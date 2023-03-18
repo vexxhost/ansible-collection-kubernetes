@@ -1,0 +1,3 @@
+helm_package_dependencies:
+  - curl-minimal
+  - git
