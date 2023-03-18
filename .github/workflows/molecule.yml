@@ -48,6 +48,9 @@ jobs:
       - name: Install Molecule
         run: pip install -r requirements.txt
 
+      - name: Turn off swap
+        run: sudo swapoff -a
+
       - name: Run Molecule
         run: molecule test -s ${{ matrix.scenario }}
         env:
