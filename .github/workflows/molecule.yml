@@ -41,3 +41,5 @@ jobs:
 
       - name: Run Molecule
         uses: robertdebock/molecule-action@5.0.2
+        with:
+          scenario: "${{ matrix.scenario }}"
