@@ -32,5 +32,8 @@ platforms:
       - /lib/modules:/lib/modules:ro
 provisioner:
   name: ansible
+  config_options:
+    connection:
+      pipelining: true
 verifier:
   name: ansible

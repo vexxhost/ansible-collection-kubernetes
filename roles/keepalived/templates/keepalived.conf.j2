@@ -10,7 +10,7 @@ vrrp_script check_apiserver {
 }
 
 vrrp_instance kubernetes {
-    state MASTER
+    state BACKUP
     interface {{ keepalived_interface }}
     virtual_router_id {{ keepalived_vrid }}
 

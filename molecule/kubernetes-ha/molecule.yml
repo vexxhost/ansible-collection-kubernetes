@@ -42,6 +42,9 @@ platforms:
     name: instance-3
 provisioner:
   name: ansible
+  config_options:
+    connection:
+      pipelining: true
   inventory:
     group_vars:
       controllers:
