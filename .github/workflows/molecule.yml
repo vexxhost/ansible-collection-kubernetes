@@ -45,8 +45,12 @@ jobs:
       - name: Disable swap
         run: sudo swapoff -a
 
+      - name: Install Molecule
+        run: |
+          pipx install molecule
+          pipx inject molecule ansible-core molecule-plugins[docker] docker-image-py
+
       - name: Run Molecule
-        uses: robertdebock/molecule-action@5.0.2
-        with:
-          image: ${{ matrix.distro }}
-          scenario: "${{ matrix.scenario }}"
+        run: molecule test -s ${{ matrix.scenario }} -d "${{ matrix.distro }}"
+        env:
+          MOLECULE_DISTRO: ${{ matrix.distro }}
