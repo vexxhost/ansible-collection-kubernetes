@@ -12,7 +12,18 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-- name: Ensure that 'tar' command is available
-  ansible.builtin.package:
-    name: tar
-    state: present
+galaxy_info:
+  author: VEXXHOST, Inc.
+  description: Ansible role to manage a directory
+  license: Apache-2.0
+  min_ansible_version: 5.5.0
+  standalone: false
+  platforms:
+    - name: EL
+      versions:
+        - "8"
+        - "9"
+    - name: Ubuntu
+      versions:
+        - focal
+        - jammy

@@ -12,7 +12,10 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-- name: Ensure that 'tar' command is available
-  ansible.builtin.package:
-    name: tar
-    state: present
+- name: Create directory ({{ directory_path }})
+  ansible.builtin.file:
+    state: directory
+    path: "{{ directory_path }}"
+    owner: "{{ directory_owner | default(omit) }}"
+    mode: "{{ directory_mode | default(omit) }}"
+    recurse: "{{ directory_recurse | default(omit) }}"

@@ -16,19 +16,6 @@
   ansible.builtin.debug:
     msg: "{{ download_artifact_url }}"
 
-- name: Ensure the work directory exists on the target host
-  ansible.builtin.file:
-    path: "{{ download_artifact_work_directory }}"
-    state: directory
-    mode: "0755"
-
-- name: Create destination directory on node # noqa risky-file-permissions
-  ansible.builtin.file:
-    path: "{{ download_artifact_dest | dirname }}"
-    owner: "{{ download_artifact_owner | default(omit) }}"
-    state: directory
-    recurse: true
-
 - name: Download item
   ansible.builtin.get_url:
     url: "{{ download_artifact_url }}"
@@ -49,20 +36,11 @@
 
 - name: Extract archive
   when: download_artifact_unarchive
-  block:
-    - name: Create new folder for unarchiving
-      ansible.builtin.file:
-        path: "{{ download_artifact_unarchive_dest }}"
-        state: directory
-        mode: "0755"
-        recurse: true
-
-    - name: Extract archive
-      ansible.builtin.unarchive:
-        src: "{{ download_artifact_dest }}"
-        dest: "{{ download_artifact_unarchive_dest }}"
-        owner: "{{ download_artifact_owner | default(omit) }}"
-        mode: "{{ download_artifact_mode | default(omit) }}"
-        remote_src: true
-        include: "{{ download_artifact_unarchive_include | default(omit) }}"
-        extra_opts: "{{ download_artifact_unarchive_extra_opts | default(omit) }}"
+  ansible.builtin.unarchive:
+    src: "{{ download_artifact_dest }}"
+    dest: "{{ download_artifact_unarchive_dest }}"
+    owner: "{{ download_artifact_owner | default(omit) }}"
+    mode: "{{ download_artifact_mode | default(omit) }}"
+    remote_src: true
+    include: "{{ download_artifact_unarchive_include | default(omit) }}"
+    extra_opts: "{{ download_artifact_unarchive_extra_opts | default(omit) }}"
