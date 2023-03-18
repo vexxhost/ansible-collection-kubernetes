@@ -1,0 +1,36 @@
+# Copyright (c) 2023 VEXXHOST, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
+
+cni_plugins_bin_dir: /opt/cni/bin
+
+cni_plugins_version: v1.2.0
+cni_plugins_checksums:
+  amd64:
+    v1.2.0: f3a841324845ca6bf0d4091b4fc7f97e18a623172158b72fc3fdcdb9d42d2d37
+  arm64:
+    v1.2.0: 525e2b62ba92a1b6f3dc9612449a84aa61652e680f7ebf4eff579795fe464b57
+
+cni_plugins_download_url: "https://github.com/containernetworking/plugins/releases/download/{{ cni_plugins_version }}/cni-plugins-{{ ansible_system | lower }}-{{ download_artifact_goarch }}-{{ cni_plugins_version }}.tgz" # noqa: yaml[line-length]
+cni_plugins_download_dest: "{{ download_artifact_work_directory }}/kubernetes-cni-{{ cni_plugins_version }}-linux-{{ download_artifact_goarch }}.tgz" # noqa: yaml[line-length]
+cni_plugins_archive_checksum: "{{ cni_plugins_checksums[download_artifact_goarch][cni_plugins_version] }}"
+
+# NOTE(mnaser): This is to accomodate for the uninstallation of the old packages
+#               that shipped with the operating system
+cni_plugins_package_name: kubernetes-cni
+
+# Automatically load kernel modules required by Kubernetes CNI
+cni_plugins_kernel_modules:
+  - br_netfilter
+  - ip_tables
+  - ip6_tables
