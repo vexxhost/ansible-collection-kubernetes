@@ -42,4 +42,5 @@ jobs:
       - name: Run Molecule
         uses: robertdebock/molecule-action@5.0.2
         with:
+          image: ${{ matrix.distro }}
           scenario: "${{ matrix.scenario }}"
