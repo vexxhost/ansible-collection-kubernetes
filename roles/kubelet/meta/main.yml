@@ -32,6 +32,9 @@ dependencies:
   - role: containerd
   - role: cri_tools
   - role: cni_plugins
+  - role: package
+    package_name: "{{ kubelet_package_name }}"
+    package_state: absent
   - role: download_artifact
     download_artifact_url: "{{ kubelet_download_url }}"
     download_artifact_dest: "{{ kubelet_download_dest }}"

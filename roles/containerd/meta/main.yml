@@ -30,6 +30,9 @@ galaxy_info:
 
 dependencies:
   - role: runc
+  - role: package
+    package_name: "{{ containerd_package_name }}"
+    package_state: absent
   - role: download_artifact
     download_artifact_url: "{{ containerd_download_url }}"
     download_artifact_dest: "{{ containerd_download_dest }}"

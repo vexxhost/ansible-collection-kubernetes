@@ -29,6 +29,7 @@ galaxy_info:
         - jammy
 
 dependencies:
-  - role: tar
+  - role: package
+    package_name: tar
   - role: directory
     directory_path: "{{ download_artifact_work_directory }}"

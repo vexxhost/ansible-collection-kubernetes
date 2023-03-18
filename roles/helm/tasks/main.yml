@@ -21,11 +21,6 @@
     - "{{ ansible_facts['distribution'] | lower }}.yml"
     - "{{ ansible_facts['os_family'] | lower }}.yml"
 
-- name: Uninstall Helm package
-  ansible.builtin.package:
-    name: "{{ helm_package_name }}"
-    state: absent
-
 - name: Remove Helm repository
   ansible.builtin.apt_repository:
     repo: "{{ helm_repository_apt }}"

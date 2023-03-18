@@ -12,11 +12,6 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-- name: Remove containerd package
-  ansible.builtin.package:
-    name: "{{ containerd_package_name }}"
-    state: absent
-
 - name: Install AppArmor packages
   ansible.builtin.package:
     state: present

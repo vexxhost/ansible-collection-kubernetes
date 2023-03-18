@@ -29,6 +29,9 @@ galaxy_info:
         - jammy
 
 dependencies:
+  - role: package
+    package_name: "{{ cri_tools_package_name }}"
+    package_state: absent
   - role: download_artifact
     download_artifact_url: "{{ cri_tools_crictl_download_url }}"
     download_artifact_dest: "{{ cri_tools_crictl_download_dest }}"

@@ -29,6 +29,9 @@ galaxy_info:
         - jammy
 
 dependencies:
+  - role: package
+    package_name: "{{ helm_package_name }}"
+    package_state: absent
   - role: vexxhost.kubernetes.download_artifact
     download_artifact_url: "{{ helm_download_url }}"
     download_artifact_dest: "{{ helm_download_dest }}"

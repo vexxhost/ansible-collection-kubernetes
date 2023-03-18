@@ -12,11 +12,6 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-- name: Uninstall kubelet package
-  ansible.builtin.package:
-    name: "{{ kubelet_package_name }}"
-    state: absent
-
 - name: Gather variables for each operating system
   ansible.builtin.include_vars: "{{ item }}"
   with_first_found:

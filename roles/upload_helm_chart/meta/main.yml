@@ -29,4 +29,5 @@ galaxy_info:
         - jammy
 
 dependencies:
-  - role: rsync
+  - role: package
+    package_name: rsync

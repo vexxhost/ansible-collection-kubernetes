@@ -12,11 +12,6 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-- name: Uninstall crictl package
-  ansible.builtin.package:
-    name: "{{ cri_tools_package_name }}"
-    state: absent
-
 - name: Create crictl config
   ansible.builtin.template:
     src: crictl.yaml.j2

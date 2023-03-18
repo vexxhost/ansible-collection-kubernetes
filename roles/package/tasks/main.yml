@@ -12,7 +12,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-- name: Uninstall runc package
+- name: Update state for {{ package_name }}
   ansible.builtin.package:
-    name: "{{ runc_package_name }}"
-    state: absent
+    name: "{{ package_name }}"
+    state: "{{ package_state | default(omit) }}"
