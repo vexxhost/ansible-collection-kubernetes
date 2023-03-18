@@ -12,20 +12,16 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-galaxy_info:
-  author: VEXXHOST, Inc.
-  description: Ansible role for "binary_download"
-  license: Apache-2.0
-  min_ansible_version: 5.5.0
-  standalone: false
-  platforms:
-    - name: EL
-      versions:
-        - "8"
-        - "9"
-    - name: Ubuntu
-      versions:
-        - focal
+- name: Verify
+  hosts: all
+  become: true
+  tasks:
+    - name: Get the current Helm version
+      ansible.builtin.command: helm version --client --short
+      register: helm_version
 
-dependencies:
-  - role: tar
+    - name: Assert Helm version
+      ansible.builtin.assert:
+        that:
+          - helm_version.stdout.startswith("v3.11.2")
+        msg: "Helm version is not correct"

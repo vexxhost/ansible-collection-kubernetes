@@ -1,0 +1,4 @@
+- name: Ensure that 'tar' command is available
+  ansible.builtin.package:
+    name: tar
+    state: present

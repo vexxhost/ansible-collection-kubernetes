@@ -22,8 +22,7 @@ cri_tools_crictl_checksums:
     v1.25.0: 651c939eca010bbf48cc3932516b194028af0893025f9e366127f5b50ad5c4f4
 
 cri_tools_crictl_download_url: "https://github.com/kubernetes-sigs/cri-tools/releases/download/{{ cri_tools_version }}/crictl-{{ cri_tools_version }}-{{ ansible_system | lower }}-{{ download_artifact_goarch }}.tar.gz" # noqa: yaml[line-length]
-cri_tools_crictl_download_dest: "{{ cri_tools_crictl_download_unarchive_dest }}.tar.gz"
-cri_tools_crictl_download_unarchive_dest: "{{ download_artifact_work_directory }}/crictl-{{ cri_tools_version }}-{{ ansible_system | lower }}-{{ download_artifact_goarch }}"
+cri_tools_crictl_download_dest: "{{ download_artifact_work_directory }}/crictl-{{ cri_tools_version }}-{{ ansible_system | lower }}-{{ download_artifact_goarch }}.tar.gz"
 cri_tools_crictl_archive_checksum: "{{ cri_tools_crictl_checksums[download_artifact_goarch][cri_tools_version] }}"
 
 cri_tools_critest_checksums:
@@ -33,8 +32,7 @@ cri_tools_critest_checksums:
     v1.25.0: fb42d54353b2b6c2417a82277748678d41438ae679fa8925a596953c3cf6c197
 
 cri_tools_critest_download_url: "https://github.com/kubernetes-sigs/cri-tools/releases/download/{{ cri_tools_version }}/critest-{{ cri_tools_version }}-{{ ansible_system | lower }}-{{ download_artifact_goarch }}.tar.gz" # noqa: yaml[line-length]
-cri_tools_critest_download_dest: "{{ cri_tools_critest_download_unarchive_dest }}.tar.gz"
-cri_tools_critest_download_unarchive_dest: "{{ download_artifact_work_directory }}/critest-{{ cri_tools_version }}-{{ ansible_system | lower }}-{{ download_artifact_goarch }}"
+cri_tools_critest_download_dest: "{{ download_artifact_work_directory }}/critest-{{ cri_tools_version }}-{{ ansible_system | lower }}-{{ download_artifact_goarch }}.tar.gz"
 cri_tools_critest_archive_checksum: "{{ cri_tools_critest_checksums[download_artifact_goarch][cri_tools_version] }}"
 
 # NOTE(mnaser): This is to accomodate for the uninstallation of the old packages

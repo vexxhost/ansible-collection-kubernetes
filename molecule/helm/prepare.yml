@@ -12,20 +12,22 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-galaxy_info:
-  author: VEXXHOST, Inc.
-  description: Ansible role for "binary_download"
-  license: Apache-2.0
-  min_ansible_version: 5.5.0
-  standalone: false
-  platforms:
-    - name: EL
-      versions:
-        - "8"
-        - "9"
-    - name: Ubuntu
-      versions:
-        - focal
-
-dependencies:
-  - role: tar
+- name: Prepare
+  hosts: all
+  become: true
+  pre_tasks:
+    - name: Wait for systemd to complete initialization
+      ansible.builtin.command: systemctl is-system-running
+      register: systemctl_status
+      until: >
+        'running' in systemctl_status.stdout or
+        'degraded' in systemctl_status.stdout
+      retries: 30
+      delay: 5
+      changed_when: false
+      failed_when: systemctl_status.rc > 1
+  tasks:
+    - name: Run APT update
+      ansible.builtin.apt:
+        update_cache: yes
+      when: ansible_pkg_mgr == "apt"

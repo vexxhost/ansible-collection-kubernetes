@@ -13,7 +13,7 @@
 # under the License.
 
 - name: Install Kubernetes
-  hosts: "{{ target | default('all') }}"
+  hosts: "{{ kubernetes_all_nodes | default('all') }}"
   become: true
   roles:
     # - role: sysctl
@@ -32,7 +32,14 @@
     #   tags:
     #     - kubernetes
 
-# - import_playbook: vexxhost.kubernetes.helm
+- name: Install Helm
+  hosts: "{{ kubernetes_control_plane_nodes | default('controllers') }}"
+  become: true
+  roles:
+    - role: helm
+      tags:
+        - helm
+
 # - import_playbook: vexxhost.kubernetes.cni
 # - import_playbook: vexxhost.kubernetes.csi
 # - import_playbook: vexxhost.kubernetes.flux

@@ -32,4 +32,5 @@ download_artifact_no_log: true
 # Unarchive the downloaded file
 download_artifact_unarchive: false
 # download_artifact_unarchive_dest:
+# download_artifact_unarchive_include:
 # download_artifact_unarchive_extra_opts:
