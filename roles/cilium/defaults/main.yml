@@ -1,0 +1,9 @@
+cilium_helm_release_name: cilium
+cilium_helm_chart_path: "{{ role_path }}/../../charts/cilium/"
+cilium_helm_chart_ref: /usr/local/src/cilium
+
+cilium_helm_release_namespace: kube-system
+cilium_helm_values: {}
+
+cilium_node_image: quay.io/cilium/cilium:v1.10.7@sha256:e23f55e80e1988db083397987a89967aa204ad6fc32da243b9160fbcea29b0ca
+cilium_operator_image: quay.io/cilium/operator-generic:v1.10.7@sha256:d0b491d8d8cb45862ed7f0410f65e7c141832f0f95262643fa5ff1edfcddcafe

@@ -12,34 +12,46 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-- name: Install Kubernetes
-  hosts: "{{ kubernetes_all_nodes | default('all') }}"
+- name: Configure Kubernetes VIP
+  hosts: "{{ kubernetes_control_plane_group | default('controllers') }}"
   become: true
   roles:
-    # - role: sysctl
-    #   tags:
-    #     - sysctl
+    - role: keepalived
+      tags:
+        - keepalived
 
-    # - role: ethtool
-    #   tags:
-    #     - ethtool
+    - role: haproxy
+      tags:
+        - haproxy
 
+- name: Install Kubernetes
+  hosts: "{{ kubernetes_group | default('all') }}"
+  become: true
+  roles:
     - role: containerd
       tags:
         - containerd
 
-    # - role: kubernetes
-    #   tags:
-    #     - kubernetes
+    - role: kubernetes
+      tags:
+        - kubernetes
 
-- name: Install Helm
-  hosts: "{{ kubernetes_control_plane_nodes | default('controllers') }}"
+- name: Install control-plane components
+  hosts: "{{ kubernetes_control_plane_group | default('controllers') }}"
   become: true
   roles:
     - role: helm
       tags:
         - helm
 
-# - import_playbook: vexxhost.kubernetes.cni
-# - import_playbook: vexxhost.kubernetes.csi
-# - import_playbook: vexxhost.kubernetes.flux
+    - role: cilium
+      tags:
+        - cilium
+
+    # - role: csi
+    #   tags:
+    #     - csi
+
+    - role: flux
+      tags:
+        - flux

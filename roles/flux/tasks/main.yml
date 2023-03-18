@@ -1,0 +1,4 @@
+- name: Install Flux to cluster
+  run_once: true
+  changed_when: false
+  ansible.builtin.command: flux install --registry={{ flux_image_registry }}

@@ -34,3 +34,6 @@ download_artifact_unarchive: false
 # download_artifact_unarchive_dest:
 # download_artifact_unarchive_include:
 # download_artifact_unarchive_extra_opts:
+
+# Notify handlers upon changes
+download_artifact_notify: []

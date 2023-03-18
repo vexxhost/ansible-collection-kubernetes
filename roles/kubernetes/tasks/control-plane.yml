@@ -1,0 +1,53 @@
+# Copyright (c) 2022 VEXXHOST, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
+
+- name: Bootstrap cluster
+  ansible.builtin.include_tasks: bootstrap-cluster.yml
+
+- name: Create folder for admin configuration
+  ansible.builtin.file:
+    path: /root/.kube
+    state: directory
+    owner: root
+    group: root
+    mode: "0750"
+
+- name: Creating a symlink for admin configuration file
+  ansible.builtin.file:
+    src: /etc/kubernetes/admin.conf
+    dest: /root/.kube/config
+    state: link
+    force: true
+
+- name: Add bash autocomplete for kubectl
+  ansible.builtin.lineinfile:
+    path: /root/.bashrc
+    line: 'source <(kubectl completion bash)'
+    insertbefore: EOF
+
+# TODO(fitbeard): Move common system packages from all roles to dedicated role.
+- name: Install PIP
+  ansible.builtin.package:
+    name: python3-pip
+
+- name: Install Kubernetes python package
+  ansible.builtin.pip:
+    name: kubernetes
+
+- name: Allow workloads on control plane nodes
+  run_once: true
+  ansible.builtin.shell: |
+    kubectl taint nodes --all node-role.kubernetes.io/master-
+  failed_when: false
+  changed_when: false

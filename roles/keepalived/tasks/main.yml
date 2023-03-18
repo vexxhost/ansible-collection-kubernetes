@@ -12,11 +12,24 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-- name: Install CSI
-  hosts: "{{ target | default('controllers') }}"
-  gather_facts: false
-  become: true
-  roles: []
-    # - role: csi
-    #   tags:
-    #     - csi
+- name: Upload configuration
+  ansible.builtin.template:
+    src: keepalived.conf.j2
+    dest: /etc/keepalived/keepalived.conf
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Upload health check
+  ansible.builtin.template:
+    src: check_apiserver.sh.j2
+    dest: /etc/keepalived/check_apiserver.sh
+    mode: "0755"
+
+- name: Upload Kubernetes manifest
+  ansible.builtin.template:
+    src: keepalived.yaml.j2
+    dest: /etc/kubernetes/manifests/keepalived.yaml
+    owner: root
+    group: root
+    mode: "0644"

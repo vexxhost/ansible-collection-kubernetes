@@ -29,6 +29,9 @@ galaxy_info:
         - jammy
 
 dependencies:
+  - role: directory
+    directory_path: /opt/cni/bin
+    directory_recurse: true
   - role: download_artifact
     download_artifact_url: "{{ cni_plugins_download_url }}"
     download_artifact_dest: "{{ cni_plugins_download_dest }}"
@@ -36,4 +39,4 @@ dependencies:
     download_artifact_owner: root
     download_artifact_mode: "0755"
     download_artifact_unarchive: true
-    download_artifact_unarchive_dest: "{{ cni_plugins_bin_dir }}"
+    download_artifact_unarchive_dest: /opt/cni/bin

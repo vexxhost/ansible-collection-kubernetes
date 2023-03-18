@@ -36,7 +36,7 @@ dependencies:
     download_artifact_owner: root
     download_artifact_mode: "0755"
     download_artifact_unarchive: true
-    download_artifact_unarchive_dest: "{{ helm_bin_dir }}"
+    download_artifact_unarchive_dest: /usr/bin
     download_artifact_unarchive_include:
       - "linux-{{ download_artifact_goarch }}/helm"
     download_artifact_unarchive_extra_opts:

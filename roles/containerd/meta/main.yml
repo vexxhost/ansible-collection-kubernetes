@@ -37,6 +37,8 @@ dependencies:
     download_artifact_owner: root
     download_artifact_mode: "0755"
     download_artifact_unarchive: true
-    download_artifact_unarchive_dest: "{{ containerd_download_unarchive_dest }}"
+    download_artifact_unarchive_dest: /usr/bin
     download_artifact_unarchive_extra_opts:
       - --strip-components=1
+    download_artifact_notify:
+      - Restart containerd

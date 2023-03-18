@@ -29,6 +29,8 @@ jobs:
         scenario:
           - containerd
           - helm
+          - kubernetes-aio
+          - kubernetes-ha
         distro:
           - rockylinux8
           - rockylinux9

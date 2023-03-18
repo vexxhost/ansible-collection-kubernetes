@@ -12,8 +12,6 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-helm_bin_dir: /usr/bin
-
 helm_version: v3.11.2
 helm_checksums:
   amd64:
@@ -23,8 +21,8 @@ helm_checksums:
     v3.8.0: 23e08035dc0106fe4e0bd85800fd795b2b9ecd9f32187aa16c49b0a917105161
     v3.11.2: 0a60baac83c3106017666864e664f52a4e16fbd578ac009f9a85456a9241c5db
 
-helm_download_url: "https://get.helm.sh/helm-{{ helm_version }}-linux-{{ download_artifact_goarch }}.tar.gz"
-helm_download_dest: "{{ download_artifact_work_directory }}/helm-{{ helm_version }}-linux-{{ download_artifact_goarch }}.tar.gz"
+helm_download_url: "https://get.helm.sh/helm-{{ helm_version }}-{{ ansible_system | lower }}-{{ download_artifact_goarch }}.tar.gz"
+helm_download_dest: "{{ download_artifact_work_directory }}/helm-{{ helm_version }}-{{ ansible_system | lower }}-{{ download_artifact_goarch }}.tar.gz"
 helm_binary_checksum: "{{ helm_checksums[download_artifact_goarch][helm_version] }}"
 
 # NOTE(fitbeard): This is to accomodate for the uninstallation of the old packages

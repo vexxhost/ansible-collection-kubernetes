@@ -36,7 +36,6 @@ platforms:
       - /usr/src:/usr/src:ro
     groups:
       - controllers
-      - computes
   - <<: *instance_config
     name: instance-2
   - <<: *instance_config
@@ -46,9 +45,9 @@ provisioner:
   inventory:
     group_vars:
       controllers:
+        keepalived_interface: "{{ ansible_default_ipv4.interface }}"
+        keepalived_vip: 172.17.0.100
+        keepalived_vrid: 42
         kubernetes_hostname: k8s
-        kubernetes_keepalived_interface: "{{ ansible_default_ipv4.interface }}"
-        kubernetes_keepalived_vip: 172.17.0.100
-        kubernetes_keepalived_vrid: 42
 verifier:
   name: ansible
