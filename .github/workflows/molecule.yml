@@ -42,15 +42,15 @@ jobs:
         with:
           path: "${{ github.repository }}"
 
-      - name: Disable swap
-        run: sudo swapoff -a
+      - name: Setup Python
+        uses: actions/setup-python@v2
+        with:
+          cache: pip
 
       - name: Install Molecule
-        run: |
-          pipx install molecule
-          pipx inject molecule ansible-core molecule-plugins[docker] docker-image-py
+        run: pip install -r requirements.txt
 
       - name: Run Molecule
-        run: molecule test -s ${{ matrix.scenario }} -d "${{ matrix.distro }}"
+        run: molecule test -s ${{ matrix.scenario }}
         env:
           MOLECULE_DISTRO: ${{ matrix.distro }}
