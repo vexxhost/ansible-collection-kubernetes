@@ -42,6 +42,9 @@ jobs:
         with:
           path: "${{ github.repository }}"
 
+      - name: Disable swap
+        run: sudo swapoff -a
+
       - name: Run Molecule
         uses: robertdebock/molecule-action@5.0.2
         with:
