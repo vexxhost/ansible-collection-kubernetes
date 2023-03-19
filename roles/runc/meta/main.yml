@@ -29,6 +29,9 @@ galaxy_info:
         - jammy
 
 dependencies:
+  - role: package
+    package_name: "{{ runc_package_name }}"
+    package_state: absent
   - role: download_artifact
     vars:
       download_artifact_url: "{{ runc_download_url }}"

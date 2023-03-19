@@ -18,7 +18,7 @@ driver:
   name: docker
 platforms:
   - name: instance
-    image: geerlingguy/docker-${image:-ubuntu2004}-ansible:latest
+    image: geerlingguy/docker-${MOLECULE_DISTRO:-ubuntu2004}-ansible:latest
     command: ${MOLECULE_DOCKER_COMMAND:-""}
     privileged: true
     cgroupns_mode: host
@@ -32,5 +32,8 @@ platforms:
       - /lib/modules:/lib/modules:ro
 provisioner:
   name: ansible
+  config_options:
+    connection:
+      pipelining: true
 verifier:
   name: ansible

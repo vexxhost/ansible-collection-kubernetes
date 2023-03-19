@@ -68,3 +68,8 @@
       ansible.builtin.systemd:
         name: dbus.socket
         state: started
+
+    # NOTE(mnaser): SystemD is supposed to set / to `rshared` however it does
+    #               not seem like it is applying correctly in a container.
+    - name: Switch "/" to "rshared"
+      ansible.builtin.command: mount --make-rshared /

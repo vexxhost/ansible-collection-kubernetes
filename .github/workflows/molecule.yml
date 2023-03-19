@@ -29,6 +29,8 @@ jobs:
         scenario:
           - containerd
           - helm
+          - kubernetes-aio
+          - kubernetes-ha
         distro:
           - rockylinux8
           - rockylinux9
@@ -37,11 +39,19 @@ jobs:
     steps:
       - name: Checkout project
         uses: actions/checkout@v3
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
         with:
-          path: "${{ github.repository }}"
+          cache: pip
+
+      - name: Install Molecule
+        run: pip install -r requirements.txt
+
+      - name: Turn off swap
+        run: sudo swapoff -a
 
       - name: Run Molecule
-        uses: robertdebock/molecule-action@5.0.2
-        with:
-          image: ${{ matrix.distro }}
-          scenario: "${{ matrix.scenario }}"
+        run: molecule test -s ${{ matrix.scenario }}
+        env:
+          MOLECULE_DISTRO: ${{ matrix.distro }}

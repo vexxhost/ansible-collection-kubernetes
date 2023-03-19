@@ -21,22 +21,11 @@
     - "{{ ansible_facts['distribution'] | lower }}.yml"
     - "{{ ansible_facts['os_family'] | lower }}.yml"
 
-- name: Uninstall Helm package
-  ansible.builtin.package:
-    name: "{{ helm_package_name }}"
-    state: absent
-
 - name: Remove Helm repository
   ansible.builtin.apt_repository:
     repo: "{{ helm_repository_apt }}"
     state: absent
   when: ansible_os_family in ['Debian']
-
-- name: Remove orphaned Helm binary
-  ansible.builtin.file:
-    path: /usr/bin/helm
-    state: absent
-  when: helm_bin_dir != "/usr/bin"
 
 - name: Add bash autocomplete for helm
   ansible.builtin.lineinfile:

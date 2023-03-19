@@ -12,8 +12,6 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-cri_tools_bin_dir: /usr/bin
-
 cri_tools_version: v1.25.0
 cri_tools_crictl_checksums:
   amd64:

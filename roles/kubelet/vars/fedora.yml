@@ -1,0 +1,8 @@
+kubelet_package_dependencies:
+  - conntrack
+  - coreutils
+  - ebtables
+  - ethtool
+  - iproute
+  - socat
+  - util-linux

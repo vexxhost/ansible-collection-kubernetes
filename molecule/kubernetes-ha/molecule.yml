@@ -19,7 +19,7 @@ driver:
 platforms:
   - &instance_config
     name: instance-1
-    image: geerlingguy/docker-${image:-ubuntu2004}-ansible:latest
+    image: geerlingguy/docker-${MOLECULE_DISTRO:-ubuntu2004}-ansible:latest
     command: ${MOLECULE_DOCKER_COMMAND:-""}
     privileged: true
     cgroupns_mode: host
@@ -36,19 +36,21 @@ platforms:
       - /usr/src:/usr/src:ro
     groups:
       - controllers
-      - computes
   - <<: *instance_config
     name: instance-2
   - <<: *instance_config
     name: instance-3
 provisioner:
   name: ansible
+  config_options:
+    connection:
+      pipelining: true
   inventory:
     group_vars:
       controllers:
+        keepalived_interface: "{{ ansible_default_ipv4.interface }}"
+        keepalived_vip: 172.17.0.100
+        keepalived_vrid: 42
         kubernetes_hostname: k8s
-        kubernetes_keepalived_interface: "{{ ansible_default_ipv4.interface }}"
-        kubernetes_keepalived_vip: 172.17.0.100
-        kubernetes_keepalived_vrid: 42
 verifier:
   name: ansible

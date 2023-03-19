@@ -8,7 +8,7 @@ oom_score = {{ containerd_oom_score }}
 
 [plugins]
   [plugins."io.containerd.grpc.v1.cri"]
-    sandbox_image = "{{ containerd_pause_image }}"
+    sandbox_image = "{{ containerd_pause_image | vexxhost.kubernetes.docker_image('ref') }}"
     max_container_log_line_size = {{ containerd_max_container_log_line_size }}
   [plugins."io.containerd.grpc.v1.cri".registry]
     [plugins."io.containerd.grpc.v1.cri".registry.mirrors]

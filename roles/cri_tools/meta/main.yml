@@ -29,6 +29,9 @@ galaxy_info:
         - jammy
 
 dependencies:
+  - role: package
+    package_name: "{{ cri_tools_package_name }}"
+    package_state: absent
   - role: download_artifact
     download_artifact_url: "{{ cri_tools_crictl_download_url }}"
     download_artifact_dest: "{{ cri_tools_crictl_download_dest }}"
@@ -36,7 +39,7 @@ dependencies:
     download_artifact_owner: root
     download_artifact_mode: "0755"
     download_artifact_unarchive: true
-    download_artifact_unarchive_dest: "{{ cri_tools_bin_dir }}"
+    download_artifact_unarchive_dest: /usr/bin
   - role: download_artifact
     download_artifact_url: "{{ cri_tools_critest_download_url }}"
     download_artifact_dest: "{{ cri_tools_critest_download_dest }}"
@@ -44,4 +47,4 @@ dependencies:
     download_artifact_owner: root
     download_artifact_mode: "0755"
     download_artifact_unarchive: true
-    download_artifact_unarchive_dest: "{{ cri_tools_bin_dir }}"
+    download_artifact_unarchive_dest: /usr/bin

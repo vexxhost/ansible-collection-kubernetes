@@ -33,6 +33,7 @@
   # NOTE(fitbeard): This task will avoid logging it's parameters to not leak
   #                 environment passwords in the log.
   no_log: "{{ download_artifact_no_log | bool }}"
+  notify: "{{ download_artifact_notify }}"
 
 - name: Extract archive
   when: download_artifact_unarchive
@@ -44,3 +45,4 @@
     remote_src: true
     include: "{{ download_artifact_unarchive_include | default(omit) }}"
     extra_opts: "{{ download_artifact_unarchive_extra_opts | default(omit) }}"
+  notify: "{{ download_artifact_notify }}"

@@ -1,0 +1,4 @@
+ansible-core
+docker-image-py
+molecule
+molecule-plugins[docker]
