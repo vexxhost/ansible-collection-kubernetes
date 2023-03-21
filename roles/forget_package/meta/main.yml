@@ -14,30 +14,12 @@
 
 galaxy_info:
   author: VEXXHOST, Inc.
-  description: Ansible role for "kubelet"
+  description: Ansible role for forgetting a package
   license: Apache-2.0
   min_ansible_version: 5.5.0
   standalone: false
   platforms:
-    - name: EL
-      versions:
-        - "8"
-        - "9"
     - name: Ubuntu
       versions:
         - focal
         - jammy
-
-dependencies:
-  - role: containerd
-  - role: cri_tools
-  - role: cni_plugins
-  - role: forget_package
-    forget_package_name: "{{ kubelet_package_name }}"
-    when: ansible_pkg_mgr == "apt"
-  - role: download_artifact
-    download_artifact_url: "{{ kubelet_download_url }}"
-    download_artifact_dest: "{{ kubelet_download_dest }}"
-    download_artifact_checksum: "sha256:{{ kubelet_binary_checksum }}"
-    download_artifact_owner: root
-    download_artifact_mode: "0755"
