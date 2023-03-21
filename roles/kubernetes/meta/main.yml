@@ -30,7 +30,12 @@ galaxy_info:
 
 dependencies:
   - role: kubeadm
+    vars:
+      kubeadm_version: "{{ kubernetes_version }}"
   - role: kubectl
+    vars:
+      kubectl_version: "{{ kubernetes_version }}"
   - role: kubelet
     vars:
+      kubelet_version: "{{ kubernetes_version }}"
       kubelet_allow_unsafe_swap: "{{ kubernetes_allow_unsafe_swap }}"

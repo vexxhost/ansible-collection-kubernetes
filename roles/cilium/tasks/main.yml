@@ -12,6 +12,11 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+- name: Get current Kubernetes version
+  kubernetes.core.k8s_cluster_info:
+    kubeconfig: /etc/kubernetes/admin.conf
+  register: _cilium_k8s_cluster_info
+
 - name: Deploy Helm chart
   run_once: true
   kubernetes.core.helm:
@@ -19,4 +24,4 @@
     chart_ref: "{{ cilium_helm_chart_ref }}"
     release_namespace: "{{ cilium_helm_release_namespace }}"
     kubeconfig: /etc/kubernetes/admin.conf
-    values: "{{ _cilium_helm_values | combine(cilium_helm_values, recursive=True) }}"
+    values: "{{ lookup('ansible.builtin.template', 'values.yml.j2') | from_yaml | combine(cilium_helm_values, recursive=True) }}"

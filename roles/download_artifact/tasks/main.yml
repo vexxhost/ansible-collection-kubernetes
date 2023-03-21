@@ -28,7 +28,7 @@
     url_username: "{{ download_artifact_url_username | default(omit) }}"
     url_password: "{{ download_artifact_url_password | default(omit) }}"
   register: _download_artifact_result
-  until: "'OK' in _download_artifact_result.msg or 'file already exists' in _download_artifact_result.msg"
+  until: _download_artifact_result is succeeded
   retries: 4
   # NOTE(fitbeard): This task will avoid logging it's parameters to not leak
   #                 environment passwords in the log.
