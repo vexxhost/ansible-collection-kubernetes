@@ -33,7 +33,7 @@
 - name: Add bash autocomplete for kubectl
   ansible.builtin.lineinfile:
     path: /root/.bashrc
-    line: 'source <(kubectl completion bash)'
+    line: "source <(kubectl completion bash)"
     insertbefore: EOF
 
 # TODO(fitbeard): Move common system packages from all roles to dedicated role.
@@ -45,9 +45,12 @@
   ansible.builtin.pip:
     name: kubernetes
 
-- name: Allow workloads on control plane nodes
-  run_once: true
-  ansible.builtin.shell: |
-    kubectl taint nodes --all node-role.kubernetes.io/master-
-  failed_when: false
-  changed_when: false
+- name: Allow workload on control plane node
+  kubernetes.core.k8s_taint:
+    state: absent
+    name: "{{ inventory_hostname_short }}"
+    taints:
+      - effect: NoSchedule
+        key: node-role.kubernetes.io/control-plane
+      - effect: NoSchedule
+        key: node-role.kubernetes.io/master

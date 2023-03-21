@@ -1,0 +1,19 @@
+image:
+  repository: "{{ cilium_node_image | vexxhost.kubernetes.docker_image('name') }}"
+  tag: "{{ cilium_node_image | vexxhost.kubernetes.docker_image('tag') }}"
+  useDigest: false
+tunnel: geneve
+operator:
+  image:
+    repository: "{{ cilium_operator_image | vexxhost.kubernetes.docker_image('name') | replace('-generic', '') }}"
+    tag: "{{ cilium_operator_image | vexxhost.kubernetes.docker_image('tag') }}"
+    useDigest: false
+  nodeSelector:
+{% if _cilium_k8s_cluster_info.version.server.kubernetes.gitVersion is version('v1.20.0', '>=') %}
+    node-role.kubernetes.io/control-plane: ""
+{% else %}
+    node-role.kubernetes.io/master: ""
+{% endif %}
+ipam:
+  operator:
+    clusterPoolIPv4PodCIDR: "{{ cilium_ipv4_cidr | default('10.0.0.0/8') }}"
