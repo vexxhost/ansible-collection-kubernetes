@@ -36,6 +36,9 @@ jobs:
           - rockylinux9
           - ubuntu2004
           - ubuntu2204
+        include:
+          - scenario: forget-package
+            distro: ubuntu2004
     steps:
       - name: Checkout project
         uses: actions/checkout@v3

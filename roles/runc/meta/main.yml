@@ -29,9 +29,9 @@ galaxy_info:
         - jammy
 
 dependencies:
-  - role: package
-    package_name: "{{ runc_package_name }}"
-    package_state: absent
+  - role: forget_package
+    forget_package_name: "{{ runc_package_name }}"
+    when: ansible_pkg_mgr == "apt"
   - role: download_artifact
     vars:
       download_artifact_url: "{{ runc_download_url }}"
