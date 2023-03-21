@@ -1,0 +1,9 @@
+dependencies:
+  - role: vexxhost.kubernetes.upload_helm_chart
+    vars:
+      upload_helm_chart_src: "./files/chart/"
+      upload_helm_chart_dest: /usr/local/src/chart-1
+  - role: vexxhost.kubernetes.upload_helm_chart
+    vars:
+      upload_helm_chart_src: "../../charts/foo/"
+      upload_helm_chart_dest: /usr/local/src/chart-2

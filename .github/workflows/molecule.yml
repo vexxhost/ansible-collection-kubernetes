@@ -29,6 +29,7 @@ jobs:
         scenario:
           - containerd
           - helm
+          - upload-helm-chart
         distro:
           - rockylinux8
           - rockylinux9
