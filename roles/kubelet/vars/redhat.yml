@@ -1,6 +1,6 @@
 kubelet_package_dependencies:
   - conntrack
-  - coreutils
+  - coreutils-single
   - ebtables
   - ethtool
   - iproute
