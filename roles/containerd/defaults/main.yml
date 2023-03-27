@@ -59,5 +59,9 @@ containerd_max_container_log_line_size: -1
 
 containerd_limit_proc_num: "infinity"
 containerd_limit_core: "infinity"
-containerd_limit_open_file_num: "infinity"
+# NOTE(fitbeard): EL9 family distros set an astronomically large value for open
+#                 files (1073741816 vs 65536). So, if you are running on a rpm-based
+#                 OS that sets an extremely high open files limit, then you need to set
+#                 ulimit nofile to a more reasonable value.
+containerd_limit_open_file_num: "{{ '1048576' if ansible_facts['os_family'] == 'RedHat' else 'infinity' }}"
 containerd_limit_mem_lock: "infinity"
