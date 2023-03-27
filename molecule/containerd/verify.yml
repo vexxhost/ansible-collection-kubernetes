@@ -63,7 +63,7 @@
 
     - name: Run test suite
       block:
-        - name: Run "critest" 
+        - name: Run "critest"
           ansible.builtin.command: critest
           register: _critest
       always:
