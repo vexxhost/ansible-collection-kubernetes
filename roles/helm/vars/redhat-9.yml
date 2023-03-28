@@ -1,3 +1,6 @@
 helm_package_dependencies:
-  - curl-minimal
+  # NOTE(fitbeard): This is to allow our tests to run on Docker containers since
+  #                 Rocky Linux images comes with pre-installed thiner versions
+  #                 of some packages.
+  - "{{ 'curl-minimal' if ansible_connection == 'community.docker.docker' else 'curl' }}"
   - git
