@@ -13,7 +13,7 @@ spec:
       serviceAccountName: {{ .Values.serviceAccounts.hubblecertgen.name | quote }}
       containers:
         - name: certgen
-          image: {{ .Values.certgen.image.repository }}:{{ .Values.certgen.image.tag }}
+          image: {{ if .Values.certgen.image.override }}{{ .Values.certgen.image.override }}{{ else }}{{ .Values.certgen.image.repository }}:{{ .Values.certgen.image.tag }}{{ end }}
           imagePullPolicy: {{ .Values.certgen.image.pullPolicy }}
           command:
             - "/usr/bin/cilium-certgen"
@@ -58,6 +58,7 @@ spec:
             - "--hubble-relay-server-cert-validity-duration={{ $certValiditySecondsStr }}"
             - "--hubble-relay-server-cert-secret-name=hubble-relay-server-certs"
             {{- end }}
+          terminationMessagePolicy: FallbackToLogsOnError
       hostNetwork: true
       {{- if .Values.imagePullSecrets }}
       imagePullSecrets:

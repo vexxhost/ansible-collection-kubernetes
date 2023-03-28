@@ -109,6 +109,14 @@ data:
   cilium-endpoint-gc-interval: "{{ .Values.operator.endpointGCInterval }}"
 {{- end }}
 
+{{- if hasKey .Values.operator "nodeGCInterval" }}
+  nodes-gc-interval: "{{ .Values.operator.nodeGCInterval | default "0s" }}"
+{{- end }}
+
+{{- if hasKey .Values.operator "skipCNPStatusStartupClean" }}
+  skip-cnp-status-startup-clean: "{{ .Values.operator.skipCNPStatusStartupClean }}"
+{{- end }}
+
 {{- if hasKey .Values "identityChangeGracePeriod" }}
   # identity-change-grace-period is the grace period that needs to pass
   # before an endpoint that has changed its identity will start using
@@ -130,7 +138,7 @@ data:
   debug-verbose: "{{ .Values.debug.verbose }}"
 {{- end }}
 
-{{- if ne (int .Values.healthPort) 9876 }}
+{{- if ne (int .Values.healthPort) 9879 }}
   # Set the TCP port for the agent health status API. This is not the port used
   # for cilium-health.
   agent-health-port: "{{ .Values.healthPort }}"
@@ -345,8 +353,10 @@ data:
   tunnel: "disabled"
   enable-endpoint-routes: "true"
   enable-local-node-route: "false"
+{{- else if .Values.aksbyocni.enabled }}
+  tunnel: "vxlan"
 {{- else }}
-  tunnel: {{ .Values.tunnel }}
+  tunnel: {{ .Values.tunnel | quote }}
 {{- end }}
 
 {{- if .Values.eni.enabled }}
@@ -597,7 +607,7 @@ data:
   k8s-require-ipv6-pod-cidr: {{ .Values.k8s.requireIPv6PodCIDR | quote }}
 {{- end }}
 {{- if .Values.endpointStatus.enabled }}
-  endpoint-status: {{ required "endpointStatus.status required: policy, health, controllers, logs and / or state. For 2 or more options use a comma: \"policy, health\"" .Values.endpointStatus.status | quote }}
+  endpoint-status: {{ required "endpointStatus.status required: policy, health, controllers, log and / or state. For 2 or more options use a space: \"policy health\"" .Values.endpointStatus.status | quote }}
 {{- end }}
 {{- if and .Values.endpointRoutes .Values.endpointRoutes.enabled }}
   enable-endpoint-routes: {{ .Values.endpointRoutes.enabled | quote }}
@@ -685,7 +695,11 @@ data:
   # A space separated list of iptables chains to disable when installing feeder rules.
   disable-iptables-feeder-rules: {{ .Values.disableIptablesFeederRules | join " " | quote }}
 {{- end }}
+{{- if .Values.aksbyocni.enabled }}
+  ipam: "cluster-pool"
+{{- else }}
   ipam: {{ $ipam | quote }}
+{{- end }}
 
 {{- if eq $ipam "cluster-pool" }}
 {{- if .Values.ipv4.enabled }}
@@ -740,6 +754,23 @@ data:
 
 {{- if hasKey .Values.cgroup "hostRoot" }}
   cgroup-root: {{ .Values.cgroup.hostRoot | quote }}
+{{- end }}
+
+{{- if .Values.annotateK8sNode }}
+  annotate-k8s-node: "true"
+{{- end }}
+
+{{- if .Values.operator.removeNodeTaints }}
+  remove-cilium-node-taints: "true"
+{{- end }}
+{{- if .Values.operator.setNodeNetworkStatus }}
+  set-cilium-is-up-condition: "true"
+{{- end }}
+
+{{- if .Values.operator.unmanagedPodWatcher.restart }}
+  unmanaged-pod-watcher-interval: {{ .Values.operator.unmanagedPodWatcher.intervalSeconds | quote }}
+{{- else }}
+  unmanaged-pod-watcher-interval: "0"
 {{- end }}
 
 {{- if .Values.extraConfig }}

@@ -13,7 +13,7 @@ spec:
       serviceAccountName: {{ .Values.serviceAccounts.clustermeshcertgen.name | quote }}
       containers:
         - name: certgen
-          image: {{ .Values.certgen.image.repository }}:{{ .Values.certgen.image.tag }}
+          image: {{ if .Values.certgen.image.override }}{{ .Values.certgen.image.override }}{{ else }}{{ .Values.certgen.image.repository }}:{{ .Values.certgen.image.tag }}{{ end }}
           imagePullPolicy: {{ .Values.certgen.image.pullPolicy }}
           command:
             - "/usr/bin/cilium-certgen"
@@ -38,6 +38,7 @@ spec:
             {{- if not (and .Values.clustermesh.apiserver.tls.remote.cert .Values.clustermesh.apiserver.tls.remote.key) }}
             - "--clustermesh-apiserver-remote-cert-generate"
             {{- end }}
+          terminationMessagePolicy: FallbackToLogsOnError
       hostNetwork: true
       {{- if .Values.imagePullSecrets }}
       imagePullSecrets:
