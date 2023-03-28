@@ -108,3 +108,30 @@ def test_docker_image_domain(test_input, expected):
 )
 def test_docker_image_path(test_input, expected):
     assert docker_image(test_input, "path") == expected
+
+
+@pytest.mark.parametrize(
+    "test_input,expected",
+    [
+        ("quay.io/vexxhost/glance:zed", "quay.io/vexxhost"),
+        (
+            "us-docker.pkg.dev/vexxhost-infra/openstack/heat:wallaby",
+            "us-docker.pkg.dev/vexxhost-infra/openstack",
+        ),
+        (
+            "registry.k8s.io/kube-apiserver:v1.22.0",
+            "registry.k8s.io",
+        ),
+        (
+            "k8s.gcr.io/sig-storage/csi-snapshotter:v4.2.0",
+            "k8s.gcr.io/sig-storage",
+        ),
+        ("docker.io/library/haproxy:2.5", "docker.io/library"),
+        (
+            "k8s.gcr.io/ingress-nginx/controller:v1.1.1@sha256:0bc88eb15f9e7f84e8e56c14fa5735aaa488b840983f87bd79b1054190e660de",  # noqa E501
+            "k8s.gcr.io/ingress-nginx",
+        ),
+    ],
+)
+def test_docker_image_prefix(test_input, expected):
+    assert docker_image(test_input, "prefix") == expected
