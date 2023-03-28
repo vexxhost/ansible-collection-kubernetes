@@ -34,7 +34,7 @@ spec:
       serviceAccountName: {{ .Values.serviceAccounts.clustermeshApiserver.name | quote }}
       initContainers:
       - name: etcd-init
-        image: {{ .Values.clustermesh.apiserver.etcd.image.repository }}:{{ .Values.clustermesh.apiserver.etcd.image.tag }}
+        image: {{ if .Values.clustermesh.apiserver.etcd.image.override }}{{ .Values.clustermesh.apiserver.etcd.image.override }}{{ else }}{{ .Values.clustermesh.apiserver.etcd.image.repository }}:{{ .Values.clustermesh.apiserver.etcd.image.tag }}{{ end }}
         imagePullPolicy: {{ .Values.clustermesh.apiserver.etcd.image.pullPolicy }}
         env:
         - name: ETCDCTL_API
@@ -71,8 +71,9 @@ spec:
           name: etcd-data-dir
       containers:
       - name: etcd
-        image: {{ .Values.clustermesh.apiserver.etcd.image.repository }}:{{ .Values.clustermesh.apiserver.etcd.image.tag }}
+        image: {{ if .Values.clustermesh.apiserver.etcd.image.override }}{{ .Values.clustermesh.apiserver.etcd.image.override }}{{ else }}{{ .Values.clustermesh.apiserver.etcd.image.repository }}:{{ .Values.clustermesh.apiserver.etcd.image.tag }}{{ end }}
         imagePullPolicy: {{ .Values.clustermesh.apiserver.etcd.image.pullPolicy }}
+        terminationMessagePolicy: FallbackToLogsOnError
         env:
         - name: ETCDCTL_API
           value: "3"
@@ -100,8 +101,9 @@ spec:
         - mountPath: /var/run/etcd
           name: etcd-data-dir
       - name: "apiserver"
-        image: "{{ .Values.clustermesh.apiserver.image.repository }}:{{ .Values.clustermesh.apiserver.image.tag }}{{ if .Values.clustermesh.apiserver.image.useDigest }}@{{ .Values.clustermesh.apiserver.image.digest }}{{ end }}"
+        image: "{{ if .Values.clustermesh.apiserver.image.override }}{{ .Values.clustermesh.apiserver.image.override }}{{ else }}{{ .Values.clustermesh.apiserver.image.repository }}:{{ .Values.clustermesh.apiserver.image.tag }}{{ if .Values.clustermesh.apiserver.image.useDigest }}@{{ .Values.clustermesh.apiserver.image.digest }}{{ end }}{{ end }}"
         imagePullPolicy: {{ .Values.clustermesh.apiserver.image.pullPolicy }}
+        terminationMessagePolicy: FallbackToLogsOnError
         command:
           - /usr/bin/clustermesh-apiserver
         args:
@@ -109,6 +111,7 @@ spec:
           - --debug
 {{- end }}
           - --cluster-name=$(CLUSTER_NAME)
+          - --cluster-id=$(CLUSTER_ID)
           - --kvstore-opt
           - etcd.config=/var/lib/cilium/etcd-config.yaml
         env:
@@ -128,6 +131,12 @@ spec:
             configMapKeyRef:
               key: identity-allocation-mode
               name: cilium-config
+        - name: ENABLE_K8S_ENDPOINT_SLICE
+          valueFrom:
+            configMapKeyRef:
+              name: cilium-config
+              key: enable-k8s-endpoint-slice
+              optional: true
 {{- with .Values.clustermesh.apiserver.resources }}
         resources: {{- toYaml . | nindent 10 }}
 {{- end }}

@@ -81,11 +81,12 @@ rollOutCiliumPods: false
 
 # -- Agent container image.
 image:
+  override: ~
   repository: quay.io/cilium/cilium
-  tag: v1.10.7
+  tag: v1.10.20
   pullPolicy: IfNotPresent
   # cilium-digest
-  digest: "sha256:e23f55e80e1988db083397987a89967aa204ad6fc32da243b9160fbcea29b0ca"
+  digest: "sha256:c9b3af1f9c405cc8dcb163af0e0ea0a376a9f62304501c9392d26e91178d7869"
   useDigest: true
 
 # -- Pod affinity for cilium-agent.
@@ -194,12 +195,23 @@ updateStrategy:
 
 # Configuration Values for cilium-agent
 
+aksbyocni:
+  # -- Enable AKS BYOCNI integration.
+  # Note that this is incompatible with AKS clusters not created in BYOCNI mode:
+  # use Azure integration (`azure.enabled`) instead.
+  enabled: false
+
 # -- Enable installation of PodCIDR routes between worker
 # nodes if worker nodes share a common L2 network segment.
 autoDirectNodeRoutes: false
 
+# -- Annotate k8s node upon initialization with Cilium's metadata.
+annotateK8sNode: true
+
 azure:
-  # -- Enable Azure integration
+  # -- Enable Azure integration.
+  # Note that this is incompatible with AKS clusters created in BYOCNI mode: use
+  # AKS BYOCNI integration (`aksbyocni.enabled`) instead.
   enabled: false
   # resourceGroup: group1
   # subscriptionID: 00000000-0000-0000-0000-000000000000
@@ -302,6 +314,12 @@ cleanBpfState: false
 #
 # WARNING: Use with care!
 cleanState: false
+
+# -- Wait for KUBE-PROXY-CANARY iptables rule to appear in "wait-for-kube-proxy"
+# init container before launching cilium-agent.
+# More context can be found in the commit message of below PR
+# https://github.com/cilium/cilium/pull/20123
+waitForKubeProxy: false
 
 cni:
   # -- Install the CNI configuration and binary files into the filesystem.
@@ -463,7 +481,7 @@ endpointHealthChecking:
   enabled: true
 
 # -- Enable endpoint status.
-# Status can be: policy, health, controllers, logs and / or state. For 2 or more options use a comma.
+# Status can be: policy, health, controllers, log and / or state. For 2 or more options use a space.
 endpointStatus:
   enabled: false
   status: ""
@@ -490,8 +508,14 @@ eni:
   # See https://github.com/aws/amazon-eks-pod-identity-webhook
   iamRole: ""
   # -- Filter via subnet IDs which will dictate which subnets are going to be used to create new ENIs
+  # Important note: This requires that each instance has an ENI with a matching subnet attached
+  # when Cilium is deployed. If you only want to control subnets for ENIs attached by Cilium,
+  # use the CNI configuration file settings (cni.customConf) instead.
   subnetIDsFilter: ""
   # -- Filter via tags (k=v) which will dictate which subnets are going to be used to create new ENIs
+  # Important note: This requires that each instance has an ENI with a matching subnet attached
+  # when Cilium is deployed. If you only want to control subnets for ENIs attached by Cilium,
+  # use the CNI configuration file settings (cni.customConf) instead.
   subnetTagsFilter: ""
 
 externalIPs:
@@ -509,7 +533,7 @@ gke:
 healthChecking: true
 
 # -- TCP port for the agent health API. This is not the port for cilium-health.
-healthPort: 9876
+healthPort: 9879
 
 # -- Enables the enforcement of host policies in the eBPF datapath.
 hostFirewall: false
@@ -535,6 +559,7 @@ hostServices:
 # (re)generate any certificates not provided manually.
 certgen:
   image:
+    override: ~
     repository: quay.io/cilium/certgen
     tag: v0.1.5
     pullPolicy: IfNotPresent
@@ -587,6 +612,8 @@ hubble:
       enabled: false
       # -- Labels to add to ServiceMonitor hubble
       labels: {}
+      # -- Annotations to add to ServiceMonitor hubble
+      annotations: {}
 
   # -- Unix domain socket path to listen to when Hubble is enabled.
   socketPath: /var/run/cilium/hubble.sock
@@ -595,7 +622,19 @@ hubble:
   # Set this field ":4244" if you are enabling Hubble Relay, as it assumes that
   # Hubble is listening on port 4244.
   listenAddress: ":4244"
-
+  peerService:
+    # -- Enable a K8s Service for the Peer service, so that it can be accessed
+    # by a non-local client
+    enabled: false
+    # -- Service Port for the Peer service.
+    # If not set, it is dynamically assigned to port 443 if TLS is enabled and to
+    # port 80 if not.
+    # servicePort: 80
+    # -- Target Port for the Peer service.
+    targetPort: 4244
+    # -- The cluster domain to use to query the Hubble Peer service. It should
+    # be the local cluster.
+    clusterDomain: cluster.local
   # -- TLS configuration for Hubble
   tls:
     # -- Enable mutual TLS for listenAddress. Setting this value to false is
@@ -647,10 +686,11 @@ hubble:
 
     # -- Hubble-relay container image.
     image:
+      override: ~
       repository: quay.io/cilium/hubble-relay
-      tag: v1.10.7
+      tag: v1.10.20
        # hubble-relay-digest
-      digest: "sha256:385fcc4fa315eb6b66626c3e5f607b6b6514c8c3a863c47c2b2dbc97790acb47"
+      digest: "sha256:0c4932b94d6d7cea7045597ac93234de36031668fc7a509aa34a6a23d516135d"
       useDigest: true
       pullPolicy: IfNotPresent
 
@@ -734,53 +774,46 @@ hubble:
     backend:
       # -- Hubble-ui backend image.
       image:
-        repository: quay.io/cilium/hubble-ui-backend
-        tag: v0.8.5@sha256:2bce50cf6c32719d072706f7ceccad654bfa907b2745a496da99610776fe31ed
+        override: ~
+        repository: "quay.io/cilium/hubble-ui-backend"
+        tag: v0.9.2@sha256:a3ac4d5b87889c9f7cc6323e86d3126b0d382933bd64f44382a92778b0cde5d7
         pullPolicy: IfNotPresent
-      # [Example]
-      # resources:
+
+      # -- Additional hubble-ui backend environment variables.
+      extraEnv: []
+
+      # -- Resource requests and limits for the 'backend' container of the 'hubble-ui' deployment.
+      resources: {}
       #   limits:
       #     cpu: 1000m
       #     memory: 1024M
       #   requests:
       #     cpu: 100m
       #     memory: 64Mi
-      # -- Resource requests and limits for the 'backend' container of the 'hubble-ui' deployment.
-      resources: {}
 
     frontend:
       # -- Hubble-ui frontend image.
       image:
-        repository: quay.io/cilium/hubble-ui
-        tag: v0.8.5@sha256:4eaca1ec1741043cfba6066a165b3bf251590cf4ac66371c4f63fbed2224ebb4
+        override: ~
+        repository: "quay.io/cilium/hubble-ui"
+        tag: v0.9.2@sha256:d3596efc94a41c6b772b9afe6fe47c17417658956e04c3e2a28d293f2670663e
         pullPolicy: IfNotPresent
-      # [Example]
-      # resources:
-      #   limits:
-      #     cpu: 1000m
-      #     memory: 1024M
-      #   requests:
-      #     cpu: 100m
-      #     memory: 64Mi
+
+      # -- Additional hubble-ui frontend environment variables.
+      extraEnv: []
+
       # -- Resource requests and limits for the 'frontend' container of the 'hubble-ui' deployment.
       resources: {}
-
-    proxy:
-      # -- Hubble-ui ingress proxy image.
-      image:
-        repository: docker.io/envoyproxy/envoy
-        tag: v1.18.4@sha256:e5c2bb2870d0e59ce917a5100311813b4ede96ce4eb0c6bfa879e3fbe3e83935
-        pullPolicy: IfNotPresent
-      # [Example]
-      # resources:
       #   limits:
       #     cpu: 1000m
       #     memory: 1024M
       #   requests:
       #     cpu: 100m
       #     memory: 64Mi
-      # -- Resource requests and limits for the 'proxy' container of the 'hubble-ui' deployment.
-      resources: {}
+      server:
+        # -- Controls server listener for ipv6
+        ipv6:
+          enabled: true
 
     # -- The number of replicas of Hubble UI to deploy.
     replicas: 1
@@ -1042,6 +1075,8 @@ prometheus:
     enabled: false
     # -- Labels to add to ServiceMonitor cilium-agent
     labels: {}
+    # -- Annotations to add to ServiceMonitor cilium-agent
+    annotations: {}
     # -- Specify the Kubernetes namespace where Prometheus expects to find
     # service monitors configured.
     # namespace: ""
@@ -1118,6 +1153,7 @@ etcd:
 
   # -- cilium-etcd-operator image.
   image:
+    override: ~
     repository: quay.io/cilium/cilium-etcd-operator
     tag: v2.0.7
     pullPolicy: IfNotPresent
@@ -1220,16 +1256,17 @@ operator:
 
   # -- cilium-operator image.
   image:
+    override: ~
     repository: quay.io/cilium/operator
-    tag: v1.10.7
+    tag: v1.10.20
     # operator-generic-digest
-    genericDigest: "sha256:d0b491d8d8cb45862ed7f0410f65e7c141832f0f95262643fa5ff1edfcddcafe"
+    genericDigest: "sha256:f7a07e674687fc4be01168409eeed0986ed7cb19c8d966501507fd24b9f6bd98"
     # operator-azure-digest
-    azureDigest: "sha256:556d692b2f08822101c159d9d6f731efe6c437d2b80f0ef96813e8745203c852"
+    azureDigest: "sha256:e870bbafecec3529961fa8e494159d365c92eabbd3597145fca582e1cc3fd2ec"
     # operator-aws-digest
-    awsDigest: "sha256:97b378e0e3b6b5ade6ae1706024c7a25fe6fc48e00102b65a6b7ac51d6327f40"
+    awsDigest: "sha256:73ed66f6ec9363441591b3c60c19834089ad0c0138e47a2de3497e5e7282b6c7"
     # operator-alibabacloud-digest
-    alibabacloudDigest: "sha256:7a6ccc99195ae6a8216d2a1e1e0cc05d49c2d263b194895da264899fe9d0f45a"
+    alibabacloudDigest: "sha256:6174f8d45a1ee99c650ca4792e8cecd5a654e9620cc2383e546e843660092e2e"
     useDigest: true
     pullPolicy: IfNotPresent
     suffix: ""
@@ -1334,6 +1371,12 @@ operator:
   # -- Interval for endpoint garbage collection.
   endpointGCInterval: "5m0s"
 
+  # -- Interval for cilium node garbage collection.
+  nodeGCInterval: "5m0s"
+
+  # -- Skip CNP node status clean up at operator startup.
+  skipCNPStatusStartupClean: false
+
   # -- Interval for identity garbage collection.
   identityGCInterval: "15m0s"
 
@@ -1352,10 +1395,26 @@ operator:
       enabled: false
       # -- Labels to add to ServiceMonitor cilium-operator
       labels: {}
+      # -- Annotations to add to ServiceMonitor cilium-operator
+      annotations: {}
 
   # -- Skip CRDs creation for cilium-operator
   skipCRDCreation: false
 
+  # -- Remove Cilium node taint from Kubernetes nodes that have a healthy Cilium
+  # pod running.
+  removeNodeTaints: true
+
+  # -- Set Node condition NetworkUnavailable to 'false' with the reason
+  # 'CiliumIsUp' for nodes that have a healthy Cilium pod.
+  setNodeNetworkStatus: true
+
+  unmanagedPodWatcher:
+    # -- Restart any pod that are not managed by Cilium.
+    restart: true
+    # -- Interval, in seconds, to check if there are any pods that are not
+    # managed by Cilium.
+    intervalSeconds: 15
 
 nodeinit:
   # -- Enable the node initialization DaemonSet
@@ -1363,6 +1422,7 @@ nodeinit:
 
   # -- node-init image.
   image:
+    override: ~
     repository: quay.io/cilium/startup-script
     tag: 62bfbe88c17778aad7bef9fa57ff9e2d4a9ba0d8
     pullPolicy: IfNotPresent
@@ -1438,7 +1498,7 @@ nodeinit:
 
   # -- bootstrapFile is the location of the file where the bootstrap timestamp is
   # written by the node-init DaemonSet
-  bootstrapFile: "/tmp/cilium-bootstrap-time"
+  bootstrapFile: "/tmp/cilium-bootstrap.d/cilium-bootstrap-time"
 
 preflight:
   # -- Enable Cilium pre-flight resources (required for upgrade)
@@ -1447,9 +1507,9 @@ preflight:
   # -- Cilium pre-flight image.
   image:
     repository: quay.io/cilium/cilium
-    tag: v1.10.7
+    tag: v1.10.20
     # cilium-digest
-    digest: "sha256:e23f55e80e1988db083397987a89967aa204ad6fc32da243b9160fbcea29b0ca"
+    digest: "sha256:c9b3af1f9c405cc8dcb163af0e0ea0a376a9f62304501c9392d26e91178d7869"
     useDigest: true
     pullPolicy: IfNotPresent
 
@@ -1555,13 +1615,40 @@ clustermesh:
   # -- Deploy clustermesh-apiserver for clustermesh
   useAPIServer: false
 
+  # -- Clustermesh explicit configuration.
+  config:
+    # -- Enable the Clustermesh explicit configuration.
+    enabled: false
+    # -- Default dns domain for the Clustermesh API servers
+    # This is used in the case cluster addresses are not provided
+    # and IPs are used.
+    domain: mesh.cilium.io
+    # -- List of clusters to be peered in the mesh.
+    clusters: []
+    # clusters: 
+    # # -- Name of the cluster
+    # - name: cluster1
+    # # -- Address of the cluster, use this if you created DNS records for
+    # # the cluster Clustermesh API server.
+    #   address: cluster1.mesh.cilium.io 
+    # # -- Port of the cluster Clustermesh API server.
+    #   port: 2379
+    # # -- IPs of the cluster Clustermesh API server, use multiple ones when
+    # # you have multiple IPs to access the Clustermesh API server.
+    #   ips:
+    #   - 172.18.255.201
+    # # -- base64 encoded PEM values for the cluster client certificate, private key and certificate authority.
+    #   tls:
+    #     cert: ""
+    #     key: ""
+
   apiserver:
     # -- Clustermesh API server image.
     image:
       repository: quay.io/cilium/clustermesh-apiserver
-      tag: v1.10.7
+      tag: v1.10.20
       # clustermesh-apiserver-digest
-      digest: "sha256:9afb0a15afffdf84812c8174df9de86e35239fb87a6ffd9539877a9e643d8132"
+      digest: "sha256:0c38519ec0c1462ceef9c58e008c9a36ee0633d3ad6c3fd860bfd20418987fe6"
       useDigest: true
       pullPolicy: IfNotPresent
 

@@ -54,10 +54,10 @@ annotations:
         the cluster which are managed by Cilium, including enforcement status,
         IP addressing and whether the networking is succesfully operational.
 apiVersion: v2
-appVersion: 1.10.7
+appVersion: 1.10.20
 description: eBPF-based Networking, Security, and Observability
 home: https://cilium.io/
-icon: https://cdn.jsdelivr.net/gh/cilium/cilium@v1.10.7/Documentation/images/logo-solo.svg
+icon: https://cdn.jsdelivr.net/gh/cilium/cilium@v1.10.20/Documentation/images/logo-solo.svg
 keywords:
 - BPF
 - eBPF
@@ -70,4 +70,4 @@ kubeVersion: '>= 1.16.0-0'
 name: cilium
 sources:
 - https://github.com/cilium/cilium
-version: 1.10.7
+version: 1.10.20
