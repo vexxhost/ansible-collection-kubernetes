@@ -21,6 +21,9 @@ kubernetes_control_plane_group: controllers
 # TODO(mnaser): We should remove this at some point.
 kubernetes_repository_apt: "deb https://apt.kubernetes.io/ kubernetes-xenial main"
 
+# Kubernetes image repository (leave undefined to use the `kubeadm` default)
+# kubernetes_image_repository:
+
 # Deprecated: Please use "kubelet_node_ip" instead.
 kubernetes_node_ip: "{{ kubelet_node_ip }}"
 
