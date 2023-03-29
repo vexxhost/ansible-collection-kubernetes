@@ -127,4 +127,4 @@
   # NOTE(mnaser): This is to allow our tests to run on Docker containers since
   #               you cannot edit the `/etc/hosts` file.
   when:
-    - ansible_connection != "community.docker.docker"
+    - '"docker" not in ansible_connection'

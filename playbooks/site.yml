@@ -15,6 +15,7 @@
 - name: Configure Kubernetes VIP
   hosts: "{{ kubernetes_control_plane_group | default('controllers') }}"
   become: true
+  strategy: "{{ kubernetes_strategy | default('serverscom.mitogen.mitogen_linear') }}"
   roles:
     - role: keepalived
       tags:
@@ -27,6 +28,7 @@
 - name: Install Kubernetes
   hosts: "{{ kubernetes_group | default('all') }}"
   become: true
+  strategy: "{{ kubernetes_strategy | default('serverscom.mitogen.mitogen_linear') }}"
   roles:
     - role: containerd
       tags:
@@ -39,6 +41,7 @@
 - name: Install control-plane components
   hosts: "{{ kubernetes_control_plane_group | default('controllers') }}"
   become: true
+  strategy: "{{ kubernetes_strategy | default('serverscom.mitogen.mitogen_linear') }}"
   roles:
     - role: helm
       tags:

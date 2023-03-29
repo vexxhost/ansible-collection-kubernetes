@@ -62,7 +62,7 @@ kind: KubeletConfiguration
 apiVersion: kubeproxy.config.k8s.io/v1alpha1
 kind: KubeProxyConfiguration
 metricsBindAddress: 0.0.0.0
-{% if ansible_connection == "community.docker.docker" %}
+{% if 'docker' in ansible_connection %}
 conntrack:
   maxPerCore: 0
 {% endif %}

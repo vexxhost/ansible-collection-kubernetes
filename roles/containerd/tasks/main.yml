@@ -48,7 +48,7 @@
   # NOTE(mnaser): This is to allow our tests to run on Docker containers since
   #               the "/var/lib/containerd" directory cannot be mounted inside
   #               an "overlayfs" filesystem.
-  when: ansible_connection == "community.docker.docker"
+  when: '"docker" in ansible_connection'
   block:
     - name: Generate a 20G file for "/var/lib/containers"
       ansible.builtin.command: truncate -s 20G /var/lib/containerd.img

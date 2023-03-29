@@ -1,5 +1,6 @@
-ansible-core
+ansible-core>=2.13.8,<2.14
 docker-image-py
+git+https://github.com/mitogen-hq/mitogen@330375b#egg=mitogen
 molecule
 molecule-plugins[docker]
 pytest
