@@ -51,7 +51,3 @@
     # - role: csi
     #   tags:
     #     - csi
-
-    - role: flux
-      tags:
-        - flux
