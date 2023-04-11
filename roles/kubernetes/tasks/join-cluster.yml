@@ -12,11 +12,6 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-- name: Check if the node is already part of the cluster
-  ansible.builtin.stat:
-    path: /etc/kubernetes/kubelet.conf
-  register: kubernetes_kubelet_stat
-
 - name: Generate control-plane certificates for joining cluster
   run_once: true
   delegate_to: "{{ kubernetes_bootstrap_node | default(groups[kubernetes_control_plane_group][0]) }}"
@@ -24,7 +19,6 @@
   changed_when: false
   register: kubernetes_kubeadm_init_upload_certs
   when:
-    - not kubernetes_kubelet_stat.stat.exists
     - inventory_hostname in groups[kubernetes_control_plane_group]
 
 - name: Retrieve SHA256 certificate hash
@@ -33,8 +27,6 @@
   community.crypto.x509_certificate_info:
     path: /etc/kubernetes/pki/ca.crt
   register: kubernetes_kubeadm_certificate_info
-  when:
-    - not kubernetes_kubelet_stat.stat.exists
 
 - name: Generate token for joining cluster
   run_once: true
@@ -43,8 +35,6 @@
   ansible.builtin.shell: |
     kubeadm token create
   register: kubernetes_kubeadm_token_create
-  when:
-    - not kubernetes_kubelet_stat.stat.exists
 
 - name: Upload kubeadm configuration
   ansible.builtin.template:
@@ -53,8 +43,6 @@
     owner: root
     group: root
     mode: "0640"
-  when:
-    - not kubernetes_kubelet_stat.stat.exists
 
 - name: Join cluster
   ansible.builtin.shell: |

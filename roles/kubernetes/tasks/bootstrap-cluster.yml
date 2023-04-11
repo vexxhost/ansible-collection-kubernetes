@@ -109,6 +109,13 @@
     PATH: /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
   when: inventory_hostname == kubernetes_bootstrap_node
 
+- name: Check if the node is already part of the cluster
+  ansible.builtin.stat:
+    path: /etc/kubernetes/kubelet.conf
+  register: _stat_etc_kubernetes_kubelet_conf
+
 - name: Join cluster
   ansible.builtin.include_tasks: join-cluster.yml
-  when: inventory_hostname != kubernetes_bootstrap_node
+  when:
+    - inventory_hostname != kubernetes_bootstrap_node
+    - not _stat_etc_kubernetes_kubelet_conf.stat.exists
