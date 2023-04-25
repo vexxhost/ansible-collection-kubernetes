@@ -22,7 +22,7 @@ containerd_archive_checksums:
     1.7.0: e7e5be2d9c92e076f1e2e15c9f0a6e0609ddb75f7616999b843cba92d01e4da2
 
 containerd_download_url: "https://github.com/containerd/containerd/releases/download/v{{ containerd_version }}/containerd-{{ containerd_version }}-{{ ansible_system | lower }}-{{ download_artifact_goarch }}.tar.gz" # noqa: yaml[line-length]
-containerd_download_dest: "{{ download_artifact_work_directory }}/containerd-{{ containerd_version }}-{{ ansible_system | lower }}-{{ download_artifact_goarch }}.tar.gz"
+containerd_download_dest: "{{ download_artifact_work_directory }}/containerd-{{ containerd_version }}-{{ ansible_system | lower }}-{{ download_artifact_goarch }}.tar.gz" # noqa: yaml[line-length]
 containerd_archive_checksum: "{{ containerd_archive_checksums[download_artifact_goarch][containerd_version] }}"
 
 containerd_pause_image: registry.k8s.io/pause:3.8
