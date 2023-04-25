@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.0](https://github.com/vexxhost/ansible-collection-kubernetes/compare/v1.4.0...v1.5.0) (2023-04-25)
+
+
+### Features
+
+* add capi ([6f5a8f1](https://github.com/vexxhost/ansible-collection-kubernetes/commit/6f5a8f149c043e8ad285f34eab0a0e247dd7cb4b))
+
 ## [1.3.3](https://github.com/vexxhost/ansible-collection-kubernetes/compare/v1.3.2...v1.3.3) (2023-03-28)
 
 
