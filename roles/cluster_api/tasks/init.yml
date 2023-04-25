@@ -1,0 +1,25 @@
+# Copyright (c) 2023 VEXXHOST, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
+
+- name: Initialize the management cluster
+  run_once: true
+  changed_when: true
+  ansible.builtin.command: |
+    {{ clusterctl_download_dest }} init \
+      --config {{ clusterctl_config_file }} \
+      --core {{ cluster_api_core_provider }}:v{{ cluster_api_core_version }} \
+      --bootstrap {{ cluster_api_bootstrap_provider }}:v{{ cluster_api_bootstrap_version }} \
+      --control-plane {{ cluster_api_control_plane_provider }}:v{{ cluster_api_control_plane_version }} \
+      --infrastructure {{ cluster_api_infrastructure_provider }}:v{{ cluster_api_infrastructure_version }}
+  environment: "{{ _cluster_api_environment }}"

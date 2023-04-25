@@ -1,0 +1,39 @@
+# Copyright (c) 2023 VEXXHOST, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
+
+- name: Parse provider resources into version mapping
+  run_once: true
+  ansible.builtin.set_fact:
+    # noqa: yaml[line-length]
+    _cluster_api_core_version: "{{ _cluster_api_providers.resources | selectattr('type', 'equalto', 'CoreProvider') | map(attribute='version') | first | regex_replace('^v', '') }}"
+    _cluster_api_bootstrap_version: "{{ _cluster_api_providers.resources | selectattr('type', 'equalto', 'BootstrapProvider') | map(attribute='version') | first | regex_replace('^v', '') }}"
+    _cluster_api_control_plane_version: "{{ _cluster_api_providers.resources | selectattr('type', 'equalto', 'ControlPlaneProvider') | map(attribute='version') | first | regex_replace('^v', '') }}"
+    _cluster_api_infrastructure_version: "{{ _cluster_api_providers.resources | selectattr('type', 'equalto', 'InfrastructureProvider') | map(attribute='version') | first | regex_replace('^v', '') }}"
+
+- name: Run upgrade if required
+  run_once: true
+  changed_when: true
+  ansible.builtin.command: |
+    {{ clusterctl_download_dest }} upgrade apply \
+      --config {{ clusterctl_config_file }} \
+      --core capi-system/{{ cluster_api_core_provider }}:v{{ cluster_api_core_version }} \
+      --bootstrap capi-kubeadm-bootstrap-system/{{ cluster_api_bootstrap_provider }}:v{{ cluster_api_bootstrap_version }} \
+      --control-plane capi-kubeadm-control-plane-system/{{ cluster_api_control_plane_provider }}:v{{ cluster_api_control_plane_version }} \
+      --infrastructure capo-system/{{ cluster_api_infrastructure_provider }}:v{{ cluster_api_infrastructure_version }}
+  when:
+    _cluster_api_core_version != cluster_api_core_version or
+    _cluster_api_bootstrap_version != cluster_api_bootstrap_version or
+    _cluster_api_control_plane_version != cluster_api_control_plane_version or
+    _cluster_api_infrastructure_version != cluster_api_infrastructure_version
+  environment: "{{ _cluster_api_environment }}"
