@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.1](https://github.com/vexxhost/ansible-collection-kubernetes/compare/v1.5.0...v1.5.1) (2023-04-26)
+
+
+### Bug Fixes
+
+* **containerd:** bump to 100G ([858e977](https://github.com/vexxhost/ansible-collection-kubernetes/commit/858e977e4a8532a5375422f140cb120183ef6648))
+
 ## [1.5.0](https://github.com/vexxhost/ansible-collection-kubernetes/compare/v1.4.0...v1.5.0) (2023-04-25)
 
 
