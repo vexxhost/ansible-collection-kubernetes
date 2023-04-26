@@ -51,7 +51,7 @@
   when: ansible_connection == "community.docker.docker"
   block:
     - name: Generate a 20G file for "/var/lib/containers"
-      ansible.builtin.command: truncate -s 20G /var/lib/containerd.img
+      ansible.builtin.command: truncate -s 100G /var/lib/containerd.img
       args:
         creates: /var/lib/containerd.img
 
