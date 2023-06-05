@@ -30,9 +30,7 @@ containerd_insecure_registries: []
 
 # NOTE(mnaser): This is to accomodate for the uninstallation of the old packages
 #               that shipped with the operating system
-containerd_package_name:
-  - containerd
-  - containerd.io
+containerd_package_name: containerd
 
 containerd_binaries:
   - containerd
