@@ -6,6 +6,52 @@ Create chart name and version as used by the chart label.
 {{- end }}
 
 {{/*
+Render full image name from given values, e.g:
+```
+image:
+  repository: quay.io/cilium/cilium
+  tag: v1.10.1
+  useDigest: true
+  digest: abcdefgh
+```
+then `include "cilium.image" .Values.image`
+will return `quay.io/cilium/cilium:v1.10.1@abcdefgh`
+*/}}
+{{- define "cilium.image" -}}
+{{- $digest := (.useDigest | default false) | ternary (printf "@%s" .digest) "" -}}
+{{- if .override -}}
+{{- printf "%s" .override -}}
+{{- else -}}
+{{- printf "%s:%s%s" .repository .tag $digest -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
+Return user specify priorityClass or default criticalPriorityClass
+Usage:
+  include "cilium.priorityClass" (list $ <priorityClass> <criticalPriorityClass>)
+where:
+* `priorityClass`: is user specify priorityClass e.g `.Values.operator.priorityClassName`
+* `criticalPriorityClass`: default criticalPriorityClass, e.g `"system-cluster-critical"`
+  This value is used when `priorityClass` is `nil` and
+  `.Values.enableCriticalPriorityClass=true` and kubernetes supported it.
+*/}}
+{{- define "cilium.priorityClass" -}}
+{{- $root := index . 0 -}}
+{{- $priorityClass := index . 1 -}}
+{{- $criticalPriorityClass := index . 2 -}}
+{{- if $priorityClass }}
+  {{- $priorityClass }}
+{{- else if and $root.Values.enableCriticalPriorityClass $criticalPriorityClass -}}
+  {{- if and (eq $root.Release.Namespace "kube-system") (semverCompare ">=1.10-0" $root.Capabilities.KubeVersion.Version) -}}
+    {{- $criticalPriorityClass }}
+  {{- else if semverCompare ">=1.17-0" $root.Capabilities.KubeVersion.Version -}}
+    {{- $criticalPriorityClass }}
+  {{- end -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
 Return the appropriate apiVersion for ingress.
 */}}
 {{- define "ingress.apiVersion" -}}
@@ -34,111 +80,77 @@ backend:
 {{- end -}}
 {{- end -}}
 
+{{/*
+Return the appropriate apiVersion for cronjob.
+*/}}
+{{- define "cronjob.apiVersion" -}}
+{{- if semverCompare ">=1.21-0" .Capabilities.KubeVersion.Version -}}
+{{- print "batch/v1" -}}
+{{- else -}}
+{{- print "batch/v1beta1" -}}
+{{- end -}}
+{{- end -}}
 
 {{/*
-Generate TLS certificates for Hubble Server and Hubble Relay.
-
-Note: these 2 lines, that are repeated several times below, are a trick to
-ensure the CA certs are generated only once:
-
-    $ca := .ca | default (genCA "hubble-ca.cilium.io" (.Values.hubble.tls.auto.certValidityDuration | int))
-    $_ := set . "ca" $ca
-
-Please, don't try to "simplify" them as without this trick, every generated
-certificate would be signed by a different CA.
+Return the appropriate apiVersion for podDisruptionBudget.
 */}}
-{{- define "hubble.ca.gen-cert-only" }}
-{{- $ca := .ca | default (genCA "hubble-ca.cilium.io" (.Values.hubble.tls.auto.certValidityDuration | int)) -}}
-{{- $_ := set . "ca" $ca -}}
-ca.crt: |-
-{{ $ca.Cert | indent 2 -}}
+{{- define "podDisruptionBudget.apiVersion" -}}
+{{- if semverCompare ">=1.21-0" .Capabilities.KubeVersion.Version -}}
+{{- print "policy/v1" -}}
+{{- else -}}
+{{- print "policy/v1beta1" -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
+Generate TLS CA for Cilium
+Note: Always use this template as follows:
+    {{- $_ := include "cilium.ca.setup" . -}}
+
+The assignment to `$_` is required because we store the generated CI in a global `commonCA`
+and `commonCASecretName` variables.
+
+*/}}
+{{- define "cilium.ca.setup" }}
+  {{- if not .commonCA -}}
+    {{- $ca := "" -}}
+    {{- $secretName := "cilium-ca" -}}
+    {{- $crt := .Values.tls.ca.cert -}}
+    {{- $key := .Values.tls.ca.key -}}
+    {{- if and $crt $key }}
+      {{- $ca = buildCustomCert $crt $key -}}
+    {{- else }}
+      {{- with lookup "v1" "Secret" .Release.Namespace $secretName }}
+        {{- $crt := index .data "ca.crt" }}
+        {{- $key := index .data "ca.key" }}
+        {{- $ca = buildCustomCert $crt $key -}}
+      {{- else }}
+        {{- $validity := ( .Values.tls.ca.certValidityDuration | int) -}}
+        {{- $ca = genCA "Cilium CA" $validity -}}
+      {{- end }}
+    {{- end -}}
+    {{- $_ := set (set . "commonCA" $ca) "commonCASecretName" $secretName -}}
+  {{- end -}}
+{{- end -}}
+
+{{/*
+Check if duration is non zero value, return duration, empty when zero.
+*/}}
+{{- define "hasDuration" }}
+{{- $now := now }}
+{{- if ne $now ($now | dateModify (toString .)) }}
+{{- . }}
 {{- end }}
-{{- define "hubble.server.gen-certs" }}
-{{- $ca := .ca | default (genCA "hubble-ca.cilium.io" (.Values.hubble.tls.auto.certValidityDuration | int)) -}}
-{{- $_ := set . "ca" $ca -}}
-{{- $cn := list "*" (.Values.cluster.name | replace "." "-") "hubble-grpc.cilium.io" | join "." }}
-{{- $cert := genSignedCert $cn nil (list $cn) (.Values.hubble.tls.auto.certValidityDuration | int) $ca -}}
-ca.crt: {{ $ca.Cert | b64enc }}
-tls.crt: {{ $cert.Cert | b64enc }}
-tls.key: {{ $cert.Key | b64enc }}
-{{- end }}
-{{- define "hubble.relay.gen-certs" }}
-{{- $ca := .ca | default (genCA "hubble-ca.cilium.io" (.Values.hubble.tls.auto.certValidityDuration | int)) -}}
-{{- $_ := set . "ca" $ca -}}
-{{- $cert := genSignedCert "*.hubble-relay.cilium.io" nil (list "*.hubble-relay.cilium.io") (.Values.hubble.tls.auto.certValidityDuration | int) $ca -}}
-ca.crt: {{ $ca.Cert | b64enc }}
-tls.crt: {{ $cert.Cert | b64enc }}
-tls.key: {{ $cert.Key | b64enc }}
 {{- end }}
 
-{{/* Generate CA "vmca" for clustermesh-apiserver in the global dict. */}}
-{{- define "clustermesh.apiserver.generate.ca" }}
-{{- $ca := .cmca | default (genCA "clustermesh-apiserver-ca.cilium.io" (.Values.clustermesh.apiserver.tls.auto.certValidityDuration | int)) -}}
-{{- $_ := set . "cmca" $ca -}}
+{{/*
+Validate duration field, return validated duration, 0s when provided duration is empty.
+*/}}
+{{- define "validateDuration" }}
+{{- if . }}
+{{- $_ := now | mustDateModify (toString .) }}
+{{- . }}
+{{- else -}}
+0s
 {{- end }}
-
-{{/* Generate CA certificate clustermesh-apiserver. */}}
-{{- define "clustermesh.apiserver.ca.gen-cert" }}
-{{- template "clustermesh.apiserver.generate.ca" . -}}
-ca.crt: {{ .cmca.Cert | b64enc }}
-ca.key: {{ .cmca.Key | b64enc }}
-{{- end }}
-
-{{/* Generate server certificate clustermesh-apiserver. */}}
-{{- define "clustermesh.apiserver.server.gen-cert" }}
-{{- template "clustermesh.apiserver.generate.ca" . }}
-{{- $CN := "clustermesh-apiserver.cilium.io" }}
-{{- $IPs := (list "127.0.0.1") }}
-{{- $SANs := (list $CN "*.mesh.cilium.io") }}
-{{- $cert := genSignedCert $CN $IPs $SANs (.Values.clustermesh.apiserver.tls.auto.certValidityDuration | int) .cmca -}}
-ca.crt: {{ .cmca.Cert | b64enc }}
-tls.crt: {{ $cert.Cert | b64enc }}
-tls.key: {{ $cert.Key | b64enc }}
-{{- end }}
-
-{{/* Generate admin certificate clustermesh-apiserver. */}}
-{{- define "clustermesh.apiserver.admin.gen-cert" }}
-{{- template "clustermesh.apiserver.generate.ca" . }}
-{{- $CN := "root" }}
-{{- $SANs := (list "localhost") }}
-{{- $cert := genSignedCert $CN nil $SANs (.Values.clustermesh.apiserver.tls.auto.certValidityDuration | int) .cmca -}}
-ca.crt: {{ .cmca.Cert | b64enc }}
-tls.crt: {{ $cert.Cert | b64enc }}
-tls.key: {{ $cert.Key | b64enc }}
-{{- end }}
-
-{{/* Generate client certificate clustermesh-apiserver. */}}
-{{- define "clustermesh.apiserver.client.gen-cert" }}
-{{- template "clustermesh.apiserver.generate.ca" . }}
-{{- $CN := "externalworkload" }}
-{{- $cert := genSignedCert $CN nil nil (.Values.clustermesh.apiserver.tls.auto.certValidityDuration | int) .cmca -}}
-ca.crt: {{ .cmca.Cert | b64enc }}
-tls.crt: {{ $cert.Cert | b64enc }}
-tls.key: {{ $cert.Key | b64enc }}
-{{- end }}
-
-{{/* Generate remote certificate clustermesh-apiserver. */}}
-{{- define "clustermesh.apiserver.remote.gen-cert" }}
-{{- template "clustermesh.apiserver.generate.ca" . }}
-{{- $CN := "remote" }}
-{{- $cert := genSignedCert $CN nil nil (.Values.clustermesh.apiserver.tls.auto.certValidityDuration | int) .cmca -}}
-ca.crt: {{ .cmca.Cert | b64enc }}
-tls.crt: {{ $cert.Cert | b64enc }}
-tls.key: {{ $cert.Key | b64enc }}
-{{- end }}
-
-{{/* Generate endpoints for clustermesh secret. */}}
-{{- define "clustermesh-config-generate-etcd-cfg" }}
-{{- $cluster := index . 0 -}}
-{{- $domain := index . 1 -}}
-
-endpoints:
-{{- if $cluster.ips }}
-- https://{{ $cluster.name }}.{{ $domain }}:{{ $cluster.port }}
-{{ else }}
-- https://{{ $cluster.address | required "missing clustermesh.apiserver.config.clusters.address" }}:{{ $cluster.port }}
-{{- end }}
-trusted-ca-file: /var/lib/cilium/clustermesh/{{ $cluster.name }}.etcd-client-ca.crt
-key-file: /var/lib/cilium/clustermesh/{{ $cluster.name }}.etcd-client.key
-cert-file: /var/lib/cilium/clustermesh/{{ $cluster.name }}.etcd-client.crt
 {{- end }}
