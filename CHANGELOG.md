@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.6.0](https://github.com/vexxhost/ansible-collection-kubernetes/compare/v1.5.1...v1.6.0) (2023-06-22)
+
+
+### Features
+
+* **role:cilium:** Upgrade cilium version ([e783aad](https://github.com/vexxhost/ansible-collection-kubernetes/commit/e783aad4190a797c3037849f176e07b179aace23))
+
+
+### Bug Fixes
+
+* **containerd:** properly forget package ([2bbb2f7](https://github.com/vexxhost/ansible-collection-kubernetes/commit/2bbb2f7eb9c96c48df8cde99d57a2d74fc5f95b8))
+
 ## [1.5.1](https://github.com/vexxhost/ansible-collection-kubernetes/compare/v1.5.0...v1.5.1) (2023-04-26)
 
 
