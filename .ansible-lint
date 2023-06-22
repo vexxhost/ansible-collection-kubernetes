@@ -3,3 +3,5 @@ exclude_paths:
   - .github
   - charts
   - molecule
+skip_list:
+  - role-name
