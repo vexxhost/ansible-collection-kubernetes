@@ -44,6 +44,12 @@
       ansible.builtin.command: helm env HELM_PLUGINS
       register: _helm_plugins_path
 
+    - name: Create helm plugins directory if it does not exist
+      ansible.builtin.file:
+        path: "{{ _helm_plugins_path.stdout }}"
+        state: directory
+        mode: "0755"
+
     - name: Install plugin
       ansible.builtin.include_role:
         name: download_artifact
