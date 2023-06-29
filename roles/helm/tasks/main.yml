@@ -42,6 +42,7 @@
   block:
     - name: Get helm plugins dir
       ansible.builtin.command: helm env HELM_PLUGINS
+      changed_when: false
       register: _helm_plugins_path
 
     - name: Create helm plugins directory if it does not exist
