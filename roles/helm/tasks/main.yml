@@ -37,7 +37,20 @@
   ansible.builtin.package:
     name: "{{ helm_package_dependencies }}"
 
-- name: Install "helm-diff" plugin
-  kubernetes.core.helm_plugin:
-    plugin_path: https://github.com/databus23/helm-diff
-    state: present
+
+- name: Install helm diff plugin
+  block:
+    - name: Get helm plugins dir
+      ansible.builtin.command: helm env HELM_PLUGINS
+      register: _helm_plugins_path
+
+    - name: Install plugin
+      ansible.builtin.include_role:
+        name: download_artifact
+      vars:
+        download_artifact_url: "{{ helm_diff_plugin_download_url }}"
+        download_artifact_dest: "{{ helm_diff_plugin_download_dest }}"
+        download_artifact_owner: root
+        download_artifact_mode: "0755"
+        download_artifact_unarchive: true
+        download_artifact_unarchive_dest: "{{ _helm_plugins_path.stdout }}"
