@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.7.0](https://github.com/vexxhost/ansible-collection-kubernetes/compare/v1.6.0...v1.7.0) (2023-07-01)
+
+
+### Features
+
+* update CAPI release ([faf7048](https://github.com/vexxhost/ansible-collection-kubernetes/commit/faf7048aa167314b850b1b4fff817472d5688b4c))
+
+
+### Bug Fixes
+
+* add checksums + linters ([e1956c1](https://github.com/vexxhost/ansible-collection-kubernetes/commit/e1956c1d0e32835ff5f9ebb877ec4911459277bc))
+
 ## [1.6.0](https://github.com/vexxhost/ansible-collection-kubernetes/compare/v1.5.1...v1.6.0) (2023-06-22)
 
 
