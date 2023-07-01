@@ -27,8 +27,8 @@
     force_basic_auth: "{{ download_artifact_force_basic_auth | default(omit) }}"
     url_username: "{{ download_artifact_url_username | default(omit) }}"
     url_password: "{{ download_artifact_url_password | default(omit) }}"
-  register: _download_artifact_result
-  until: _download_artifact_result is succeeded
+  register: download_artifact_result
+  until: download_artifact_result is succeeded
   retries: 4
   # NOTE(fitbeard): This task will avoid logging it's parameters to not leak
   #                 environment passwords in the log.

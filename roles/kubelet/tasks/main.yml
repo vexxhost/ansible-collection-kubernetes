@@ -73,14 +73,14 @@
     - name: Check swap status
       ansible.builtin.command: /sbin/swapon -s
       changed_when: false
-      register: _swapon
+      register: kubelet_swapon
 
     - name: Disable swap
       ansible.builtin.command: /sbin/swapoff -a
       changed_when: true
       ignore_errors: "{{ ansible_check_mode }}"
       when:
-        - _swapon.stdout
+        - kubelet_swapon.stdout
 
     - name: Remove swapfile from /etc/fstab
       ansible.posix.mount:

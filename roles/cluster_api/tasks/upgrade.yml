@@ -15,10 +15,10 @@
 - name: Parse provider resources into version mapping
   run_once: true
   ansible.builtin.set_fact:
-    _cluster_api_core_version: "{{ _cluster_api_providers.resources | selectattr('type', 'equalto', 'CoreProvider') | map(attribute='version') | first | regex_replace('^v', '') }}" # noqa: yaml[line-length]
-    _cluster_api_bootstrap_version: "{{ _cluster_api_providers.resources | selectattr('type', 'equalto', 'BootstrapProvider') | map(attribute='version') | first | regex_replace('^v', '') }}" # noqa: yaml[line-length]
-    _cluster_api_control_plane_version: "{{ _cluster_api_providers.resources | selectattr('type', 'equalto', 'ControlPlaneProvider') | map(attribute='version') | first | regex_replace('^v', '') }}" # noqa: yaml[line-length]
-    _cluster_api_infrastructure_version: "{{ _cluster_api_providers.resources | selectattr('type', 'equalto', 'InfrastructureProvider') | map(attribute='version') | first | regex_replace('^v', '') }}" # noqa: yaml[line-length]
+    cluster_api_installed_core_version: "{{ cluster_api_providers.resources | selectattr('type', 'equalto', 'CoreProvider') | map(attribute='version') | first | regex_replace('^v', '') }}" # noqa: yaml[line-length]
+    cluster_api_installed_bootstrap_version: "{{ cluster_api_providers.resources | selectattr('type', 'equalto', 'BootstrapProvider') | map(attribute='version') | first | regex_replace('^v', '') }}" # noqa: yaml[line-length]
+    cluster_api_installed_control_plane_version: "{{ cluster_api_providers.resources | selectattr('type', 'equalto', 'ControlPlaneProvider') | map(attribute='version') | first | regex_replace('^v', '') }}" # noqa: yaml[line-length]
+    cluster_api_installed_infrastructure_version: "{{ cluster_api_providers.resources | selectattr('type', 'equalto', 'InfrastructureProvider') | map(attribute='version') | first | regex_replace('^v', '') }}" # noqa: yaml[line-length]
 
 - name: Run upgrade if required
   run_once: true
@@ -31,8 +31,8 @@
       --control-plane capi-kubeadm-control-plane-system/{{ cluster_api_control_plane_provider }}:v{{ cluster_api_control_plane_version }} \
       --infrastructure capo-system/{{ cluster_api_infrastructure_provider }}:v{{ cluster_api_infrastructure_version }}
   when:
-    _cluster_api_core_version != cluster_api_core_version or
-    _cluster_api_bootstrap_version != cluster_api_bootstrap_version or
-    _cluster_api_control_plane_version != cluster_api_control_plane_version or
-    _cluster_api_infrastructure_version != cluster_api_infrastructure_version
+    cluster_api_installed_core_version != cluster_api_core_version or
+    cluster_api_installed_bootstrap_version != cluster_api_bootstrap_version or
+    cluster_api_installed_control_plane_version != cluster_api_control_plane_version or
+    cluster_api_installed_infrastructure_version != cluster_api_infrastructure_version
   environment: "{{ _cluster_api_environment }}"
