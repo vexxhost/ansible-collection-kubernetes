@@ -38,7 +38,7 @@
         mode: "0755"
 
     - name: Install plugin
-      ansible.builtin.include_role:
+      ansible.builtin.include_role: # noqa: var-naming[no-role-prefix]
         name: download_artifact
       vars:
         download_artifact_url: "{{ helm_diff_download_url }}"
