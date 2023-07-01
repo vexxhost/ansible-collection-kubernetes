@@ -29,3 +29,14 @@ helm_binary_checksum: "{{ helm_checksums[download_artifact_goarch][helm_version]
 #               that shipped with the operating system
 helm_package_name: helm
 helm_repository_apt: "deb https://baltocdn.com/helm/stable/debian/ all main"
+
+helm_diff_version: v3.8.1
+helm_diff_checksums:
+  amd64:
+    v3.8.1: f78867edfde60e2506e3228f706beaf96d1ae3ee5f169f42315acbd513794078
+  arm64:
+    v3.8.1: d451e4772a3987710f485de4caed760583c88f8f15864a623b3fbd73be7077ec
+
+helm_diff_download_url: "https://github.com/databus23/helm-diff/releases/download/{{ helm_diff_version }}/helm-diff-{{ ansible_system | lower }}-{{ download_artifact_goarch }}.tgz" # noqa: yaml[line-length]
+helm_diff_download_dest: "{{ download_artifact_work_directory }}/helm-diff-{{ ansible_system | lower }}-{{ download_artifact_goarch }}.tgz"
+helm_diff_checksum: "{{ helm_diff_checksums[download_artifact_goarch][helm_diff_version] }}"

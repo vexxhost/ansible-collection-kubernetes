@@ -12,15 +12,6 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-- name: Gather variables for each operating system
-  ansible.builtin.include_vars: "{{ item }}"
-  with_first_found:
-    - "{{ ansible_facts['distribution'] | lower }}-{{ ansible_facts['distribution_version'] | lower }}.yml"
-    - "{{ ansible_facts['distribution'] | lower }}-{{ ansible_facts['distribution_major_version'] | lower }}.yml"
-    - "{{ ansible_facts['os_family'] | lower }}-{{ ansible_facts['distribution_major_version'] | lower }}.yml"
-    - "{{ ansible_facts['distribution'] | lower }}.yml"
-    - "{{ ansible_facts['os_family'] | lower }}.yml"
-
 - name: Remove Helm repository
   ansible.builtin.apt_repository:
     repo: "{{ helm_repository_apt }}"
@@ -33,11 +24,27 @@
     line: "source <(helm completion bash)"
     insertbefore: EOF
 
-- name: Install additional packages
-  ansible.builtin.package:
-    name: "{{ helm_package_dependencies }}"
-
 - name: Install "helm-diff" plugin
-  kubernetes.core.helm_plugin:
-    plugin_path: https://github.com/databus23/helm-diff
-    state: present
+  block:
+    - name: Get Helm plugins dir
+      ansible.builtin.command: helm env HELM_PLUGINS
+      changed_when: false
+      register: helm_plugins_path
+
+    - name: Create Helm plugins directory if it does not exist
+      ansible.builtin.file:
+        path: "{{ helm_plugins_path.stdout }}"
+        state: directory
+        mode: "0755"
+
+    - name: Install plugin
+      ansible.builtin.include_role: # noqa: var-naming[no-role-prefix]
+        name: download_artifact
+      vars:
+        download_artifact_url: "{{ helm_diff_download_url }}"
+        download_artifact_dest: "{{ helm_diff_download_dest }}"
+        download_artifact_checksum: "sha256:{{ helm_diff_checksum }}"
+        download_artifact_owner: root
+        download_artifact_mode: "0755"
+        download_artifact_unarchive: true
+        download_artifact_unarchive_dest: "{{ helm_plugins_path.stdout }}"
