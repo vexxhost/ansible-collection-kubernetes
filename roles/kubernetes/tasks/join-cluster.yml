@@ -42,7 +42,7 @@
   changed_when: true
   ansible.builtin.shell: |
     kubeadm token create
-  register: _kubeadm_token_create
+  register: kubernetes_kubeadm_token_create
   when:
     - not kubernetes_kubelet_stat.stat.exists
 
