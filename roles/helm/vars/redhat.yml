@@ -1,3 +1,0 @@
-helm_package_dependencies:
-  - curl
-  - git

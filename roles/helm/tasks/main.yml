@@ -12,15 +12,6 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-- name: Gather variables for each operating system
-  ansible.builtin.include_vars: "{{ item }}"
-  with_first_found:
-    - "{{ ansible_facts['distribution'] | lower }}-{{ ansible_facts['distribution_version'] | lower }}.yml"
-    - "{{ ansible_facts['distribution'] | lower }}-{{ ansible_facts['distribution_major_version'] | lower }}.yml"
-    - "{{ ansible_facts['os_family'] | lower }}-{{ ansible_facts['distribution_major_version'] | lower }}.yml"
-    - "{{ ansible_facts['distribution'] | lower }}.yml"
-    - "{{ ansible_facts['os_family'] | lower }}.yml"
-
 - name: Remove Helm repository
   ansible.builtin.apt_repository:
     repo: "{{ helm_repository_apt }}"
@@ -32,11 +23,6 @@
     path: /root/.bashrc
     line: "source <(helm completion bash)"
     insertbefore: EOF
-
-- name: Install additional packages
-  ansible.builtin.package:
-    name: "{{ helm_package_dependencies }}"
-
 
 - name: Install "helm-diff" plugin
   block:
