@@ -15,7 +15,7 @@
 - name: Get current Kubernetes version
   kubernetes.core.k8s_cluster_info:
     kubeconfig: /etc/kubernetes/admin.conf
-  register: _cilium_k8s_cluster_info
+  register: cilium_k8s_cluster_info
 
 - name: Deploy Helm chart
   run_once: true

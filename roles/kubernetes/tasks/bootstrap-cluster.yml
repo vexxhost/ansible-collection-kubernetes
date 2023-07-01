@@ -17,20 +17,20 @@
     - name: Check if any control plane is bootstrapped
       ansible.builtin.stat:
         path: /etc/kubernetes/admin.conf
-      register: _kubernetes_stat
+      register: kubernetes_admin_conf_stat
       loop: "{{ groups[kubernetes_control_plane_group] }}"
       delegate_to: "{{ item }}"
       delegate_facts: true
 
 - name: Pick node from pre-existing cluster
   ansible.builtin.set_fact:
-    _kubernetes_bootstrap_node: "{{ _kubernetes_stat.results | selectattr('stat.exists', 'equalto', true) | map(attribute='item') | first }}"
-  when: _kubernetes_stat.results | selectattr('stat.exists', 'equalto', true) | length > 0
+    _kubernetes_bootstrap_node: "{{ kubernetes_admin_conf_stat.results | selectattr('stat.exists', 'equalto', true) | map(attribute='item') | first }}"
+  when: kubernetes_admin_conf_stat.results | selectattr('stat.exists', 'equalto', true) | length > 0
 
 - name: Select first node to initialize cluster
   ansible.builtin.set_fact:
     _kubernetes_bootstrap_node: "{{ groups[kubernetes_control_plane_group] | first }}"
-  when: _kubernetes_stat.results | selectattr('stat.exists', 'equalto', true) | length == 0
+  when: kubernetes_admin_conf_stat.results | selectattr('stat.exists', 'equalto', true) | length == 0
 
 - name: Print selected bootstrap node
   ansible.builtin.debug:
