@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.7.1](https://github.com/vexxhost/ansible-collection-kubernetes/compare/v1.7.0...v1.7.1) (2023-07-05)
+
+
+### Miscellaneous Chores
+
+* release 1.7.1 ([c80912b](https://github.com/vexxhost/ansible-collection-kubernetes/commit/c80912bf15c06ef98ecef9315438d3ee64549457))
+
 ## [1.7.0](https://github.com/vexxhost/ansible-collection-kubernetes/compare/v1.6.0...v1.7.0) (2023-07-01)
 
 
