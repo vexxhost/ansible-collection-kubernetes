@@ -26,6 +26,12 @@
 
 - name: Install "helm-diff" plugin
   block:
+    # Note(okozachenko1203): Remove legacy plugin to avoid two plugins claim the same name.
+    - name: Remove Helm diff plugin installed by kubernetes.core.helm_plugin
+      kubernetes.core.helm_plugin:
+        plugin_name: diff
+        state: absent
+
     - name: Get Helm plugins dir
       ansible.builtin.command: helm env HELM_PLUGINS
       changed_when: false
