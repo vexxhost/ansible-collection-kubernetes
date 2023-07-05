@@ -26,6 +26,7 @@
 
 - name: Install "helm-diff" plugin
   block:
+
     - name: Get Helm plugins dir
       ansible.builtin.command: helm env HELM_PLUGINS
       changed_when: false
@@ -36,6 +37,12 @@
         path: "{{ helm_plugins_path.stdout }}"
         state: directory
         mode: "0755"
+
+    # Note(okozachenko1203): Remove legacy plugin to avoid two plugins claim the same name.
+    - name: Remove Helm diff plugin installed by kubernetes.core.helm_plugin
+      ansible.builtin.file:
+        path: "{{ helm_plugins_path.stdout }}/helm-diff"
+        state: absent
 
     - name: Install plugin
       ansible.builtin.include_role: # noqa: var-naming[no-role-prefix]
