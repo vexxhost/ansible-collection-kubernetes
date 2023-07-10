@@ -117,13 +117,13 @@
 
 - name: Configure short hostname
   ansible.builtin.hostname:
-    name: "{{ inventory_hostname_short }}"
+    name: "{{ kubelet_hostname }}"
 
 - name: Ensure hostname inside hosts file
   ansible.builtin.lineinfile:
     path: /etc/hosts
     regexp: '^127\.0\.1\.1'
-    line: 127.0.1.1 {{ inventory_hostname }} {{ inventory_hostname_short }}
+    line: 127.0.1.1 {{ inventory_hostname }} {{ kubelet_hostname }}
   # NOTE(mnaser): This is to allow our tests to run on Docker containers since
   #               you cannot edit the `/etc/hosts` file.
   when:

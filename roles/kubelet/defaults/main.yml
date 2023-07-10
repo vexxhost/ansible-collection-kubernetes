@@ -60,3 +60,6 @@ kubelet_cri_socket: /run/containerd/containerd.sock
 
 # Node IP address
 kubelet_node_ip: "{{ ansible_default_ipv4.address }}"
+
+# Kubelet hostname
+kubelet_hostname: "{{ inventory_hostname_short }}"
