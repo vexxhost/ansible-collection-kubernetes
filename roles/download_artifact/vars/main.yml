@@ -18,8 +18,8 @@ _download_artifact_goarch_groups:
   armv7l: arm
 
 download_artifact_goarch: >-
-  {%- if ansible_architecture in _download_artifact_goarch_groups -%}
-  {{ _download_artifact_goarch_groups[ansible_architecture] }}
+  {%- if ansible_facts['architecture'] in _download_artifact_goarch_groups -%}
+  {{ _download_artifact_goarch_groups[ansible_facts['architecture']] }}
   {%- else -%}
-  {{ ansible_architecture }}
+  {{ ansible_facts['architecture'] }}
   {%- endif -%}

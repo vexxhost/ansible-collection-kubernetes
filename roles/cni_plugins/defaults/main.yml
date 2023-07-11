@@ -19,8 +19,8 @@ cni_plugins_checksums:
   arm64:
     v1.2.0: 525e2b62ba92a1b6f3dc9612449a84aa61652e680f7ebf4eff579795fe464b57
 
-cni_plugins_download_url: "https://github.com/containernetworking/plugins/releases/download/{{ cni_plugins_version }}/cni-plugins-{{ ansible_system | lower }}-{{ download_artifact_goarch }}-{{ cni_plugins_version }}.tgz" # noqa: yaml[line-length]
-cni_plugins_download_dest: "{{ download_artifact_work_directory }}/kubernetes-cni-{{ cni_plugins_version }}-{{ ansible_system | lower }}-{{ download_artifact_goarch }}.tgz" # noqa: yaml[line-length]
+cni_plugins_download_url: "https://github.com/containernetworking/plugins/releases/download/{{ cni_plugins_version }}/cni-plugins-{{ ansible_facts['system'] | lower }}-{{ download_artifact_goarch }}-{{ cni_plugins_version }}.tgz" # noqa: yaml[line-length]
+cni_plugins_download_dest: "{{ download_artifact_work_directory }}/kubernetes-cni-{{ cni_plugins_version }}-{{ ansible_facts['system'] | lower }}-{{ download_artifact_goarch }}.tgz" # noqa: yaml[line-length]
 cni_plugins_archive_checksum: "{{ cni_plugins_checksums[download_artifact_goarch][cni_plugins_version] }}"
 
 # NOTE(mnaser): This is to accomodate for the uninstallation of the old packages

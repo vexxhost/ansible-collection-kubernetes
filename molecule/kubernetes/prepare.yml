@@ -49,9 +49,9 @@
     - name: Install RHEL packages
       ansible.builtin.package:
         name:
-          # NOTE(mnaser): In order to get "ansible_default_ipv4"
+          # NOTE(mnaser): In order to get "ansible_facts['default_ipv4']"
           - iproute
-      when: ansible_os_family == "RedHat"
+      when: ansible_facts['os_family'] == "RedHat"
 
     - name: Uninstall RHEL packages
       ansible.builtin.package:
@@ -62,7 +62,7 @@
           # TODO(fitbeard): Use pip everywhere instead of OS package manager if possible.
           - python3-pyyaml
         state: absent
-      when: ansible_distribution == "Rocky"
+      when: ansible_facts['distribution'] == "Rocky"
 
     - name: Start-up "dbus.socket" service
       ansible.builtin.systemd:

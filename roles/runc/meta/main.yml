@@ -31,7 +31,7 @@ galaxy_info:
 dependencies:
   - role: forget_package
     forget_package_name: "{{ runc_package_name }}"
-    when: ansible_pkg_mgr == "apt"
+    when: ansible_facts['pkg_mgr'] == "apt"
   - role: download_artifact
     vars:
       download_artifact_url: "{{ runc_download_url }}"

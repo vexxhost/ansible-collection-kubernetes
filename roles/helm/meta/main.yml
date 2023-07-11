@@ -31,7 +31,7 @@ galaxy_info:
 dependencies:
   - role: forget_package
     forget_package_name: "{{ helm_package_name }}"
-    when: ansible_pkg_mgr == "apt"
+    when: ansible_facts['pkg_mgr'] == "apt"
   - role: vexxhost.kubernetes.download_artifact
     download_artifact_url: "{{ helm_download_url }}"
     download_artifact_dest: "{{ helm_download_dest }}"
