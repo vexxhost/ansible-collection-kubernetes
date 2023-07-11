@@ -17,6 +17,10 @@
     path: /etc/kubernetes/kubelet.conf
   register: kubernetes_kubelet_stat
 
+- debug: var=kubernetes_kubelet_stat
+- debug: var=inventory_hostname
+- debug: var=groups[kubernetes_control_plane_group]
+
 - name: Generate control-plane certificates for joining cluster
   run_once: true
   delegate_to: "{{ kubernetes_bootstrap_node | default(groups[kubernetes_control_plane_group][0]) }}"

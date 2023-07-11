@@ -50,7 +50,7 @@ provisioner:
       all:
         kubernetes_version: ${KUBERNETES_VERSION-1.26.3}
       controllers:
-        keepalived_interface: "{{ ansible_default_ipv4.interface }}"
+        keepalived_interface: "{{ ansible_facts['default_ipv4'].interface }}"
         keepalived_vip: 172.17.0.100
         keepalived_vrid: 42
         kubernetes_hostname: k8s

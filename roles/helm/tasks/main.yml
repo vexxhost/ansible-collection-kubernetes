@@ -16,7 +16,7 @@
   ansible.builtin.apt_repository:
     repo: "{{ helm_repository_apt }}"
     state: absent
-  when: ansible_os_family in ['Debian']
+  when: ansible_facts['os_family'] in ['Debian']
 
 - name: Add bash autocomplete for helm
   ansible.builtin.lineinfile:
