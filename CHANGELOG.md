@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.7.2](https://github.com/vexxhost/ansible-collection-kubernetes/compare/v1.7.1...v1.7.2) (2023-07-21)
+
+
+### Bug Fixes
+
+* use kubelet_hostname instead of inventory_hostname_short ([5c08c72](https://github.com/vexxhost/ansible-collection-kubernetes/commit/5c08c72a944c2cc53f1eca09eecf7112b6805a53))
+* use SSH ARGs from command line if provided ([39fcd5c](https://github.com/vexxhost/ansible-collection-kubernetes/commit/39fcd5c14ade33f17ae79a942ffcb748689c6724))
+
 ## [1.7.1](https://github.com/vexxhost/ansible-collection-kubernetes/compare/v1.7.1...v1.7.1) (2023-07-05)
 
 
