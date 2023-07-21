@@ -5,6 +5,7 @@ image:
 hubble:
   enabled: false
 tunnel: geneve
+tunnelPort: 6082
 operator:
   image:
     repository: "{{ cilium_operator_image | vexxhost.kubernetes.docker_image('name') | replace('-generic', '') }}"
