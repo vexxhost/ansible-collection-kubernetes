@@ -9,3 +9,4 @@
     recursive: true
     checksum: true
     delete: true
+    use_ssh_args: true
