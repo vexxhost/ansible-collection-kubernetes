@@ -30,7 +30,7 @@
     - name: Run APT update
       ansible.builtin.apt:
         update_cache: yes
-      when: ansible_pkg_mgr == "apt"
+      when: ansible_facts['pkg_mgr'] == "apt"
 
     - name: Install NGINX
       ansible.builtin.package:
