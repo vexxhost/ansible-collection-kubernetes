@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.8.0](https://github.com/vexxhost/ansible-collection-kubernetes/compare/v1.7.2...v1.8.0) (2023-07-26)
+
+
+### Features
+
+* Set node selector for CAPI components ([6719b63](https://github.com/vexxhost/ansible-collection-kubernetes/commit/6719b639696c067ad70030dd0c11b8279470b91e))
+
 ## [1.7.2](https://github.com/vexxhost/ansible-collection-kubernetes/compare/v1.7.1...v1.7.2) (2023-07-21)
 
 
