@@ -12,60 +12,47 @@
   # License for the specific language governing permissions and limitations
   # under the License.
 
-- name: Set node selector for CAPI components
-  block:
-    - name: Set node selector for CAPI Controller Manager
-      kubernetes.core.k8s:
-        definition:
-          apiVersion: apps/v1
-          kind: Deployment
-          metadata:
-            name: capi-controller-manager
-            namespace: capi-system
-          spec:
-            template:
-              spec:
-                nodeSelector: "{{ cluster_api_node_selector }}"
-        wait: true
 
-    - name: Set node selector for CAPO Controller Manager
-      kubernetes.core.k8s:
-        definition:
-          apiVersion: apps/v1
-          kind: Deployment
-          metadata:
-            name: capo-controller-manager
-            namespace: capo-system
-          spec:
-            template:
-              spec:
-                nodeSelector: "{{ cluster_api_node_selector }}"
-        wait: true
+- name: Ensure that the Cluster API components are present
+  kubernetes.core.k8s_info:
+    api_version: v1
+    kind: Deployment
+    name: "{{ item.name }}"
+    namespace: "{{ item.namespace }}"
+  register: _result
+  until: _result is not failed
+  delay: 2
+  retries: 5
+  loop:
+    - namespace: capi-kubeadm-bootstrap-system
+      name: capi-kubeadm-bootstrap-controller-manager
+    - namespace: capi-kubeadm-control-plane-system
+      name: capi-kubeadm-control-plane-controller-manager
+    - namespace: capi-system
+      name: capi-controller-manager
+    - namespace: capo-system
+      name: capo-controller-manager
 
-    - name: Set node selector for CAPI Kubeadm Bootstrap Controller Manager
-      kubernetes.core.k8s:
-        definition:
-          apiVersion: apps/v1
-          kind: Deployment
-          metadata:
-            name: capi-kubeadm-bootstrap-controller-manager
-            namespace: capi-kubeadm-bootstrap-system
-          spec:
-            template:
-              spec:
-                nodeSelector: "{{ cluster_api_node_selector }}"
-        wait: true
 
-    - name: Set node selector for CAPI Kubeadm Controlplane Controller Manager
-      kubernetes.core.k8s:
-        definition:
-          apiVersion: apps/v1
-          kind: Deployment
-          metadata:
-            name: capi-kubeadm-control-plane-controller-manager
-            namespace: capi-kubeadm-control-plane-system
+- name: Set node selector for the Cluster API components
+  kubernetes.core.k8s:
+    definition:
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: "{{ item.name }}"
+        namespace: "{{ item.namespace }}"
+      spec:
+        template:
           spec:
-            template:
-              spec:
-                nodeSelector: "{{ cluster_api_node_selector }}"
-        wait: true
+            nodeSelector: "{{ cluster_api_node_selector }}"
+    wait: true
+  loop:
+    - namespace: capi-kubeadm-bootstrap-system
+      name: capi-kubeadm-bootstrap-controller-manager
+    - namespace: capi-kubeadm-control-plane-system
+      name: capi-kubeadm-control-plane-controller-manager
+    - namespace: capi-system
+      name: capi-controller-manager
+    - namespace: capo-system
+      name: capo-controller-manager
