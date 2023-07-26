@@ -12,29 +12,7 @@
   # License for the specific language governing permissions and limitations
   # under the License.
 
-
-- name: Ensure that the Cluster API components are present
-  kubernetes.core.k8s_info:
-    api_version: v1
-    kind: Deployment
-    name: "{{ item.name }}"
-    namespace: "{{ item.namespace }}"
-  register: _result
-  until: _result is not failed
-  delay: 2
-  retries: 5
-  loop:
-    - namespace: capi-kubeadm-bootstrap-system
-      name: capi-kubeadm-bootstrap-controller-manager
-    - namespace: capi-kubeadm-control-plane-system
-      name: capi-kubeadm-control-plane-controller-manager
-    - namespace: capi-system
-      name: capi-controller-manager
-    - namespace: capo-system
-      name: capo-controller-manager
-
-
-- name: Set node selector for the Cluster API components
+- name: Set node selector for Cluster API components
   kubernetes.core.k8s:
     definition:
       apiVersion: apps/v1
