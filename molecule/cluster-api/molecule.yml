@@ -49,7 +49,7 @@ provisioner:
             replicas: 1
       controllers:
         cluster_api_node_selector:
-          node-role.kubernetes.io/master: ""
+          kubernetes.io/os: linux
         keepalived_interface: "{{ ansible_facts['default_ipv4'].interface }}"
         keepalived_vip: 172.17.0.100
         keepalived_vrid: 42
