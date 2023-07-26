@@ -29,4 +29,3 @@
 
 - name: Patch Cluster API
   ansible.builtin.import_tasks: patch.yml
-  when: cluster_api_providers.resources | length != 0
