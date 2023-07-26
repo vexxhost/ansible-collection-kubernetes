@@ -29,3 +29,5 @@ cluster_api_control_plane_version: 1.4.4
 
 cluster_api_infrastructure_provider: openstack
 cluster_api_infrastructure_version: 0.7.1
+
+cluster_api_node_selector: {}
