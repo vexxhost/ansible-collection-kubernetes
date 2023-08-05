@@ -1,3 +1,5 @@
+k8sServiceHost: "{{ kubernetes_hostname }}"
+k8sServicePort: 6443
 image:
   repository: "{{ cilium_node_image | vexxhost.kubernetes.docker_image('name') }}"
   tag: "{{ cilium_node_image | vexxhost.kubernetes.docker_image('tag') }}"
@@ -20,3 +22,4 @@ operator:
 ipam:
   operator:
     clusterPoolIPv4PodCIDR: "{{ cilium_ipv4_cidr | default('10.0.0.0/8') }}"
+kubeProxyReplacement: "strict"
