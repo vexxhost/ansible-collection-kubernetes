@@ -40,7 +40,7 @@
 # yamllint disable rule:line-length
 - name: Set default values for imagePullPolicy in kubeadmConfigSpec of CRDs
   changed_when: false
-  when: cluster_api_control_plane_version >= 1.4.0
+  when: cluster_api_control_plane_version >= 1.4
   ansible.builtin.command: |
     kubectl patch crd {{ item.crd }} --type=json -p='[{"op": "add", "path": "{{ item.path }}", "value": "IfNotPresent"}]'
   loop:
