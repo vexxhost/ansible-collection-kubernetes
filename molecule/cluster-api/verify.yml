@@ -89,3 +89,69 @@
           - _cluster_api_bootstrap_version == cluster_api_bootstrap_version
           - _cluster_api_control_plane_version == cluster_api_control_plane_version
           - _cluster_api_infrastructure_version == cluster_api_infrastructure_version
+
+    # Note(okozachenko1203): Until https://github.com/kubernetes-sigs/cluster-api/issues/9132 is fixed,
+    #                        we set the default value of imagePullPolicy in CRDs. Without this,
+    #                         kcptemplate re-apply fails.
+    - name: Test CRD patches
+      block:
+        - name: Create a test kcptemplate
+          kubernetes.core.k8s:
+            wait: true
+            definition:
+              apiVersion: controlplane.cluster.x-k8s.io/v1beta1
+              kind: KubeadmControlPlaneTemplate
+              metadata:
+                name: test-crd-patch
+                namespace: magnum-system
+              spec:
+                template:
+                  spec:
+                    kubeadmConfigSpec:
+                      clusterConfiguration:
+                        apiServer:
+                          extraArgs:
+                            cloud-provider: external
+                            profiling: 'false'
+                          extraVolumes: []
+                        controllerManager:
+                          extraArgs:
+                            cloud-provider: external
+                            profiling: 'false'
+                        scheduler:
+                          extraArgs:
+                            profiling: 'false'
+                      initConfiguration:
+                        nodeRegistration:
+                          name: ctl1
+                          kubeletExtraArgs:
+                            cloud-provider: external
+                      joinConfiguration:
+                        nodeRegistration:
+                          name: ctl1
+                          kubeletExtraArgs:
+                            cloud-provider: external
+
+        - name: Reapply the test kcptemplate
+          kubernetes.core.k8s:
+            wait: true
+            definition:
+              apiVersion: controlplane.cluster.x-k8s.io/v1beta1
+              kind: KubeadmControlPlaneTemplate
+              metadata:
+                name: test-crd-patch
+                namespace: magnum-system
+              spec:
+                template:
+                  spec:
+                    kubeadmConfigSpec:
+                      initConfiguration:
+                        nodeRegistration:
+                          name: ctl1
+                          kubeletExtraArgs:
+                            cloud-provider: external
+                      joinConfiguration:
+                        nodeRegistration:
+                          name: ctl1
+                          kubeletExtraArgs:
+                            cloud-provider: external
