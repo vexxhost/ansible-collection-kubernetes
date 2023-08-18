@@ -103,7 +103,7 @@
               kind: KubeadmControlPlaneTemplate
               metadata:
                 name: test-crd-patch
-                namespace: magnum-system
+                namespace: default
               spec:
                 template:
                   spec:
@@ -140,7 +140,7 @@
               kind: KubeadmControlPlaneTemplate
               metadata:
                 name: test-crd-patch
-                namespace: magnum-system
+                namespace: default
               spec:
                 template:
                   spec:
