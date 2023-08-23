@@ -34,3 +34,21 @@
       name: capi-controller-manager
     - namespace: capo-system
       name: capo-controller-manager
+
+# Note(okozachenko1203): Until https://github.com/kubernetes-sigs/cluster-api/issues/9132 is fixed,
+#                        set the default value of imagePullPolicy in CRDs.
+# yamllint disable rule:line-length
+- name: Set default values for imagePullPolicy in kubeadmConfigSpec of CRDs
+  changed_when: false
+  when: cluster_api_control_plane_version | float >= 1.4
+  ansible.builtin.command: |
+    kubectl patch crd {{ item.crd }} --type=json -p='[{"op": "add", "path": "{{ item.path }}", "value": "IfNotPresent"}]'
+  loop:
+    - {"crd": "kubeadmcontrolplanetemplates.controlplane.cluster.x-k8s.io", "path": "/spec/versions/1/schema/openAPIV3Schema/properties/spec/properties/template/properties/spec/properties/kubeadmConfigSpec/properties/initConfiguration/properties/nodeRegistration/properties/imagePullPolicy/default"}
+    - {"crd": "kubeadmcontrolplanetemplates.controlplane.cluster.x-k8s.io", "path": "/spec/versions/1/schema/openAPIV3Schema/properties/spec/properties/template/properties/spec/properties/kubeadmConfigSpec/properties/joinConfiguration/properties/nodeRegistration/properties/imagePullPolicy/default"}
+    - {"crd": "kubeadmconfigs.bootstrap.cluster.x-k8s.io", "path": "/spec/versions/2/schema/openAPIV3Schema/properties/spec/properties/initConfiguration/properties/nodeRegistration/properties/imagePullPolicy/default"}
+    - {"crd": "kubeadmconfigs.bootstrap.cluster.x-k8s.io", "path": "/spec/versions/2/schema/openAPIV3Schema/properties/spec/properties/joinConfiguration/properties/nodeRegistration/properties/imagePullPolicy/default"}
+    - {"crd": "kubeadmconfigtemplates.bootstrap.cluster.x-k8s.io", "path": "/spec/versions/2/schema/openAPIV3Schema/properties/spec/properties/template/properties/spec/properties/initConfiguration/properties/nodeRegistration/properties/imagePullPolicy/default"}
+    - {"crd": "kubeadmconfigtemplates.bootstrap.cluster.x-k8s.io", "path": "/spec/versions/2/schema/openAPIV3Schema/properties/spec/properties/template/properties/spec/properties/joinConfiguration/properties/nodeRegistration/properties/imagePullPolicy/default"}
+    - {"crd": "kubeadmcontrolplanes.controlplane.cluster.x-k8s.io", "path": "/spec/versions/2/schema/openAPIV3Schema/properties/spec/properties/kubeadmConfigSpec/properties/initConfiguration/properties/nodeRegistration/properties/imagePullPolicy/default"}
+    - {"crd": "kubeadmcontrolplanes.controlplane.cluster.x-k8s.io", "path": "/spec/versions/2/schema/openAPIV3Schema/properties/spec/properties/kubeadmConfigSpec/properties/joinConfiguration/properties/nodeRegistration/properties/imagePullPolicy/default"}
