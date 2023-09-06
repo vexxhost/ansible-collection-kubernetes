@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.8.2](https://github.com/vexxhost/ansible-collection-kubernetes/compare/v1.8.1...v1.8.2) (2023-09-06)
+
+
+### Bug Fixes
+
+* loosen kubernetes.core to above 2.3.2 ([f7ce48f](https://github.com/vexxhost/ansible-collection-kubernetes/commit/f7ce48fa3d61949d9ae9c75f8d1fb6efd7e59733))
+
+## [1.8.1](https://github.com/vexxhost/ansible-collection-kubernetes/compare/v1.8.0...v1.8.1) (2023-08-23)
+
+
+### Bug Fixes
+
+* Set default values for imagePullPolicy in kubeadmConfigSpec of CRDs ([ebf9dd1](https://github.com/vexxhost/ansible-collection-kubernetes/commit/ebf9dd100ef133153d1632e786a771440bc0d420))
+
 ## [1.8.0](https://github.com/vexxhost/ansible-collection-kubernetes/compare/v1.7.2...v1.8.0) (2023-07-26)
 
 
