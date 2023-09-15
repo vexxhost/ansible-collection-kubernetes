@@ -65,5 +65,5 @@ mkdocs-build:
   FROM +mkdocs-image
   COPY . /docs
   RUN mkdocs build
-  RUN --push --secret GITHUB_TOKEN git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/vexxhost/magnum-cluster-api.git
+  RUN --push --secret GITHUB_TOKEN git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/vexxhost/ansible-collection-kubernetes.git
   RUN --push mkdocs gh-deploy --force
