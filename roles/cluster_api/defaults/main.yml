@@ -18,6 +18,8 @@
 # See: https://github.com/kubernetes-sigs/cluster-api/issues/3982
 cluster_api_github_token: ""
 
+cluster_api_provider_path: /var/lib/cluster-api/providers
+
 cluster_api_core_provider: cluster-api
 cluster_api_core_version: 1.4.4
 

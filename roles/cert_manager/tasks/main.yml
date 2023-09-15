@@ -12,25 +12,12 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-galaxy_info:
-  author: VEXXHOST, Inc.
-  description: Ansible role for "binary_download"
-  license: Apache-2.0
-  min_ansible_version: 5.5.0
-  standalone: false
-  platforms:
-    - name: EL
-      versions:
-        - "8"
-        - "9"
-    - name: Ubuntu
-      versions:
-        - focal
-        - jammy
-
-dependencies:
-  - role: package
-    package_name: tar
-    when: download_artifact_unarchive | bool
-  - role: directory
-    directory_path: "{{ download_artifact_work_directory }}"
+- name: Deploy Helm chart
+  run_once: true
+  kubernetes.core.helm:
+    name: "{{ cert_manager_helm_release_name }}"
+    chart_ref: "{{ cert_manager_helm_chart_ref }}"
+    release_namespace: "{{ cert_manager_helm_release_namespace }}"
+    create_namespace: true
+    kubeconfig: /etc/kubernetes/admin.conf
+    values: "{{ _cert_manager_helm_values | combine(cert_manager_helm_values, recursive=True) }}"

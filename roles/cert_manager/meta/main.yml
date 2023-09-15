@@ -14,7 +14,7 @@
 
 galaxy_info:
   author: VEXXHOST, Inc.
-  description: Ansible role for "binary_download"
+  description: Ansible role for Cert Manager
   license: Apache-2.0
   min_ansible_version: 5.5.0
   standalone: false
@@ -29,8 +29,7 @@ galaxy_info:
         - jammy
 
 dependencies:
-  - role: package
-    package_name: tar
-    when: download_artifact_unarchive | bool
-  - role: directory
-    directory_path: "{{ download_artifact_work_directory }}"
+  - role: vexxhost.kubernetes.upload_helm_chart
+    vars:
+      upload_helm_chart_src: "{{ cert_manager_helm_chart_path }}"
+      upload_helm_chart_dest: "{{ cert_manager_helm_chart_ref }}"

@@ -12,25 +12,16 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-galaxy_info:
-  author: VEXXHOST, Inc.
-  description: Ansible role for "binary_download"
-  license: Apache-2.0
-  min_ansible_version: 5.5.0
-  standalone: false
-  platforms:
-    - name: EL
-      versions:
-        - "8"
-        - "9"
-    - name: Ubuntu
-      versions:
-        - focal
-        - jammy
+cert_manager_helm_chart_path: "../../charts/cert-manager/"
+cert_manager_helm_chart_ref: /usr/local/src/cert-manager
 
-dependencies:
-  - role: package
-    package_name: tar
-    when: download_artifact_unarchive | bool
-  - role: directory
-    directory_path: "{{ download_artifact_work_directory }}"
+cert_manager_helm_release_name: cert-manager
+cert_manager_helm_release_namespace: cert-manager
+cert_manager_helm_values: {}
+
+cert_manager_node_selector: {}
+
+cert_manager_image_cli: quay.io/jetstack/cert-manager-ctl:v1.7.1
+cert_manager_image_controller: quay.io/jetstack/cert-manager-controller:v1.7.1
+cert_manager_image_cainjector: quay.io/jetstack/cert-manager-cainjector:v1.7.1
+cert_manager_image_webhook: quay.io/jetstack/cert-manager-webhook:v1.7.1

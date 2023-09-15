@@ -29,3 +29,5 @@ clusterctl_binary_checksum: "{{ clusterctl_checksums[download_artifact_goarch][c
 
 clusterctl_config_file: /etc/clusterctl.yaml
 clusterctl_config: {}
+
+clusterctl_providers: []
