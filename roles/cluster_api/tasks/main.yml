@@ -16,6 +16,9 @@
   ansible.builtin.file:
     path: "{{ cluster_api_provider_path }}"
     state: directory
+    mode: "0o755"
+    owner: root
+    group: root
 
 - name: Copy over all provider configuration to the remote system
   ansible.posix.synchronize:
