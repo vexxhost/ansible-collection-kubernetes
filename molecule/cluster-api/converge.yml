@@ -16,4 +16,5 @@
   hosts: all
   become: true
   roles:
+    - vexxhost.kubernetes.cert_manager
     - vexxhost.kubernetes.cluster_api
