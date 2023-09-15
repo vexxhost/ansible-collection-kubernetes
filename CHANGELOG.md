@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.9.0](https://github.com/vexxhost/ansible-collection-kubernetes/compare/v1.8.2...v1.9.0) (2023-09-15)
+
+
+### Features
+
+* add offline installs for capi ([#56](https://github.com/vexxhost/ansible-collection-kubernetes/issues/56)) ([cdf3ddb](https://github.com/vexxhost/ansible-collection-kubernetes/commit/cdf3ddbca0b1da08ee73885de45ac4456d9f2c56))
+
 ## [1.8.2](https://github.com/vexxhost/ansible-collection-kubernetes/compare/v1.8.1...v1.8.2) (2023-09-06)
 
 
