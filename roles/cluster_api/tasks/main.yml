@@ -12,6 +12,19 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+- name: Create a folder for the Cluster API providers
+  ansible.builtin.file:
+    path: "{{ cluster_api_provider_path }}"
+    state: directory
+
+- name: Copy over all provider configuration to the remote system
+  ansible.posix.synchronize:
+    src: providers/
+    dest: "{{ cluster_api_provider_path }}"
+    archive: false
+    recursive: true
+    checksum: true
+
 - name: Get a list of all Cluster API providers
   run_once: true
   kubernetes.core.k8s_info:
