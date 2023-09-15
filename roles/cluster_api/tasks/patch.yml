@@ -1,0 +1,54 @@
+  # Copyright (c) 2023 VEXXHOST, Inc.
+  #
+  # Licensed under the Apache License, Version 2.0 (the "License"); you may
+  # not use this file except in compliance with the License. You may obtain
+  # a copy of the License at
+  #
+  #      http://www.apache.org/licenses/LICENSE-2.0
+  #
+  # Unless required by applicable law or agreed to in writing, software
+  # distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+  # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+  # License for the specific language governing permissions and limitations
+  # under the License.
+
+- name: Set node selector for Cluster API components
+  kubernetes.core.k8s:
+    definition:
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: "{{ item.name }}"
+        namespace: "{{ item.namespace }}"
+      spec:
+        template:
+          spec:
+            nodeSelector: "{{ cluster_api_node_selector }}"
+    wait: true
+  loop:
+    - namespace: capi-kubeadm-bootstrap-system
+      name: capi-kubeadm-bootstrap-controller-manager
+    - namespace: capi-kubeadm-control-plane-system
+      name: capi-kubeadm-control-plane-controller-manager
+    - namespace: capi-system
+      name: capi-controller-manager
+    - namespace: capo-system
+      name: capo-controller-manager
+
+# Note(okozachenko1203): Until https://github.com/kubernetes-sigs/cluster-api/issues/9132 is fixed,
+#                        set the default value of imagePullPolicy in CRDs.
+# yamllint disable rule:line-length
+- name: Set default values for imagePullPolicy in kubeadmConfigSpec of CRDs
+  changed_when: false
+  when: cluster_api_control_plane_version | float >= 1.4
+  ansible.builtin.command: |
+    kubectl patch crd {{ item.crd }} --type=json -p='[{"op": "add", "path": "{{ item.path }}", "value": "IfNotPresent"}]'
+  loop:
+    - {"crd": "kubeadmcontrolplanetemplates.controlplane.cluster.x-k8s.io", "path": "/spec/versions/1/schema/openAPIV3Schema/properties/spec/properties/template/properties/spec/properties/kubeadmConfigSpec/properties/initConfiguration/properties/nodeRegistration/properties/imagePullPolicy/default"}
+    - {"crd": "kubeadmcontrolplanetemplates.controlplane.cluster.x-k8s.io", "path": "/spec/versions/1/schema/openAPIV3Schema/properties/spec/properties/template/properties/spec/properties/kubeadmConfigSpec/properties/joinConfiguration/properties/nodeRegistration/properties/imagePullPolicy/default"}
+    - {"crd": "kubeadmconfigs.bootstrap.cluster.x-k8s.io", "path": "/spec/versions/2/schema/openAPIV3Schema/properties/spec/properties/initConfiguration/properties/nodeRegistration/properties/imagePullPolicy/default"}
+    - {"crd": "kubeadmconfigs.bootstrap.cluster.x-k8s.io", "path": "/spec/versions/2/schema/openAPIV3Schema/properties/spec/properties/joinConfiguration/properties/nodeRegistration/properties/imagePullPolicy/default"}
+    - {"crd": "kubeadmconfigtemplates.bootstrap.cluster.x-k8s.io", "path": "/spec/versions/2/schema/openAPIV3Schema/properties/spec/properties/template/properties/spec/properties/initConfiguration/properties/nodeRegistration/properties/imagePullPolicy/default"}
+    - {"crd": "kubeadmconfigtemplates.bootstrap.cluster.x-k8s.io", "path": "/spec/versions/2/schema/openAPIV3Schema/properties/spec/properties/template/properties/spec/properties/joinConfiguration/properties/nodeRegistration/properties/imagePullPolicy/default"}
+    - {"crd": "kubeadmcontrolplanes.controlplane.cluster.x-k8s.io", "path": "/spec/versions/2/schema/openAPIV3Schema/properties/spec/properties/kubeadmConfigSpec/properties/initConfiguration/properties/nodeRegistration/properties/imagePullPolicy/default"}
+    - {"crd": "kubeadmcontrolplanes.controlplane.cluster.x-k8s.io", "path": "/spec/versions/2/schema/openAPIV3Schema/properties/spec/properties/kubeadmConfigSpec/properties/joinConfiguration/properties/nodeRegistration/properties/imagePullPolicy/default"}

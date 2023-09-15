@@ -1,5 +1,41 @@
 # Changelog
 
+## [1.9.0](https://github.com/vexxhost/ansible-collection-kubernetes/compare/v1.8.2...v1.9.0) (2023-09-15)
+
+
+### Features
+
+* add offline installs for capi ([#56](https://github.com/vexxhost/ansible-collection-kubernetes/issues/56)) ([cdf3ddb](https://github.com/vexxhost/ansible-collection-kubernetes/commit/cdf3ddbca0b1da08ee73885de45ac4456d9f2c56))
+
+## [1.8.2](https://github.com/vexxhost/ansible-collection-kubernetes/compare/v1.8.1...v1.8.2) (2023-09-06)
+
+
+### Bug Fixes
+
+* loosen kubernetes.core to above 2.3.2 ([f7ce48f](https://github.com/vexxhost/ansible-collection-kubernetes/commit/f7ce48fa3d61949d9ae9c75f8d1fb6efd7e59733))
+
+## [1.8.1](https://github.com/vexxhost/ansible-collection-kubernetes/compare/v1.8.0...v1.8.1) (2023-08-23)
+
+
+### Bug Fixes
+
+* Set default values for imagePullPolicy in kubeadmConfigSpec of CRDs ([ebf9dd1](https://github.com/vexxhost/ansible-collection-kubernetes/commit/ebf9dd100ef133153d1632e786a771440bc0d420))
+
+## [1.8.0](https://github.com/vexxhost/ansible-collection-kubernetes/compare/v1.7.2...v1.8.0) (2023-07-26)
+
+
+### Features
+
+* Set node selector for CAPI components ([6719b63](https://github.com/vexxhost/ansible-collection-kubernetes/commit/6719b639696c067ad70030dd0c11b8279470b91e))
+
+## [1.7.2](https://github.com/vexxhost/ansible-collection-kubernetes/compare/v1.7.1...v1.7.2) (2023-07-21)
+
+
+### Bug Fixes
+
+* use kubelet_hostname instead of inventory_hostname_short ([5c08c72](https://github.com/vexxhost/ansible-collection-kubernetes/commit/5c08c72a944c2cc53f1eca09eecf7112b6805a53))
+* use SSH ARGs from command line if provided ([39fcd5c](https://github.com/vexxhost/ansible-collection-kubernetes/commit/39fcd5c14ade33f17ae79a942ffcb748689c6724))
+
 ## [1.7.1](https://github.com/vexxhost/ansible-collection-kubernetes/compare/v1.7.1...v1.7.1) (2023-07-05)
 
 

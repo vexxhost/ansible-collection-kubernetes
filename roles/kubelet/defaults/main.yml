@@ -32,7 +32,7 @@ kubelet_checksums:
     1.25.8: 6c995b05b54cc0ce4eb6bf3097565167069b2ce45ba965972430c631c467d239
     1.26.3: d360f919c279a05441b27178030c3d17134c1f257c95f4b22bdb28c2290993e7
 
-kubelet_download_url: "https://storage.googleapis.com/kubernetes-release/release/v{{ kubelet_version }}/bin/{{ ansible_system | lower }}/{{ download_artifact_goarch }}/kubelet" # noqa: yaml[line-length]
+kubelet_download_url: "https://storage.googleapis.com/kubernetes-release/release/v{{ kubelet_version }}/bin/{{ ansible_facts['system'] | lower }}/{{ download_artifact_goarch }}/kubelet" # noqa: yaml[line-length]
 kubelet_download_dest: /usr/bin/kubelet
 kubelet_binary_checksum: "{{ kubelet_checksums[download_artifact_goarch][kubelet_version] }}"
 
@@ -59,4 +59,7 @@ kubelet_sysctls:
 kubelet_cri_socket: /run/containerd/containerd.sock
 
 # Node IP address
-kubelet_node_ip: "{{ ansible_default_ipv4.address }}"
+kubelet_node_ip: "{{ ansible_facts['default_ipv4'].address }}"
+
+# Kubelet hostname
+kubelet_hostname: "{{ inventory_hostname_short }}"
