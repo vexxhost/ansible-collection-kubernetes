@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.9.1](https://github.com/vexxhost/ansible-collection-kubernetes/compare/v1.9.0...v1.9.1) (2023-09-25)
+
+
+### Bug Fixes
+
+* Update CAPO version ([#58](https://github.com/vexxhost/ansible-collection-kubernetes/issues/58)) ([c204d44](https://github.com/vexxhost/ansible-collection-kubernetes/commit/c204d448d535d7442e97549d4980d85c429cf22a))
+
+
+### Documentation
+
+* add upgrade docs ([#40](https://github.com/vexxhost/ansible-collection-kubernetes/issues/40)) ([e9cb5dd](https://github.com/vexxhost/ansible-collection-kubernetes/commit/e9cb5dd8dfdca8f2872eccd37fe26707a0b44dca))
+
 ## [1.9.0](https://github.com/vexxhost/ansible-collection-kubernetes/compare/v1.8.2...v1.9.0) (2023-09-15)
 
 
