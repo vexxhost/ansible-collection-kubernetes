@@ -21,8 +21,8 @@
     - role: vexxhost.kubernetes.cert_manager
     - role: vexxhost.kubernetes.cluster_api
       vars:
-        clusterctl_version: 1.4.4
-        cluster_api_core_version: 1.4.4
-        cluster_api_bootstrap_version: 1.4.4
-        cluster_api_control_plane_version: 1.4.4
-        cluster_api_infrastructure_version: 0.7.1
+        clusterctl_version: 1.3.2
+        cluster_api_core_version: 1.3.2
+        cluster_api_bootstrap_version: 1.3.2
+        cluster_api_control_plane_version: 1.3.2
+        cluster_api_infrastructure_version: 0.7.0
