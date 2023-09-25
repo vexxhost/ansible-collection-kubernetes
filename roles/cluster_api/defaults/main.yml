@@ -21,15 +21,15 @@ cluster_api_github_token: ""
 cluster_api_provider_path: /var/lib/cluster-api/providers
 
 cluster_api_core_provider: cluster-api
-cluster_api_core_version: 1.4.4
+cluster_api_core_version: 1.5.1
 
 cluster_api_bootstrap_provider: kubeadm
-cluster_api_bootstrap_version: 1.4.4
+cluster_api_bootstrap_version: 1.5.1
 
 cluster_api_control_plane_provider: kubeadm
-cluster_api_control_plane_version: 1.4.4
+cluster_api_control_plane_version: 1.5.1
 
 cluster_api_infrastructure_provider: openstack
-cluster_api_infrastructure_version: 0.7.1
+cluster_api_infrastructure_version: 0.8.0
 
 cluster_api_node_selector: {}
