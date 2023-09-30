@@ -36,7 +36,7 @@
   notify: "{{ download_artifact_notify }}"
 
 - name: Extract archive
-  when: download_artifact_unarchive
+  when: download_artifact_unarchive and not ansible_check_mode
   ansible.builtin.unarchive:
     src: "{{ download_artifact_dest }}"
     dest: "{{ download_artifact_unarchive_dest }}"
