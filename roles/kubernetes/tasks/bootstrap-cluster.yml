@@ -46,6 +46,7 @@
   when: inventory_hostname == kubernetes_bootstrap_node
 
 - name: Upload cluster CA certificate
+  when: allow_custom_ca
   block:
     - name: Create pki folder
       ansible.builtin.file:
@@ -53,7 +54,7 @@
         state: directory
         owner: root
         group: root
-        recurse: yes
+        recurse: true
     - name: Create kubernetes ca key
       ansible.builtin.copy:
         content: "{{ custom_ca_key }}"
@@ -96,7 +97,6 @@
         mode: "0644"
       when:
         - (custom_front_proxy_ca_cert is defined) and (custom_front_proxy_ca_cert|length > 0)
-  when: allow_custom_ca
 
 - name: Initialize cluster
   throttle: 1
