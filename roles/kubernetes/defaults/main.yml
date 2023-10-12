@@ -36,3 +36,6 @@ kubernetes_allow_unsafe_swap: false
 # If the deployment is in a non-init namespace (docker/LXC/...)
 # then kube-proxy must be prevented from ajusting conntrack settings
 kubernetes_non_init_namespace: "{{ ansible_connection == 'community.docker.docker' }}"
+
+# Allow custom CA usage in the cluster
+allow_custom_ca: false
