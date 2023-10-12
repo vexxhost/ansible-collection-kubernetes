@@ -58,42 +58,42 @@
       ansible.builtin.copy:
         content: "{{ custom_ca_key }}"
         dest: /etc/kubernetes/pki/ca.key
-        mode: 0600
+        mode: "0600"
       when:
         - (custom_ca_key is defined) and (custom_ca_key|length > 0)
     - name: Create kubernetes ca cert
       ansible.builtin.copy:
         content: "{{ custom_ca_cert }}"
         dest: /etc/kubernetes/pki/ca.crt
-        mode: 0644
+        mode: "0644"
       when:
         - (custom_ca_cert is defined) and (custom_ca_cert|length > 0)
     - name: Create etcd-ca key
       ansible.builtin.copy:
         content: "{{ custom_etcd_ca_key }}"
         dest: /etc/kubernetes/pki/etcd/ca.key
-        mode: 0600
+        mode: "0600"
       when:
         - (custom_etcd_ca_key is defined) and (custom_etcd_ca_key|length > 0)
     - name: Create etcd-ca cert
       ansible.builtin.copy:
         content: "{{ custom_etcd_ca_cert }}"
         dest: /etc/kubernetes/pki/etcd/ca.crt
-        mode: 0600
+        mode: "0644"
       when:
         - (custom_etcd_ca_cert is defined) and (custom_etcd_ca_cert|length > 0)
     - name: Create front-proxy-ca key
       ansible.builtin.copy:
-        content: "{{ custom_etcd_ca_key }}"
+        content: "{{ custom_front_proxy_ca_key }}"
         dest: /etc/kubernetes/pki/front-proxy-ca.key
-        mode: 0600
+        mode: "0600"
       when:
         - (custom_front_proxy_ca_key is defined) and (custom_front_proxy_ca_key|length > 0)
     - name: Create front-proxy-ca cert
       ansible.builtin.copy:
-        content: "{{ custom_etcd_ca_cert }}"
+        content: "{{ custom_front_proxy_ca_cert }}"
         dest: /etc/kubernetes/pki/front-proxy-ca.crt
-        mode: 0600
+        mode: "0644"
       when:
         - (custom_front_proxy_ca_cert is defined) and (custom_front_proxy_ca_cert|length > 0)
   when: allow_custom_ca
