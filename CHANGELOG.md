@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.10.0](https://github.com/vexxhost/ansible-collection-kubernetes/compare/v1.9.1...v1.10.0) (2023-10-13)
+
+
+### Features
+
+* upgrade CAPI version to 1.5.1 ([#62](https://github.com/vexxhost/ansible-collection-kubernetes/issues/62)) ([65f8a63](https://github.com/vexxhost/ansible-collection-kubernetes/commit/65f8a63ea06d062334822330f3d958f98d5f7e2a))
+
 ## [1.9.1](https://github.com/vexxhost/ansible-collection-kubernetes/compare/v1.9.0...v1.9.1) (2023-09-25)
 
 
