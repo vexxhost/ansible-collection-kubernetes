@@ -117,5 +117,5 @@
 - name: Join cluster
   ansible.builtin.include_tasks: join-cluster.yml
   when:
-    - inventory_hostname != kubernetes_bootstrap_node
+    - inventory_hostname != _kubernetes_bootstrap_node
     - not _stat_etc_kubernetes_kubelet_conf.stat.exists
