@@ -49,6 +49,7 @@
   throttle: 1
   ansible.builtin.shell: |
     kubeadm init --config /etc/kubernetes/kubeadm.yaml --upload-certs \
+                 --skip-phases=addon/kube-proxy \
                  --ignore-preflight-errors=DirAvailable--etc-kubernetes-manifests{% if kubernetes_allow_unsafe_swap %},Swap{% endif %}
   args:
     creates: /etc/kubernetes/admin.conf
