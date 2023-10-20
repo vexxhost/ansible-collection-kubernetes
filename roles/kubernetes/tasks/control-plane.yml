@@ -54,3 +54,17 @@
         key: node-role.kubernetes.io/control-plane
       - effect: NoSchedule
         key: node-role.kubernetes.io/master
+
+- name: Set node selector for CoreDNS components
+  kubernetes.core.k8s:
+    definition:
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: coredns
+        namespace: kube-system
+      spec:
+        template:
+          spec:
+            nodeSelector: "{{ coredns_node_selector }}"
+  run_once: true
