@@ -47,6 +47,8 @@ kind: ClusterConfiguration
 controlPlaneEndpoint: "{{ kubernetes_hostname }}:6443"
 {% if kubernetes_image_repository not in ("registry.k8s.io", "k8s.gcr.io") %}
 imageRepository: "{{ kubernetes_image_repository }}"
+dns:
+  imageRepository: "{{ kubernetes_image_repository }}/coredns"
 {% endif %}
 apiServer:
   extraArgs:
