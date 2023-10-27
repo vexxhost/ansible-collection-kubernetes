@@ -11,17 +11,17 @@ all further creation to Kubernetes itself.
 You can configure those intermediate CAs by using the following variables.
 
 ```yaml
-allow_custom_ca: true
-custom_ca_key: |
+kubernetes_allow_custom_ca: true
+kubernetes_custom_ca_key: |
     INPUT CA KEY CONTENT HERE
-custom_ca_cert: |
+kubernetes_custom_ca_cert: |
     INPUT CA CERT CONTENT HERE
-custom_etcd_ca_key: |
+kubernetes_custom_etcd_ca_key: |
     INPUT ETCD CA KEY CONTENT HERE
-custom_etcd_ca_cert: |
+kubernetes_custom_etcd_ca_cert: |
     INPUT ETCD CERT KEY CONTENT HERE
-custom_front_proxy_ca_key: |
+kubernetes_custom_front_proxy_ca_key: |
     INPUT FRONT PROXY CA KEY CONTENT HERE
-custom_front_proxy_ca_cert: |
+kubernetes_custom_front_proxy_ca_cert: |
     INPUT FRONT PROXY CA CERT CONTENT HERE
 ```

@@ -42,4 +42,4 @@ kubernetes_coredns_node_selector:
   openstack-control-plane: enabled
 
 # Allow custom CA usage in the cluster
-allow_custom_ca: false
+kubernetes_allow_custom_ca: false
