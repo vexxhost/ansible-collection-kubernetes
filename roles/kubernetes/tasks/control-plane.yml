@@ -67,4 +67,4 @@
       spec:
         template:
           spec:
-            nodeSelector: "{{ coredns_node_selector }}"
+            nodeSelector: "{{ kubernetes_coredns_node_selector }}"
