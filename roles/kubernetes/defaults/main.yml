@@ -38,7 +38,7 @@ kubernetes_allow_unsafe_swap: false
 kubernetes_non_init_namespace: "{{ ansible_connection == 'community.docker.docker' }}"
 
 # select the node selector for the CoreDNS pods.
-coredns_node_selector:
+kubernetes_coredns_node_selector:
   openstack-control-plane: enabled
 
 # Allow custom CA usage in the cluster
