@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.11.0](https://github.com/vexxhost/ansible-collection-kubernetes/compare/v1.10.0...v1.11.0) (2023-10-30)
+
+
+### Features
+
+* Allow custom ca certificates for K8s cluster ([b22a38a](https://github.com/vexxhost/ansible-collection-kubernetes/commit/b22a38a29d17f2318d566f7ee0e4b9488fd62440))
+
 ## [1.10.0](https://github.com/vexxhost/ansible-collection-kubernetes/compare/v1.9.1...v1.10.0) (2023-10-13)
 
 
