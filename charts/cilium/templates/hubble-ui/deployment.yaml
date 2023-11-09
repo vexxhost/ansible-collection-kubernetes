@@ -102,7 +102,7 @@ spec:
           value: "hubble-relay:80"
         {{- end }}
         {{- with .Values.hubble.ui.backend.extraEnv }}
-        {{- toYaml . | trim | nindent 10 }}
+        {{- toYaml . | trim | nindent 8 }}
         {{- end }}
         ports:
         - name: grpc
@@ -167,12 +167,20 @@ spec:
           - secret:
               name: hubble-ui-client-certs
               items:
-                - key: ca.crt
-                  path: hubble-relay-ca.crt
                 - key: tls.crt
                   path: client.crt
                 - key: tls.key
                   path: client.key
+          {{- if not .Values.tls.caBundle.enabled }}
+                - key: ca.crt
+                  path: hubble-relay-ca.crt
+          {{- else }}
+          - {{ .Values.tls.caBundle.useSecret | ternary "secret" "configMap" }}:
+              name: {{ .Values.tls.caBundle.name }}
+              items:
+                - key: {{ .Values.tls.caBundle.key }}
+                  path: hubble-relay-ca.crt
+          {{- end }}
       {{- end }}
       {{- end }}
       {{- with .Values.hubble.ui.frontend.extraVolumes }}

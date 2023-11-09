@@ -1,6 +1,6 @@
 {{- define "clustermesh-apiserver-generate-certs.job.spec" }}
 {{- $certValiditySecondsStr := printf "%ds" (mul .Values.clustermesh.apiserver.tls.auto.certValidityDuration 24 60 60) -}}
-{{- $clustermeshServerSANs := concat (list "*.mesh.cilium.io")
+{{- $clustermeshServerSANs := concat (list "*.mesh.cilium.io" (printf "clustermesh-apiserver.%s.svc" .Release.Namespace))
   .Values.clustermesh.apiserver.tls.server.extraDnsNames
   .Values.clustermesh.apiserver.tls.server.extraIpAddresses
 -}}
@@ -38,6 +38,7 @@ spec:
             - "--clustermesh-apiserver-server-cert-sans={{ join "," $clustermeshServerSANs }}"
             - "--clustermesh-apiserver-admin-cert-generate"
             - "--clustermesh-apiserver-admin-cert-validity-duration={{ $certValiditySecondsStr }}"
+            - "--clustermesh-apiserver-admin-cert-common-name={{ include "clustermesh-apiserver-generate-certs.admin-common-name" . }}"
             {{- if .Values.externalWorkloads.enabled }}
             - "--clustermesh-apiserver-client-cert-generate"
             - "--clustermesh-apiserver-client-cert-validity-duration={{ $certValiditySecondsStr }}"
@@ -45,12 +46,17 @@ spec:
             {{- if .Values.clustermesh.useAPIServer }}
             - "--clustermesh-apiserver-remote-cert-generate"
             - "--clustermesh-apiserver-remote-cert-validity-duration={{ $certValiditySecondsStr }}"
+            - "--clustermesh-apiserver-remote-cert-common-name={{ include "clustermesh-apiserver-generate-certs.remote-common-name" . }}"
             {{- end }}
           {{- with .Values.certgen.extraVolumeMounts }}
           volumeMounts:
           {{- toYaml . | nindent 10 }}
           {{- end }}
       hostNetwork: true
+      {{- with .Values.certgen.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       serviceAccount: {{ .Values.serviceAccounts.clustermeshcertgen.name | quote }}
       serviceAccountName: {{ .Values.serviceAccounts.clustermeshcertgen.name | quote }}
       automountServiceAccountToken: {{ .Values.serviceAccounts.clustermeshcertgen.automount }}
