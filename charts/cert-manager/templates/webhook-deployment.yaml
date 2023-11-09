@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ include "webhook.fullname" . }}
-  namespace: {{ .Release.Namespace | quote }}
+  namespace: {{ include "cert-manager.namespace" . }}
   labels:
     app: {{ include "webhook.name" . }}
     app.kubernetes.io/name: {{ include "webhook.name" . }}
@@ -41,6 +41,10 @@ spec:
       {{- end }}
     spec:
       serviceAccountName: {{ template "webhook.serviceAccountName" . }}
+      {{- if hasKey .Values.webhook "automountServiceAccountToken" }}
+      automountServiceAccountToken: {{ .Values.webhook.automountServiceAccountToken }}
+      {{- end }}
+      enableServiceLinks: {{ .Values.webhook.enableServiceLinks }}
       {{- with .Values.global.priorityClassName }}
       priorityClassName: {{ . | quote }}
       {{- end }}
@@ -51,8 +55,11 @@ spec:
       {{- if .Values.webhook.hostNetwork }}
       hostNetwork: true
       {{- end }}
+      {{- if .Values.webhook.hostNetwork }}
+      dnsPolicy: ClusterFirstWithHostNet
+      {{- end }}
       containers:
-        - name: {{ .Chart.Name }}
+        - name: {{ .Chart.Name }}-webhook
           {{- with .Values.webhook.image }}
           image: "{{- if .registry -}}{{ .registry }}/{{- end -}}{{ .repository }}{{- if (.digest) -}} @{{ .digest }}{{- else -}}:{{ default $.Chart.AppVersion .tag }} {{- end -}}"
           {{- end }}
@@ -68,11 +75,19 @@ spec:
           {{ if not $config.securePort -}}
           - --secure-port={{ .Values.webhook.securePort }}
           {{- end }}
+          {{- if .Values.featureGates }}
+          - --feature-gates={{ .Values.webhook.featureGates }}
+          {{- end }}
           {{- $tlsConfig := default $config.tlsConfig "" }}
           {{ if or (not $config.tlsConfig) (and (not $tlsConfig.dynamic) (not $tlsConfig.filesystem) ) -}}
           - --dynamic-serving-ca-secret-namespace=$(POD_NAMESPACE)
           - --dynamic-serving-ca-secret-name={{ template "webhook.fullname" . }}-ca
-          - --dynamic-serving-dns-names={{ template "webhook.fullname" . }},{{ template "webhook.fullname" . }}.{{ .Release.Namespace }},{{ template "webhook.fullname" . }}.{{ .Release.Namespace }}.svc{{ if .Values.webhook.url.host }},{{ .Values.webhook.url.host }}{{ end }}
+          - --dynamic-serving-dns-names={{ template "webhook.fullname" . }}
+          - --dynamic-serving-dns-names={{ template "webhook.fullname" . }}.$(POD_NAMESPACE)
+          - --dynamic-serving-dns-names={{ template "webhook.fullname" . }}.$(POD_NAMESPACE).svc
+          {{ if .Values.webhook.url.host }}
+          - --dynamic-serving-dns-names={{ .Values.webhook.url.host }}
+          {{- end }}
           {{- end }}
           {{- with .Values.webhook.extraArgs }}
           {{- toYaml . | nindent 10 }}
@@ -86,6 +101,13 @@ spec:
             containerPort: {{ .Values.webhook.securePort }}
             {{- else }}
             containerPort: 6443
+            {{- end }}
+          - name: healthcheck
+            protocol: TCP
+            {{- if $config.healthzPort }}
+            containerPort: {{ $config.healthzPort }}
+            {{- else }}
+            containerPort: 6080
             {{- end }}
           livenessProbe:
             httpGet:
@@ -128,10 +150,15 @@ spec:
           resources:
             {{- toYaml . | nindent 12 }}
           {{- end }}
-          {{- if .Values.webhook.config }}
+          {{- if or .Values.webhook.config .Values.webhook.volumeMounts }}
           volumeMounts:
+            {{- if .Values.webhook.config }}
             - name: config
               mountPath: /var/cert-manager/config
+            {{- end }}
+            {{- if .Values.webhook.volumeMounts }}
+            {{- toYaml .Values.webhook.volumeMounts | nindent 12 }}
+            {{- end }}
           {{- end }}
       {{- with .Values.webhook.nodeSelector }}
       nodeSelector:
@@ -145,9 +172,18 @@ spec:
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- if .Values.webhook.config }}
+      {{- with  .Values.webhook.topologySpreadConstraints }}
+      topologySpreadConstraints:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- if or .Values.webhook.config .Values.webhook.volumes }}
       volumes:
+        {{- if .Values.webhook.config }}
         - name: config
           configMap:
             name: {{ include "webhook.fullname" . }}
+        {{- end }}
+        {{- if .Values.webhook.volumes }}
+        {{- toYaml .Values.webhook.volumes | nindent 8 }}
+        {{- end }}
       {{- end }}
