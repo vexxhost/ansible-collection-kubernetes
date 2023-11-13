@@ -21,7 +21,7 @@
   delegate_to: groups[kubernetes_control_plane_group][0]
   changed_when: true
   ansible.builtin.shell: |
-    kubectl version -o json | jq -r .serverVersion.gitVersion| cut -c2-
+    set -o pipefail && kubectl version -o json | jq -r .serverVersion.gitVersion| cut -c2-
   register: kubernetes_current_version
 
 - name: Upgrade the controlplane nodes

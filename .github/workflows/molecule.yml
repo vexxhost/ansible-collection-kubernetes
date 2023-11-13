@@ -29,6 +29,8 @@ jobs:
         scenario:
           - cluster-api
           - cluster-api-upgrade
+          - cluster-upgrade
+          - containerd
           - helm
           - upload-helm-chart
         distro:

@@ -1,0 +1,38 @@
+# Copyright (c) 2023 VEXXHOST, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
+
+- name: Verify
+  hosts: all
+  become: true
+  tasks:
+    - name: Ensure that the cert-manager is ready
+      kubernetes.core.k8s_info:
+        api_version: v1
+        kind: Deployment
+        name: "cert-manager"
+        namespace: "cert-manager"
+      register: _resource_info
+      until: _resource_info.resources | json_query('[*].status.conditions[?reason==`NewReplicaSetAvailable`][].status') | select ('match','True') | list | length == 1
+      delay: 2
+      retries: 5
+
+    - name: Retrieve the revision number
+      run_once: true
+      ansible.builtin.set_fact:
+        _deployment_revision: "{{ _resource_info.resources.metadata.annotations['deployment.kubernetes.io/revision'] }}"
+
+    - name: Assert that the deployment is not restarted
+      ansible.builtin.assert:
+        that:
+          - _deployment_revision == "1"
