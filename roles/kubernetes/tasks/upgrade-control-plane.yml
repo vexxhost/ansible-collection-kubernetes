@@ -17,7 +17,7 @@
   when: inventory_hostname == groups[kubernetes_control_plane_group][0]
   changed_when: true
   ansible.builtin.shell: |
-    kubeadm upgrade apply {{ kubernetes_version }}
+    kubeadm upgrade apply {{ kubernetes_version }} -y
   notify:
     - Reload systemd
 
