@@ -31,4 +31,4 @@
 
 - import_playbook: vexxhost.kubernetes.upgrade
   vars:
-    kubernetes_version: ${KUBERNETES_VERSION-1.26.3}
+    kubernetes_version: "{{ new_kubernetes_version }}"

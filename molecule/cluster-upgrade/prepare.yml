@@ -15,4 +15,4 @@
 - ansible.builtin.import_playbook: ../kubernetes/prepare.yml
 - ansible.builtin.import_playbook: ../kubernetes/converge.yml
   vars:
-    kubernetes_version: ${KUBERNETES_VERSION-1.25.8}
+    kubernetes_version: "{{ old_kubernetes_version }}"
