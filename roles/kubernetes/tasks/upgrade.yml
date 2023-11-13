@@ -23,6 +23,8 @@
   ansible.builtin.shell: |
     set -o pipefail && kubectl version -o json | jq -r .serverVersion.gitVersion| cut -c2-
   register: kubernetes_current_version
+  args:
+    executable: /bin/bash
 
 - name: Upgrade the controlplane nodes
   when:
