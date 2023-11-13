@@ -17,6 +17,7 @@
   become: true
   tasks:
     - name: Ensure that the cert-manager is ready
+      run_once: true
       kubernetes.core.k8s_info:
         api_version: v1
         kind: Deployment
@@ -30,7 +31,7 @@
     - name: Retrieve the revision number
       run_once: true
       ansible.builtin.set_fact:
-        _deployment_revision: "{{ _resource_info.resources.metadata.annotations['deployment.kubernetes.io/revision'] }}"
+        _deployment_revision: "{{ _resource_info.resources[0].metadata.annotations['deployment.kubernetes.io/revision'] }}"
 
     - name: Assert that the deployment is not restarted
       ansible.builtin.assert:
