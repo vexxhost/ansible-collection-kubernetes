@@ -28,12 +28,12 @@
 
 - name: Upgrade the controlplane nodes
   when:
-    - kubernetes_version is version(kubernetes_current_version, '>')
+    - kubernetes_version is version(kubernetes_current_version.stdout, '>')
     - inventory_hostname in groups[kubernetes_control_plane_group]
   ansible.builtin.include_tasks: upgrade-control-plane.yml
 
 - name: Upgrade the worker nodes
   when:
-    - kubernetes_version is version(kubernetes_current_version, '>')
+    - kubernetes_version is version(kubernetes_current_version.stdout, '>')
     - inventory_hostname not in groups[kubernetes_control_plane_group]
   ansible.builtin.include_tasks: upgrade-workers.yml
