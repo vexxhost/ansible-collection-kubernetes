@@ -13,6 +13,9 @@
 # under the License.
 
 _cert_manager_helm_values:
+  global:
+    leaderElection:
+      namespace: cert-manager
   installCRDs: true
   featureGates: AdditionalCertificateOutputFormats=true
   image:
