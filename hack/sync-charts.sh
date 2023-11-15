@@ -26,6 +26,6 @@ ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." >/dev/null 2>&1 && pwd )"
 # Clean-up all of the existing charts
 rm -rfv ${ROOT}/charts/*
 
-CILIUM_VERSION=1.13.3
+CILIUM_VERSION=1.14.3
 curl -sL https://helm.cilium.io/cilium-${CILIUM_VERSION}.tgz \
   | tar -xz -C ${ROOT}/charts
