@@ -20,7 +20,6 @@
       ansible.builtin.include_vars:
         file: "../../roles/{{ item }}/defaults/main.yml"
       loop:
-        - download_artifact
         - clusterctl
         - cluster_api
 
