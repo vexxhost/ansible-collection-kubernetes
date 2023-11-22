@@ -16,6 +16,6 @@
   hosts: all
   become: true
   roles:
-    - role: vexxhost.kubernetes.forget_package
+    - role: vexxhost.containers.forget_package
       vars:
         forget_package_name: nginx

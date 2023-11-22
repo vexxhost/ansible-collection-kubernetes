@@ -29,10 +29,10 @@ galaxy_info:
         - jammy
 
 dependencies:
-  - role: forget_package
+  - role: vexxhost.containers.forget_package
     forget_package_name: "{{ kubeadm_package_name }}"
     when: ansible_facts['pkg_mgr'] == "apt"
-  - role: download_artifact
+  - role: vexxhost.containers.download_artifact
     download_artifact_url: "{{ kubeadm_download_url }}"
     download_artifact_dest: "{{ kubeadm_download_dest }}"
     download_artifact_checksum: "sha256:{{ kubeadm_binary_checksum }}"

@@ -29,7 +29,7 @@ galaxy_info:
         - jammy
 
 dependencies:
-  - role: directory
+  - role: vexxhost.containers.directory
     directory_path: /etc/haproxy
-  - role: directory
+  - role: vexxhost.containers.directory
     directory_path: /etc/kubernetes/manifests

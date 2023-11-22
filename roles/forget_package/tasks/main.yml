@@ -1,4 +1,0 @@
-- name: Forget package
-  ansible.builtin.replace:
-    path: /var/lib/dpkg/status
-    regexp: '^Package: {{ forget_package_name }}\n(?:.|\n)+?\n\n'

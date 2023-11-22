@@ -28,7 +28,7 @@
   hosts: "{{ kubernetes_group | default('all') }}"
   become: true
   roles:
-    - role: containerd
+    - role: vexxhost.containers.containerd
       tags:
         - containerd
 

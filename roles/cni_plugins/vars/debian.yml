@@ -1,4 +1,0 @@
-cni_plugins_package_dependencies:
-  - iptables
-  - kmod
-  - udev
