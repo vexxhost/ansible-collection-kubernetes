@@ -47,7 +47,7 @@ cluster is still functional after each step.
       hosts: "{{ kubernetes_group | default('all') }}"
       become: true
       roles:
-        - role: vexxhost.kubernetes.containerd
+        - role: vexxhost.containers.containerd
     END
     ```
 
@@ -76,7 +76,7 @@ cluster is still functional after each step.
       become: true
       roles:
         - role: vexxhost.atmosphere.defaults
-        - role: vexxhost.kubernetes.containerd
+        - role: vexxhost.containers.containerd
           vars:
             containerd_pause_image: "{{ atmosphere_images['pause'] }}"
     END
