@@ -50,7 +50,7 @@
       vars:
         download_artifact_url: "{{ helm_diff_download_url }}"
         download_artifact_dest: "{{ helm_diff_download_dest }}"
-        download_artifact_checksum: "sha256:{{ helm_diff_checksum }}"
+        download_artifact_checksum: "sha256:{{ helm_diff_archive_checksum }}"
         download_artifact_owner: root
         download_artifact_mode: "0755"
         download_artifact_unarchive: true

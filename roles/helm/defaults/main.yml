@@ -23,7 +23,7 @@ helm_checksums:
 
 helm_download_url: "https://get.helm.sh/helm-{{ helm_version }}-{{ ansible_facts['system'] | lower }}-{{ download_artifact_goarch }}.tar.gz"
 helm_download_dest: "{{ download_artifact_work_directory }}/helm-{{ helm_version }}-{{ ansible_facts['system'] | lower }}-{{ download_artifact_goarch }}.tar.gz"
-helm_binary_checksum: "{{ helm_checksums[download_artifact_goarch][helm_version] }}"
+helm_archive_checksum: "{{ helm_checksums[download_artifact_goarch][helm_version] }}"
 
 # NOTE(fitbeard): This is to accomodate for the uninstallation of the old packages
 #               that shipped with the operating system
@@ -39,4 +39,4 @@ helm_diff_checksums:
 
 helm_diff_download_url: "https://github.com/databus23/helm-diff/releases/download/{{ helm_diff_version }}/helm-diff-{{ ansible_facts['system'] | lower }}-{{ download_artifact_goarch }}.tgz" # noqa: yaml[line-length]
 helm_diff_download_dest: "{{ download_artifact_work_directory }}/helm-diff-{{ ansible_facts['system'] | lower }}-{{ download_artifact_goarch }}.tgz"
-helm_diff_checksum: "{{ helm_diff_checksums[download_artifact_goarch][helm_diff_version] }}"
+helm_diff_archive_checksum: "{{ helm_diff_checksums[download_artifact_goarch][helm_diff_version] }}"
