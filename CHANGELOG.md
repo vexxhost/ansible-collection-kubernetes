@@ -1,5 +1,41 @@
 # Changelog
 
+## [1.11.1](https://github.com/vexxhost/ansible-collection-kubernetes/compare/v1.7.1...v1.11.1) (2023-11-28)
+
+
+### Features
+
+* add offline installs for capi ([#56](https://github.com/vexxhost/ansible-collection-kubernetes/issues/56)) ([cdf3ddb](https://github.com/vexxhost/ansible-collection-kubernetes/commit/cdf3ddbca0b1da08ee73885de45ac4456d9f2c56))
+* adopt to vexxhost.containers ([7a65ec2](https://github.com/vexxhost/ansible-collection-kubernetes/commit/7a65ec29329e62761a6dd3705778b26e3cc29718))
+* Allow custom ca certificates for K8s cluster ([b22a38a](https://github.com/vexxhost/ansible-collection-kubernetes/commit/b22a38a29d17f2318d566f7ee0e4b9488fd62440))
+* Set node selector for CAPI components ([6719b63](https://github.com/vexxhost/ansible-collection-kubernetes/commit/6719b639696c067ad70030dd0c11b8279470b91e))
+* upgrade CAPI version to 1.5.1 ([#62](https://github.com/vexxhost/ansible-collection-kubernetes/issues/62)) ([65f8a63](https://github.com/vexxhost/ansible-collection-kubernetes/commit/65f8a63ea06d062334822330f3d958f98d5f7e2a))
+
+
+### Bug Fixes
+
+* add missing role change ([9a37f6f](https://github.com/vexxhost/ansible-collection-kubernetes/commit/9a37f6fa17a36254a86904876c026fc7ef4dbed6))
+* Grant write perms to gh token ([6b4aea7](https://github.com/vexxhost/ansible-collection-kubernetes/commit/6b4aea7885b1d31318a597f088e4f1ba456af67d))
+* loosen kubernetes.core to above 2.3.2 ([f7ce48f](https://github.com/vexxhost/ansible-collection-kubernetes/commit/f7ce48fa3d61949d9ae9c75f8d1fb6efd7e59733))
+* Make a workaround for run_once of token generation ([74040c8](https://github.com/vexxhost/ansible-collection-kubernetes/commit/74040c805a15f62b8cf8a399a6ba8aecaa25f107))
+* remove containerd from github workflows ([090d958](https://github.com/vexxhost/ansible-collection-kubernetes/commit/090d958f71535c1d987bd8e0468684cfffd59d8b))
+* remove download_artifact from cluster-api verify ([a0cd39c](https://github.com/vexxhost/ansible-collection-kubernetes/commit/a0cd39cf6db617807c2342820581ba0520a63ad5))
+* remove forget_package molecule ([340d67d](https://github.com/vexxhost/ansible-collection-kubernetes/commit/340d67d82428d36f31dfd6c40d15e8511ff62c72))
+* Set default values for imagePullPolicy in kubeadmConfigSpec of CRDs ([ebf9dd1](https://github.com/vexxhost/ansible-collection-kubernetes/commit/ebf9dd100ef133153d1632e786a771440bc0d420))
+* Update CAPO version ([#58](https://github.com/vexxhost/ansible-collection-kubernetes/issues/58)) ([c204d44](https://github.com/vexxhost/ansible-collection-kubernetes/commit/c204d448d535d7442e97549d4980d85c429cf22a))
+* use kubelet_hostname instead of inventory_hostname_short ([5c08c72](https://github.com/vexxhost/ansible-collection-kubernetes/commit/5c08c72a944c2cc53f1eca09eecf7112b6805a53))
+* use SSH ARGs from command line if provided ([39fcd5c](https://github.com/vexxhost/ansible-collection-kubernetes/commit/39fcd5c14ade33f17ae79a942ffcb748689c6724))
+
+
+### Documentation
+
+* add upgrade docs ([#40](https://github.com/vexxhost/ansible-collection-kubernetes/issues/40)) ([e9cb5dd](https://github.com/vexxhost/ansible-collection-kubernetes/commit/e9cb5dd8dfdca8f2872eccd37fe26707a0b44dca))
+
+
+### Miscellaneous Chores
+
+* release 1.11.1 ([c0524b0](https://github.com/vexxhost/ansible-collection-kubernetes/commit/c0524b04abeb82f22d5ba88c81a635887e49108b))
+
 ## [1.7.1](https://github.com/vexxhost/ansible-collection-kubernetes/compare/v1.11.0...v1.7.1) (2023-11-13)
 
 
