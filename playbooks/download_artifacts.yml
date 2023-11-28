@@ -1,0 +1,54 @@
+- name: Download artifacts for all roles
+  hosts: "{{ target | default('all') }}"
+  gather_facts: false
+  vars:
+    role_location: "{{ playbook_dir }}/../roles"
+
+    # some role defaults use vars only defined in the download_artifact role
+    _download_artifact_goarch_groups:
+      x86_64: amd64
+      aarch64: arm64
+      armv7l: arm
+
+    download_artifact_goarch: >-
+      {%- if ansible_facts['architecture'] in _download_artifact_goarch_groups -%}
+      {{ _download_artifact_goarch_groups[ansible_facts['architecture']] }}
+      {%- else -%}
+      {{ ansible_facts['architecture'] }}
+      {%- endif -%}
+
+    # ansible-lint will not allow these intermediate values on include_role, so place them here instead
+    _archive_checksum: "{{ lookup('vars', item ~ '_archive_checksum', default='') }}"
+    _checksum: "{{ lookup('vars', item ~ '_binary_checksum', default=_archive_checksum) }}"
+    _binary_version: "{{ lookup('vars', item ~ '_version', default='') }}"
+    _download_dest: "{{ lookup('vars', item ~ '_download_dest') }}"
+    _binary_dest: "{{ download_artifact_work_directory ~ '/' ~ item ~ '-' ~ _binary_version ~ '-' ~ download_artifact_goarch }}"
+
+  tasks:
+    - name: Gather minimal facts
+      ansible.builtin.setup:
+        gather_subset: min
+
+    - name: Find all subdirectories in the role location
+      ansible.builtin.find:
+        file_type: directory
+        paths: "{{ role_location }}"
+        recurse: true
+      register: role_paths
+
+    - name: Select only defaults/ directories and load vars
+      ansible.builtin.include_vars:
+        dir: "{{ item.path }}"
+      with_items: "{{ role_paths.files | selectattr('path', 'search', 'defaults') }}"
+
+    - name: Download all artifacts defined by *_download_url
+      ansible.builtin.include_role:
+        name: vexxhost.containers.download_artifact
+      vars:
+        download_artifact_url: "{{ lookup('vars', item ~ '_download_url') }}"
+        download_artifact_dest: "{{ _download_dest | regex_search('/usr/') | ternary(_binary_dest, _download_dest) }}"
+        download_artifact_checksum: "sha256:{{ _checksum }}"
+        download_artifact_owner: root
+        download_artifact_mode: "0755"
+        download_artifact_unarchive: false
+      with_items: "{{ query('varnames', '_download_url$') | map('replace', '_download_url', '') }}"
