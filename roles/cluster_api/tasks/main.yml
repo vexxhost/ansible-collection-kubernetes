@@ -16,7 +16,7 @@
   ansible.builtin.file:
     path: "{{ cluster_api_provider_path }}"
     state: directory
-    mode: "0o755"
+    mode: "0755"
     owner: root
     group: root
 
