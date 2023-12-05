@@ -12,7 +12,7 @@ dependencies:
   community.crypto: ">=2.2.3"
   community.general: ">=4.5.0"
   kubernetes.core: ">=2.3.2"
-  vexxhost.containers: "1.1.0"
+  vexxhost.containers: "1.1.1"
 tags:
   - application
   - cloud
