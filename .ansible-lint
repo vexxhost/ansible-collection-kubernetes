@@ -1,8 +1,9 @@
 ---
 exclude_paths:
   - .github
-  - charts
   - molecule
   - roles/cluster_api/files/providers
+  - roles/cert_manager/files/chart
+  - roles/cilium/files/chart
 skip_list:
   - role-name
