@@ -1,0 +1,30 @@
+- name: Verify
+  hosts: all
+  become: true
+  tasks:
+    - name: Stat file 1
+      ansible.builtin.stat:
+        path: /usr/local/src/chart-one/.gitkeep
+      register: stat_1
+
+    - name: Stat file 2
+      ansible.builtin.stat:
+        path: /usr/local/src/chart-two/.gitkeep
+      register: stat_2
+
+    - name: Stat removed file 1
+      ansible.builtin.stat:
+        path: /usr/local/src/chart-one/file
+      register: stat_r1
+
+    - name: Stat removed file 2
+      ansible.builtin.stat:
+        path: /usr/local/src/chart-two/file
+      register: stat_r2
+
+    - ansible.builtin.assert:
+        that:
+          - stat_1.stat.exists
+          - stat_2.stat.exists
+          - not stat_r1.stat.exists
+          - not stat_r2.stat.exists

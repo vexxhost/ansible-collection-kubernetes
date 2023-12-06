@@ -1,9 +1,12 @@
 dependencies:
   - role: vexxhost.kubernetes.upload_helm_chart
     vars:
-      upload_helm_chart_src: "./files/chart/"
-      upload_helm_chart_dest: /usr/local/src/chart-1
+      # with rsync
+      upload_helm_chart_src: "{{ test_relative_path }}"
+      upload_helm_chart_dest: /usr/local/src/chart-one
   - role: vexxhost.kubernetes.upload_helm_chart
     vars:
-      upload_helm_chart_src: "../../charts/foo/"
-      upload_helm_chart_dest: /usr/local/src/chart-2
+      # with multi_copy
+      upload_helm_chart_src: "{{ test_relative_path }}"
+      upload_helm_chart_dest: /usr/local/src/chart-two
+      upload_helm_chart_method: copy
