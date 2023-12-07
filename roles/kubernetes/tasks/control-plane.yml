@@ -55,6 +55,44 @@
       - effect: NoSchedule
         key: node-role.kubernetes.io/master
 
+- name: Retrieve the "kubeadm-config" ConfigMap
+  run_once: true
+  kubernetes.core.k8s_info:
+    api_version: v1
+    kind: ConfigMap
+    name: kubeadm-config
+    namespace: kube-system
+  register: kubernetes_kubeadm_config
+
+- name: Parse the ClusterConfiguration
+  run_once: true
+  ansible.builtin.set_fact:
+    kubernetes_cluster_configuration: "{{ kubernetes_kubeadm_config.resources[0].data.ClusterConfiguration | from_yaml }}"
+
+- name: Retrieve the current Kubernetes version
+  run_once: true
+  ansible.builtin.set_fact:
+    kubernetes_cluster_version: "{{ kubernetes_cluster_configuration.kubernetesVersion | regex_replace('^v', '') }}"
+
+# TODO: if we are jumping too many minor versions, error or start over somehow
+
+- name: Start an upgrade
+  run_once: true
+  when: kubernetes_cluster_version != kubernetes_version
+  ansible.builtin.command: kubeadm upgrade apply --yes v{{ kubernetes_version }}
+
+- name: Check if the Kubernetes API services is up to date
+  ansible.builtin.lineinfile:
+    dest: /etc/kubernetes/manifests/kube-apiserver.yaml
+    line: ".*:v{{ kubernetes_version }}.*"
+  check_mode: yes
+  register: kube_apiserver_version_check
+
+- name: Trigger an upgrade of the Kubernetes API services
+  throttle: 1
+  ansible.builtin.command: kubeadm upgrade node
+  when: kube_apiserver_version_check.changed
+
 - name: Set node selector for CoreDNS components
   run_once: true
   kubernetes.core.k8s:

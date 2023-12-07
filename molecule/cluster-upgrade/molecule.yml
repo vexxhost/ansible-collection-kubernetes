@@ -17,7 +17,8 @@ dependency:
 driver:
   name: docker
 platforms:
-  - name: kubernetes-${MOLECULE_SCENARIO_NAME}
+  - &instance_config
+    name: k8s-${MOLECULE_SCENARIO_NAME}-1
     image: geerlingguy/docker-${MOLECULE_DISTRO:-ubuntu2004}-ansible:latest
     command: ${MOLECULE_DOCKER_COMMAND:-""}
     privileged: true
@@ -35,6 +36,10 @@ platforms:
       - /usr/src:/usr/src:ro
     groups:
       - controllers
+  - <<: *instance_config
+    name: k8s-${MOLECULE_SCENARIO_NAME}-2
+  - <<: *instance_config
+    name: k8s-${MOLECULE_SCENARIO_NAME}-3
 provisioner:
   name: ansible
   config_options:
@@ -43,8 +48,8 @@ provisioner:
   inventory:
     group_vars:
       all:
-        old_kubernetes_version: ${OLD_KUBERNETES_VERSION-1.25.8}
-        new_kubernetes_version: ${NEW_KUBERNETES_VERSION-1.26.3}
+        old_kubernetes_version: ${OLD_KUBERNETES_VERSION-1.27.8}
+        kubernetes_version: ${KUBERNETES_VERSION-1.28.4}
         cilium_helm_values:
           operator:
             replicas: 1

@@ -16,3 +16,24 @@
 - ansible.builtin.import_playbook: ../kubernetes/converge.yml
   vars:
     kubernetes_version: "{{ old_kubernetes_version }}"
+
+- name: Wait for all nodes to become Ready
+  hosts: controllers
+  become: true
+  tasks:
+    - name: Get all nodes in the cluster
+      kubernetes.core.k8s_info:
+        kind: Node
+      register: nodes
+
+    - name: Wait for all nodes to be Ready
+      kubernetes.core.k8s_info:
+        kind: Node
+        name: "{{ item.metadata.name }}"
+        condition: Ready
+        wait: true
+        wait_sleep: 5
+        wait_timeout: 180
+      loop: "{{ nodes.resources }}"
+      loop_control:
+        label: "{{ item.metadata.name }}"

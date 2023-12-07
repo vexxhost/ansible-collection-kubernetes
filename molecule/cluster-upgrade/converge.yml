@@ -12,23 +12,4 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-- name: Converge
-  hosts: all
-  become: true
-  roles:
-    - vexxhost.kubernetes.cert_manager
-  tasks:
-    - name: Ensure that the cert-manager is ready
-      kubernetes.core.k8s_info:
-        api_version: v1
-        kind: Deployment
-        name: "cert-manager"
-        namespace: "cert-manager"
-      register: _resource_info
-      until: _resource_info.resources | json_query('[*].status.conditions[?reason==`NewReplicaSetAvailable`][].status') | select ('match','True') | list | length == 1
-      delay: 2
-      retries: 5
-
-- import_playbook: vexxhost.kubernetes.upgrade
-  vars:
-    kubernetes_version: "{{ new_kubernetes_version }}"
+- ansible.builtin.import_playbook: ../kubernetes/converge.yml

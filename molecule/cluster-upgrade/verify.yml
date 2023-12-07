@@ -16,24 +16,17 @@
   hosts: all
   become: true
   tasks:
-    - name: Ensure that the cert-manager is ready
-      run_once: true
+    - name: Search for all Cilium operator pods
       kubernetes.core.k8s_info:
-        api_version: v1
-        kind: Deployment
-        name: "cert-manager"
-        namespace: "cert-manager"
-      register: _resource_info
-      until: _resource_info.resources | json_query('[*].status.conditions[?reason==`NewReplicaSetAvailable`][].status') | select ('match','True') | list | length == 1
-      delay: 2
-      retries: 5
+        kind: Pod
+        label_selectors:
+          - app.kubernetes.io/name=cilium-operator
+      register: cilium_operator_pods
 
-    - name: Retrieve the revision number
-      run_once: true
-      ansible.builtin.set_fact:
-        _deployment_revision: "{{ _resource_info.resources[0].metadata.annotations['deployment.kubernetes.io/revision'] }}"
-
-    - name: Assert that the deployment is not restarted
+    - name: Verify Cilium operator pods have not been restarted
       ansible.builtin.assert:
         that:
-          - _deployment_revision == "1"
+          - item.status.containerStatuses[0].restartCount == 0
+        fail_msg: "Cilium operator pods have been restarted"
+        success_msg: "Cilium operator pods have not been restarted"
+      loop: "{{ cilium_operator_pods.resources }}"

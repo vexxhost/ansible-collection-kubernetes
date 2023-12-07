@@ -25,3 +25,22 @@
 - name: Setup nodes
   when: inventory_hostname not in groups[kubernetes_control_plane_group]
   ansible.builtin.include_tasks: nodes.yml
+
+- name: Get "Node" object
+  delegate_to: "{{ kubernetes_bootstrap_node | default(groups[kubernetes_control_plane_group][0]) }}"
+  kubernetes.core.k8s_info:
+    kind: Node
+    name: "{{ inventory_hostname_short }}"
+  register: kubernetes_node
+
+- name: Upgrade & restart Kubelet node for upgrade
+  when: kubernetes_node.resources[0].status.nodeInfo.kubeletVersion[1:] != kubernetes_version
+  block:
+    - name: Upgrade node
+      ansible.builtin.command: kubeadm upgrade node
+
+    - name: Restart "kubelet" service
+      ansible.builtin.service:
+        name: kubelet
+        state: restarted
+        enabled: true

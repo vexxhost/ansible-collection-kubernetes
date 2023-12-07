@@ -39,4 +39,3 @@ dependencies:
     vars:
       kubelet_version: "{{ kubernetes_version }}"
       kubelet_allow_unsafe_swap: "{{ kubernetes_allow_unsafe_swap }}"
-  - role: jq
