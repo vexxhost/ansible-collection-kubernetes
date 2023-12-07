@@ -30,10 +30,10 @@
       kubernetes.core.k8s_info:
         kind: Node
         name: "{{ item.metadata.name }}"
-        condition: Ready
         wait: true
         wait_sleep: 5
         wait_timeout: 180
+        wait_condition: Ready
       loop: "{{ nodes.resources }}"
       loop_control:
         label: "{{ item.metadata.name }}"
