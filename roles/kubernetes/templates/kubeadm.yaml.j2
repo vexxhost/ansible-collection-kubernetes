@@ -3,7 +3,6 @@ apiVersion: kubeadm.k8s.io/v1beta2
 kind: InitConfiguration
 localAPIEndpoint:
   advertiseAddress: "{{ kubernetes_node_ip }}"
-  bindPort: 16443
 nodeRegistration:
   kubeletExtraArgs:
 {% if kubernetes_allow_unsafe_swap %}
@@ -37,7 +36,6 @@ discovery:
 controlPlane:
   localAPIEndpoint:
     advertiseAddress: "{{ kubernetes_node_ip }}"
-    bindPort: 16443
   certificateKey: {{ kubernetes_kubeadm_init_upload_certs.stdout_lines[-1] | trim }}
 {% endif %}
 {% endif %}
