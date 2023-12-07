@@ -16,7 +16,7 @@
 kube_vip_image: ghcr.io/kube-vip/kube-vip:v0.6.4
 
 # Interface to use for kube-vip
-kube_vip_interface: "{{ kubernetes_keepalived_interface }}"
+kube_vip_interface: "{{ keepalived_interface | default(kubernetes_keepalived_interface) }}"
 
 # IP address to use for kube-vip
-kube_vip_address: "{{ kubernetes_keepalived_vip }}"
+kube_vip_address: "{{ keepalived_vip | default(kubernetes_keepalived_vip) }}"
