@@ -104,3 +104,55 @@ jobs:
         env:
           MOLECULE_DISTRO: ${{ matrix.distro }}
           KUBERNETES_VERSION: ${{ matrix.version }}
+
+  upgrades:
+    runs-on: v3-standard-8
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - old_version: 1.19.16
+            version: 1.20.15
+          - old_version: 1.20.15
+            version: 1.21.14
+          - old_version: 1.21.14
+            version: 1.22.17
+          - old_version: 1.22.17
+            version: 1.23.17
+          - old_version: 1.23.17
+            version: 1.24.17
+          - old_version: 1.24.17
+            version: 1.25.16
+          - old_version: 1.25.16
+            version: 1.26.11
+          - old_version: 1.26.11
+            version: 1.27.8
+          - old_version: 1.27.8
+            version: 1.28.4
+        distro:
+          - rockylinux8
+          - rockylinux9
+          - ubuntu2004
+          - ubuntu2204
+    steps:
+      - name: Checkout project
+        uses: actions/checkout@v3
+
+      - name: Setup Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: "3.10"
+          cache: pip
+
+      - name: Install Molecule
+        run: pip install -r requirements.txt
+
+      - name: Turn off swap
+        run: sudo swapoff -a
+
+      - name: Run Molecule
+        run: molecule test -s cluster-upgrade
+        env:
+          MOLECULE_DISTRO: ${{ matrix.distro }}
+          OLD_KUBERNETES_VERSION: ${{ matrix.old_version }}
+          KUBERNETES_VERSION: ${{ matrix.version }}
