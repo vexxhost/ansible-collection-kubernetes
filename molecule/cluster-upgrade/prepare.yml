@@ -18,22 +18,14 @@
     kubernetes_version: "{{ old_kubernetes_version }}"
 
 - name: Wait for all nodes to become Ready
-  hosts: controllers
+  hosts: all
   become: true
   tasks:
-    - name: Get all nodes in the cluster
+    - name: Wait for node to be Ready
+      delegate_to: "{{ groups['controllers'][0] }}"
       kubernetes.core.k8s_info:
         kind: Node
-      register: nodes
-
-    - name: Wait for all nodes to be Ready
-      kubernetes.core.k8s_info:
-        kind: Node
-        name: "{{ item.metadata.name }}"
+        name: "{{ inventory_hostname_short }}"
         wait: true
-        wait_sleep: 5
-        wait_timeout: 180
-        wait_condition: Ready
-      loop: "{{ nodes.resources }}"
-      loop_control:
-        label: "{{ item.metadata.name }}"
+        wait_condition:
+          type: Ready
