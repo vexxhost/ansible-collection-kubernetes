@@ -45,3 +45,18 @@
         name: kubelet
         state: restarted
         enabled: true
+
+- name: Set node selector for CoreDNS components
+  run_once: true
+  delegate_to: "{{ kubernetes_bootstrap_node | default(groups[kubernetes_control_plane_group][0]) }}"
+  kubernetes.core.k8s:
+    definition:
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: coredns
+        namespace: kube-system
+      spec:
+        template:
+          spec:
+            nodeSelector: "{{ kubernetes_coredns_node_selector }}"
