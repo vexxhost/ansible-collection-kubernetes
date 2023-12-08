@@ -12,29 +12,6 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-- name: Retrieve the "kubeadm-config" ConfigMap
-  run_once: true
-  ignore_errors: true
-  kubernetes.core.k8s_info:
-    api_version: v1
-    kind: ConfigMap
-    name: kubeadm-config
-    namespace: kube-system
-  register: kube_vip_kubeadm_config
-
-- name: Update the "kubeadm-config" to use port 6443
-  when:
-    - kube_vip_kubeadm_config is not failed
-    - "'bindPort: 16443' in kube_vip_kubeadm_config.resources[0].data.ClusterConfiguration"
-  kubernetes.core.k8s:
-    state: patched
-    kind: ConfigMap
-    name: kubeadm-config
-    namespace: kube-system
-    definition:
-      data:
-        ClusterConfiguration: "{{ kube_vip_kubeadm_config.resources[0].data.ClusterConfiguration | regex_replace('bindPort: 16443', 'bindPort: 6443') }}"
-
 - name: Uninstall legacy HA stack
   ansible.builtin.file:
     path: "{{ item }}"
