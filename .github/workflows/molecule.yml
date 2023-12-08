@@ -129,11 +129,6 @@ jobs:
             version: 1.27.8
           - old_version: 1.27.8
             version: 1.28.4
-        distro:
-          - rockylinux8
-          - rockylinux9
-          - ubuntu2004
-          - ubuntu2204
     steps:
       - name: Checkout project
         uses: actions/checkout@v3
@@ -153,6 +148,5 @@ jobs:
       - name: Run Molecule
         run: molecule test -s cluster-upgrade
         env:
-          MOLECULE_DISTRO: ${{ matrix.distro }}
           OLD_KUBERNETES_VERSION: ${{ matrix.old_version }}
           KUBERNETES_VERSION: ${{ matrix.version }}
