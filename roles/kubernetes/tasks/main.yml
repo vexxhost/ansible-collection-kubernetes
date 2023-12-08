@@ -37,6 +37,7 @@
   when: kubernetes_node.resources[0].status.nodeInfo.kubeletVersion[1:] != kubernetes_version
   block:
     - name: Upgrade node
+      changed_when: true
       ansible.builtin.command: kubeadm upgrade node
 
     - name: Restart "kubelet" service

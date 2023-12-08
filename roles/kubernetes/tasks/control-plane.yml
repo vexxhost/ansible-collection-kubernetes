@@ -78,6 +78,7 @@
 
 - name: Start an upgrade
   run_once: true
+  changed_when: true
   when: kubernetes_cluster_version != kubernetes_version
   ansible.builtin.command: kubeadm upgrade apply --yes v{{ kubernetes_version }}
 
@@ -90,6 +91,7 @@
 
 - name: Trigger an upgrade of the Kubernetes API services
   throttle: 1
+  changed_when: true
   ansible.builtin.command: kubeadm upgrade node
   when: kube_apiserver_version_check is failed
 
