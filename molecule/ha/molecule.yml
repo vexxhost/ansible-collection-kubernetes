@@ -48,7 +48,7 @@ provisioner:
   inventory:
     group_vars:
       all:
-        kubernetes_version: ${KUBERNETES_VERSION-1.26.3}
+        kubernetes_version: ${KUBERNETES_VERSION-1.28.4}
       controllers:
         keepalived_interface: "{{ ansible_facts['default_ipv4'].interface }}"
         keepalived_vip: 172.17.0.100
