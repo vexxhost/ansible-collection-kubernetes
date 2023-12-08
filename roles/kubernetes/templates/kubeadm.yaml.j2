@@ -1,8 +1,8 @@
 ---
 {% if kubernetes_version is ansible.builtin.version('1.22.0', '<') %}
-apiVersion: kubeadm.k8s.io/v1beta3
-{% else %}
 apiVersion: kubeadm.k8s.io/v1beta2
+{% else %}
+apiVersion: kubeadm.k8s.io/v1beta3
 {% endif %}
 kind: InitConfiguration
 localAPIEndpoint:
@@ -21,9 +21,9 @@ nodeRegistration:
     container-runtime-endpoint: "{{ kubelet_cri_socket }}"
 ---
 {% if kubernetes_version is ansible.builtin.version('1.22.0', '<') %}
-apiVersion: kubeadm.k8s.io/v1beta3
-{% else %}
 apiVersion: kubeadm.k8s.io/v1beta2
+{% else %}
+apiVersion: kubeadm.k8s.io/v1beta3
 {% endif %}
 kind: JoinConfiguration
 nodeRegistration:
@@ -53,9 +53,9 @@ controlPlane:
 {% endif %}
 ---
 {% if kubernetes_version is ansible.builtin.version('1.22.0', '<') %}
-apiVersion: kubeadm.k8s.io/v1beta3
-{% else %}
 apiVersion: kubeadm.k8s.io/v1beta2
+{% else %}
+apiVersion: kubeadm.k8s.io/v1beta3
 {% endif %}
 kind: ClusterConfiguration
 kubernetesVersion: v{{ kubernetes_version }}
