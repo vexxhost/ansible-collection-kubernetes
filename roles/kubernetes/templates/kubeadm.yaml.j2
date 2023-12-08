@@ -1,5 +1,9 @@
 ---
+{% if kubernetes_version is ansible.builtin.version('1.22.0', '<') %}
 apiVersion: kubeadm.k8s.io/v1beta2
+{% else %}
+apiVersion: kubeadm.k8s.io/v1beta3
+{% endif %}
 kind: InitConfiguration
 localAPIEndpoint:
   advertiseAddress: "{{ kubernetes_node_ip }}"
@@ -11,10 +15,16 @@ nodeRegistration:
     cgroups-per-qos: "false"
     enforce-node-allocatable: ""
     node-ip: "{{ kubernetes_node_ip }}"
+{% if kubernetes_version is ansible.builtin.version('1.24.0', '<') %}
     container-runtime: "remote"
+{% endif %}
     container-runtime-endpoint: "{{ kubelet_cri_socket }}"
 ---
+{% if kubernetes_version is ansible.builtin.version('1.22.0', '<') %}
 apiVersion: kubeadm.k8s.io/v1beta2
+{% else %}
+apiVersion: kubeadm.k8s.io/v1beta3
+{% endif %}
 kind: JoinConfiguration
 nodeRegistration:
   kubeletExtraArgs:
@@ -24,7 +34,9 @@ nodeRegistration:
     cgroups-per-qos: "false"
     enforce-node-allocatable: ""
     node-ip: "{{ kubernetes_node_ip }}"
+{% if kubernetes_version is ansible.builtin.version('1.24.0', '<') %}
     container-runtime: "remote"
+{% endif %}
     container-runtime-endpoint: "{{ kubelet_cri_socket }}"
 {% if (kubernetes_bootstrap_node is not defined) or (kubernetes_bootstrap_node is defined and inventory_hostname != kubernetes_bootstrap_node) %}
 discovery:
@@ -40,8 +52,13 @@ controlPlane:
 {% endif %}
 {% endif %}
 ---
+{% if kubernetes_version is ansible.builtin.version('1.22.0', '<') %}
 apiVersion: kubeadm.k8s.io/v1beta2
+{% else %}
+apiVersion: kubeadm.k8s.io/v1beta3
+{% endif %}
 kind: ClusterConfiguration
+kubernetesVersion: v{{ kubernetes_version }}
 controlPlaneEndpoint: "{{ kubernetes_hostname }}:6443"
 {% if kubernetes_image_repository not in ("registry.k8s.io", "k8s.gcr.io") %}
 imageRepository: "{{ kubernetes_image_repository }}"
