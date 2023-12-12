@@ -34,6 +34,7 @@
   register: kubernetes_node
 
 - name: Upgrade & restart Kubelet node for upgrade
+  throttle: 1
   when: kubernetes_node.resources[0].status.nodeInfo.kubeletVersion[1:] != kubernetes_version
   block:
     - name: Upgrade node
