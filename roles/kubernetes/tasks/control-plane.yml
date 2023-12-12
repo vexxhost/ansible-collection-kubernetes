@@ -55,38 +55,10 @@
       - effect: NoSchedule
         key: node-role.kubernetes.io/master
 
-- name: Retrieve the "kubeadm-config" ConfigMap
-  run_once: true
-  kubernetes.core.k8s_info:
-    api_version: v1
-    kind: ConfigMap
-    name: kubeadm-config
-    namespace: kube-system
-  register: kubernetes_kubeadm_config
-
-- name: Parse the ClusterConfiguration
-  run_once: true
-  ansible.builtin.set_fact:
-    kubernetes_cluster_configuration: "{{ kubernetes_kubeadm_config.resources[0].data.ClusterConfiguration | from_yaml }}"
-
-- name: Retrieve the current Kubernetes version
-  run_once: true
-  ansible.builtin.set_fact:
-    kubernetes_cluster_version: "{{ kubernetes_cluster_configuration.kubernetesVersion | regex_replace('^v', '') }}"
-
-- name: Extract major, minor, and patch versions
-  ansible.builtin.set_fact:
-    _current_major: "{{ kubernetes_cluster_version.split('.')[0] }}"
-    _current_minor: "{{ kubernetes_cluster_version.split('.')[1] }}"
-    _current_patch: "{{ kubernetes_cluster_version.split('.')[2] }}"
-    _desired_major: "{{ kubernetes_version.split('.')[0] }}"
-    _desired_minor: "{{ kubernetes_version.split('.')[1] }}"
-    _desired_patch: "{{ kubernetes_version.split('.')[2] }}"
-
 - name: Upgrade if necessary
   when:
-    - _current_major == _desired_major
-    - (_current_minor | int + 1 == _desired_minor) or ((_current_minor == _desired_minor) and (_current_patch != _desired_patch))
+    - kubernetes_upgrade_check_upgrade_required is defined
+    - kubernetes_upgrade_check_upgrade_required | bool
   block:
     - name: Start an upgrade
       run_once: true

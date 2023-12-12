@@ -35,18 +35,11 @@
 
 - name: Extract major, minor, and patch versions
   ansible.builtin.set_fact:
-    _current_major: "{{ kubernetes_node.resources[0].status.nodeInfo.kubeletVersion[1:].split('.')[0] }}"
-    _current_minor: "{{ kubernetes_node.resources[0].status.nodeInfo.kubeletVersion[1:].split('.')[1] }}"
-    _current_patch: "{{ kubernetes_node.resources[0].status.nodeInfo.kubeletVersion[1:].split('.')[2] }}"
-    _desired_major: "{{ kubernetes_version.split('.')[0] }}"
-    _desired_minor: "{{ kubernetes_version.split('.')[1] }}"
-    _desired_patch: "{{ kubernetes_version.split('.')[2] }}"
+    kubernetes_kubelet_version: "{{ kubernetes_node.resources[0].status.nodeInfo.kubeletVersion | regex_replace('^v', '') }}}}"
 
 - name: Upgrade & restart Kubelet node for upgrade
   throttle: 1
-  when:
-    - _current_major == _desired_major
-    - (_current_minor | int + 1 == _desired_minor) or ((_current_minor == _desired_minor) and (_current_patch != _desired_patch))
+  when: kubernetes_kubelet_version != kubernetes_version
   block:
     - name: Upgrade node
       changed_when: true
