@@ -75,7 +75,7 @@
     kubernetes_cluster_version: "{{ kubernetes_cluster_configuration.kubernetesVersion | regex_replace('^v', '') }}"
 
 - name: Extract major, minor, and patch versions
-  set_fact:
+  ansible.builtin.set_fact:
     _current_major: "{{ kubernetes_cluster_version.split('.')[0] }}"
     _current_minor: "{{ kubernetes_cluster_version.split('.')[1] }}"
     _current_patch: "{{ kubernetes_cluster_version.split('.')[2] }}"
@@ -88,20 +88,20 @@
     - _current_major == _desired_major
     - (_current_minor | int + 1 == _desired_minor) or ((_current_minor == _desired_minor) and (_current_patch != _desired_patch))
   block:
-  - name: Start an upgrade
-    run_once: true
-    changed_when: true
-    ansible.builtin.command: kubeadm upgrade apply --yes v{{ kubernetes_version }}
+    - name: Start an upgrade
+      run_once: true
+      changed_when: true
+      ansible.builtin.command: kubeadm upgrade apply --yes v{{ kubernetes_version }}
 
-  - name: Check if the Kubernetes API services is up to date
-    ansible.builtin.command:
-      cmd: grep -q "v{{ kubernetes_version }}" /etc/kubernetes/manifests/kube-apiserver.yaml
-    changed_when: false
-    ignore_errors: true
-    register: kube_apiserver_version_check
+    - name: Check if the Kubernetes API services is up to date
+      ansible.builtin.command:
+        cmd: grep -q "v{{ kubernetes_version }}" /etc/kubernetes/manifests/kube-apiserver.yaml
+      changed_when: false
+      ignore_errors: true
+      register: kube_apiserver_version_check
 
-  - name: Trigger an upgrade of the Kubernetes API services
-    throttle: 1
-    changed_when: true
-    ansible.builtin.command: kubeadm upgrade node
-    when: kube_apiserver_version_check is failed
+    - name: Trigger an upgrade of the Kubernetes API services
+      throttle: 1
+      changed_when: true
+      ansible.builtin.command: kubeadm upgrade node
+      when: kube_apiserver_version_check is failed

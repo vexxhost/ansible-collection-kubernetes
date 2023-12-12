@@ -34,7 +34,7 @@
   register: kubernetes_node
 
 - name: Extract major, minor, and patch versions
-  set_fact:
+  ansible.builtin.set_fact:
     _current_major: "{{ kubernetes_node.resources[0].status.nodeInfo.kubeletVersion[1:].split('.')[0] }}"
     _current_minor: "{{ kubernetes_node.resources[0].status.nodeInfo.kubeletVersion[1:].split('.')[1] }}"
     _current_patch: "{{ kubernetes_node.resources[0].status.nodeInfo.kubeletVersion[1:].split('.')[2] }}"
