@@ -86,7 +86,7 @@
 - name: Upgrade if necessary
   when:
     - _current_major == _desired_major
-    - _current_minor + 1 == _desired_minor or (_current_minor == _desired_minor and _current_patch != _desired_patch)
+    - (_current_minor + 1 == _desired_minor) or ((_current_minor == _desired_minor) and (_current_patch != _desired_patch))
   block:
     - name: Start an upgrade
       run_once: true
