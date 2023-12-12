@@ -33,7 +33,7 @@
     - name: Retrieve the current Kubernetes version
       run_once: true
       ansible.builtin.set_fact:
-        kubernetes_upgrade_check_cluster_version: "{{ kubernetes_cluster_configuration.kubernetesVersion | regex_replace('^v', '') }}" # noqa: yaml[line-length]
+        kubernetes_upgrade_check_cluster_version: "{{ kubernetes_upgrade_check_cluster_configuration.kubernetesVersion | regex_replace('^v', '') }}" # noqa: yaml[line-length]
 
     - name: Extract major, minor, and patch versions
       run_once: true
