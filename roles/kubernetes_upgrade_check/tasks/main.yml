@@ -38,12 +38,12 @@
     - name: Extract major, minor, and patch versions
       run_once: true
       ansible.builtin.set_fact:
-        kubernetes_upgrade_check_current_major: "{{ kubernetes_upgrade_check_cluster_version.split('.')[0] }}"
-        kubernetes_upgrade_check_current_minor: "{{ kubernetes_upgrade_check_cluster_version.split('.')[1] }}"
-        kubernetes_upgrade_check_current_patch: "{{ kubernetes_upgrade_check_cluster_version.split('.')[2] }}"
-        kubernetes_upgrade_check_desired_major: "{{ kubernetes_version.split('.')[0] }}"
-        kubernetes_upgrade_check_desired_minor: "{{ kubernetes_version.split('.')[1] }}"
-        kubernetes_upgrade_check_desired_patch: "{{ kubernetes_version.split('.')[2] }}"
+        kubernetes_upgrade_check_current_major: "{{ kubernetes_upgrade_check_cluster_version.split('.')[0] | int }}"
+        kubernetes_upgrade_check_current_minor: "{{ kubernetes_upgrade_check_cluster_version.split('.')[1] | int }}"
+        kubernetes_upgrade_check_current_patch: "{{ kubernetes_upgrade_check_cluster_version.split('.')[2] | int }}"
+        kubernetes_upgrade_check_desired_major: "{{ kubernetes_version.split('.')[0] | int }}"
+        kubernetes_upgrade_check_desired_minor: "{{ kubernetes_version.split('.')[1] | int }}"
+        kubernetes_upgrade_check_desired_patch: "{{ kubernetes_version.split('.')[2] | int }}"
 
     - name: Fail if we're jumping more than one minor version
       ansible.builtin.fail:
