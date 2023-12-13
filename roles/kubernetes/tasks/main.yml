@@ -35,7 +35,7 @@
 
 - name: Extract major, minor, and patch versions
   ansible.builtin.set_fact:
-    kubernetes_kubelet_version: "{{ kubernetes_node.resources[0].status.nodeInfo.kubeletVersion | regex_replace('^v', '') }}}}"
+    kubernetes_kubelet_version: "{{ kubernetes_node.resources[0].status.nodeInfo.kubeletVersion | regex_replace('^v', '') }}"
 
 - name: Upgrade & restart Kubelet node for upgrade
   throttle: 1
