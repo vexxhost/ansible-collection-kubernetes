@@ -75,5 +75,6 @@
     - name: Trigger an upgrade of the Kubernetes API services
       throttle: 1
       changed_when: true
-      ansible.builtin.command: kubeadm upgrade node && systemctl restart kubelet
+      ansible.builtin.shell: |
+        kubeadm upgrade node && systemctl restart kubelet
       when: kube_apiserver_version_check is failed
