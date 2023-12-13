@@ -63,7 +63,8 @@
     - name: Start an upgrade
       run_once: true
       changed_when: true
-      ansible.builtin.command: kubeadm upgrade apply --yes v{{ kubernetes_version }}
+      ansible.builtin.shell: |
+        kubeadm upgrade apply --yes v{{ kubernetes_version }} && systemctl restart kubelet
 
     - name: Check if the Kubernetes API services is up to date
       ansible.builtin.command:
