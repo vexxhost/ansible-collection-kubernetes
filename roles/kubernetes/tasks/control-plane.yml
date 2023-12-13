@@ -64,7 +64,7 @@
       run_once: true
       changed_when: true
       ansible.builtin.shell: |
-        kubeadm upgrade apply --yes v{{ kubernetes_version }} && systemctl restart kubelet && sleep 10
+        kubeadm upgrade apply --yes v{{ kubernetes_version }}
 
     - name: Check if the Kubernetes API services is up to date
       ansible.builtin.command:
@@ -77,5 +77,5 @@
       throttle: 1
       changed_when: true
       ansible.builtin.shell: |
-        kubeadm upgrade node && systemctl restart kubelet && sleep 10
+        kubeadm upgrade node
       when: kube_apiserver_version_check is failed
