@@ -52,7 +52,7 @@
           version. Please upgrade to the next minor version first.
       when:
         - kubernetes_upgrade_check_desired_major == kubernetes_upgrade_check_current_major
-        - kubernetes_upgrade_check_desired_minor > (kubernetes_upgrade_check_current_minor | int + 1)
+        - (kubernetes_upgrade_check_desired_minor | int) > (kubernetes_upgrade_check_current_minor | int + 1)
         - kubernetes_upgrade_check_desired_minor < kubernetes_upgrade_check_current_minor
 
     - name: Set fact if we need to upgrade
