@@ -16,17 +16,19 @@
   hosts: all
   become: true
   tasks:
-    - name: Search for all Cilium operator pods
+    - name: Search for all Cilium pods # noqa: run-once[task]
+      run_once: true
       kubernetes.core.k8s_info:
         kind: Pod
         label_selectors:
-          - app.kubernetes.io/name=cilium-operator
-      register: cilium_operator_pods
+          - app.kubernetes.io/name=cilium-agent
+      register: cilium_pods
 
-    - name: Verify Cilium operator pods have not been restarted
+    - name: Verify Cilium operator pods have not been restarted # noqa: run-once[task]
+      run_once: true
       ansible.builtin.assert:
         that:
           - item.status.containerStatuses[0].restartCount == 0
-        fail_msg: "Cilium operator pods have been restarted"
-        success_msg: "Cilium operator pods have not been restarted"
-      loop: "{{ cilium_operator_pods.resources }}"
+        fail_msg: "Cilium pods have been restarted"
+        success_msg: "Cilium pods have not been restarted"
+      loop: "{{ cilium_pods.resources }}"

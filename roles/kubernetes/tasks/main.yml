@@ -26,30 +26,12 @@
   when: inventory_hostname not in groups[kubernetes_control_plane_group]
   ansible.builtin.include_tasks: nodes.yml
 
-- name: Get "Node" object
-  delegate_to: "{{ kubernetes_bootstrap_node | default(groups[kubernetes_control_plane_group][0]) }}"
-  kubernetes.core.k8s_info:
-    kind: Node
-    name: "{{ inventory_hostname_short }}"
-  register: kubernetes_node
-
-- name: Extract major, minor, and patch versions
-  ansible.builtin.set_fact:
-    kubernetes_kubelet_version: "{{ kubernetes_node.resources[0].status.nodeInfo.kubeletVersion | regex_replace('^v', '') }}"
-
-- name: Upgrade & restart Kubelet node for upgrade
+- name: Upgrade & restart Kubelet node for upgrade (if needed)
   throttle: 1
-  when: kubernetes_kubelet_version != kubernetes_version
-  block:
-    - name: Upgrade node
-      changed_when: true
-      ansible.builtin.command: kubeadm upgrade node
-
-    - name: Restart "kubelet" service
-      ansible.builtin.service:
-        name: kubelet
-        state: restarted
-        enabled: true
+  vexxhost.kubernetes.kubeadm_upgrade_node:
+    api_endpoint: "https://{{ kubernetes_hostname }}:6443"
+    node: "{{ inventory_hostname_short }}"
+    version: "{{ kubernetes_version }}"
 
 - name: Set node selector for CoreDNS components
   run_once: true
