@@ -62,6 +62,7 @@ jobs:
 
   kubernetes:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     strategy:
       fail-fast: false
       matrix:
@@ -107,7 +108,8 @@ jobs:
           KUBERNETES_VERSION: ${{ matrix.version }}
 
   upgrades:
-    runs-on: v3-standard-4
+    runs-on: v3-standard-8
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:

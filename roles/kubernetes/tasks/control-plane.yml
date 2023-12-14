@@ -64,7 +64,7 @@
       run_once: true
       changed_when: true
       ansible.builtin.shell: |
-        kubeadm upgrade apply --yes v{{ kubernetes_version }}
+        kubeadm upgrade apply --v=5 --yes v{{ kubernetes_version }}
 
     - name: Check if the Kubernetes API services is up to date
       ansible.builtin.command:
