@@ -12,28 +12,20 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-dependency:
-  name: galaxy
-driver:
-  name: docker
-platforms:
-  - name: instance
-    image: geerlingguy/docker-${MOLECULE_DISTRO:-ubuntu2204}-ansible:latest
-    command: ${MOLECULE_DOCKER_COMMAND:-""}
-    privileged: true
-    cgroupns_mode: host
-    pre_build_image: true
-    environment:
-      container: docker
-    security_opts:
-      - apparmor=unconfined
-    volumes:
-      - /sys/fs/cgroup:/sys/fs/cgroup:rw
-      - /lib/modules:/lib/modules:ro
-provisioner:
-  name: ansible
-  config_options:
-    connection:
-      pipelining: true
-verifier:
-  name: ansible
+- ansible.builtin.import_playbook: ../kubernetes/prepare.yml
+- ansible.builtin.import_playbook: ../kubernetes/converge.yml
+  vars:
+    kubernetes_version: "{{ old_kubernetes_version }}"
+
+- name: Wait for all nodes to become Ready
+  hosts: all
+  become: true
+  tasks:
+    - name: Wait for node to be Ready
+      delegate_to: "{{ groups['controllers'][0] }}"
+      kubernetes.core.k8s_info:
+        kind: Node
+        name: "{{ inventory_hostname_short }}"
+        wait: true
+        wait_condition:
+          type: Ready

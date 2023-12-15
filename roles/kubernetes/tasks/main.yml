@@ -25,3 +25,25 @@
 - name: Setup nodes
   when: inventory_hostname not in groups[kubernetes_control_plane_group]
   ansible.builtin.include_tasks: nodes.yml
+
+- name: Upgrade & restart Kubelet node for upgrade (if needed)
+  throttle: 1
+  vexxhost.kubernetes.kubeadm_upgrade_node:
+    api_endpoint: "https://{{ kubernetes_hostname }}:6443"
+    node: "{{ inventory_hostname_short }}"
+    version: "{{ kubernetes_version }}"
+
+- name: Set node selector for CoreDNS components
+  run_once: true
+  delegate_to: "{{ kubernetes_bootstrap_node | default(groups[kubernetes_control_plane_group][0]) }}"
+  kubernetes.core.k8s:
+    definition:
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: coredns
+        namespace: kube-system
+      spec:
+        template:
+          spec:
+            nodeSelector: "{{ kubernetes_coredns_node_selector }}"

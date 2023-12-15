@@ -1,0 +1,60 @@
+# Copyright (c) 2023 VEXXHOST, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
+
+- name: Retrieve the "kubeadm-config" ConfigMap
+  run_once: true
+  ignore_errors: true
+  kubernetes.core.k8s_info:
+    api_version: v1
+    kind: ConfigMap
+    name: kubeadm-config
+    namespace: kube-system
+  register: kubernetes_upgrade_check_kubeadm_config
+
+- name: Determine if we are jumping multiple versions
+  when: kubernetes_upgrade_check_kubeadm_config is not failed
+  block:
+    - name: Parse the ClusterConfiguration
+      run_once: true
+      ansible.builtin.set_fact:
+        kubernetes_upgrade_check_cluster_configuration: "{{ kubernetes_upgrade_check_kubeadm_config.resources[0].data.ClusterConfiguration | from_yaml }}" # noqa: yaml[line-length]
+
+    - name: Retrieve the current Kubernetes version
+      run_once: true
+      ansible.builtin.set_fact:
+        kubernetes_upgrade_check_cluster_version: "{{ kubernetes_upgrade_check_cluster_configuration.kubernetesVersion | regex_replace('^v', '') }}" # noqa: yaml[line-length]
+
+    - name: Extract major, minor, and patch versions
+      run_once: true
+      ansible.builtin.set_fact:
+        kubernetes_upgrade_check_current_major: "{{ kubernetes_upgrade_check_cluster_version.split('.')[0] | int }}"
+        kubernetes_upgrade_check_current_minor: "{{ kubernetes_upgrade_check_cluster_version.split('.')[1] | int }}"
+        kubernetes_upgrade_check_current_patch: "{{ kubernetes_upgrade_check_cluster_version.split('.')[2] | int }}"
+        kubernetes_upgrade_check_desired_major: "{{ kubernetes_version.split('.')[0] | int }}"
+        kubernetes_upgrade_check_desired_minor: "{{ kubernetes_version.split('.')[1] | int }}"
+        kubernetes_upgrade_check_desired_patch: "{{ kubernetes_version.split('.')[2] | int }}"
+
+    - name: Fail if we're jumping more than one minor version
+      ansible.builtin.fail:
+        msg: |
+          The target version is more than one minor version ahead of the current
+          version. Please upgrade to the next minor version first.
+      when:
+        - kubernetes_upgrade_check_desired_major == kubernetes_upgrade_check_current_major
+        - (kubernetes_upgrade_check_desired_minor | int) > (kubernetes_upgrade_check_current_minor | int + 1)
+        - kubernetes_upgrade_check_desired_minor < kubernetes_upgrade_check_current_minor
+
+    - name: Set fact if we need to upgrade
+      ansible.builtin.set_fact:
+        kubernetes_upgrade_check_upgrade_required: "{{ kubernetes_upgrade_check_cluster_version != kubernetes_version }}"
