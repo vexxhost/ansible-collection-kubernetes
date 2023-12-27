@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.12.1](https://github.com/vexxhost/ansible-collection-kubernetes/compare/v1.12.0...v1.12.1) (2023-12-27)
+
+
+### Bug Fixes
+
+* fix the condition for k8s upgrade version check ([#97](https://github.com/vexxhost/ansible-collection-kubernetes/issues/97)) ([449c5bf](https://github.com/vexxhost/ansible-collection-kubernetes/commit/449c5bf1a118340d51873d1b12e08a9511c2f208))
+* migrate kube api port to 6443 for all controlplane components ([#99](https://github.com/vexxhost/ansible-collection-kubernetes/issues/99)) ([be832dc](https://github.com/vexxhost/ansible-collection-kubernetes/commit/be832dc8146936a984c459d34dedec017bfaa50c))
+
 ## [1.12.0](https://github.com/vexxhost/ansible-collection-kubernetes/compare/v1.11.1...v1.12.0) (2023-12-15)
 
 
