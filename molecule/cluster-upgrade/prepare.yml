@@ -25,7 +25,7 @@
       delegate_to: "{{ groups['controllers'][0] }}"
       kubernetes.core.k8s_info:
         kind: Node
-        name: "{{ kubelet_hostname }}"
+        name: "{{ inventory_hostname_short }}"
         wait: true
         wait_condition:
           type: Ready
