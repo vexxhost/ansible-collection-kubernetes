@@ -30,7 +30,7 @@
   throttle: 1
   vexxhost.kubernetes.kubeadm_upgrade_node:
     api_endpoint: "https://{{ kubernetes_hostname }}:6443"
-    node: "{{ inventory_hostname_short }}"
+    node: "{{ kubelet_hostname }}"
     version: "{{ kubernetes_version }}"
 
 - name: Set node selector for CoreDNS components
