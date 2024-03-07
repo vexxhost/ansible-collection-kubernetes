@@ -55,6 +55,19 @@
       - effect: NoSchedule
         key: node-role.kubernetes.io/master
 
+- name: Remove kube-proxy resources
+  run_once: true
+  kubernetes.core.k8s:
+    state: absent
+    api_version: v1
+    kind: "{{ item }}"
+    namespace: kube-system
+    name: kube-proxy
+  with_items:
+    - DaemonSet
+    - ConfigMap
+  when: kubernetes_remove_kube_proxy | bool
+
 - name: Upgrade if necessary
   when:
     - kubernetes_upgrade_check_upgrade_required is defined
