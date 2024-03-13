@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.13.0](https://github.com/vexxhost/ansible-collection-kubernetes/compare/v1.12.1...v1.13.0) (2024-03-13)
+
+
+### Features
+
+* upgrade cluster api version ([#103](https://github.com/vexxhost/ansible-collection-kubernetes/issues/103)) ([afa3586](https://github.com/vexxhost/ansible-collection-kubernetes/commit/afa35869cda338317d42541ebff6152b14001267))
+
+
+### Bug Fixes
+
+* Use kubelet_hostname instead of inventory_hostname_short ([#101](https://github.com/vexxhost/ansible-collection-kubernetes/issues/101)) ([5711e3c](https://github.com/vexxhost/ansible-collection-kubernetes/commit/5711e3ccc634d3fd523f7a449fb2b2fd936544c6))
+
 ## [1.12.1](https://github.com/vexxhost/ansible-collection-kubernetes/compare/v1.12.0...v1.12.1) (2023-12-27)
 
 
