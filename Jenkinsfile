@@ -13,7 +13,7 @@ pipeline {
       parallel {
         stage('upgrade-27-28') {
           agent {
-            label 'jammy-16c-64g'
+            label 'jammy-2c-8g'
           }
           environment {
             KUBERNETES_VERSION="1.28.4"
@@ -25,7 +25,7 @@ pipeline {
         }
         stage('upgrade-26-27') {
           agent {
-            label 'jammy-16c-64g'
+            label 'jammy-2c-8g'
           }
           environment {
             KUBERNETES_VERSION="1.27.8"
@@ -37,7 +37,7 @@ pipeline {
         }
         stage('upgrade-25-26') {
           agent {
-            label 'jammy-16c-64g'
+            label 'jammy-2c-8g'
           }
           environment {
             KUBERNETES_VERSION="1.26.11"
@@ -49,7 +49,7 @@ pipeline {
         }
         stage('upgrade-24-25') {
           agent {
-            label 'jammy-16c-64g'
+            label 'jammy-2c-8g'
           }
           environment {
             KUBERNETES_VERSION="1.25.16"
@@ -61,7 +61,7 @@ pipeline {
         }
         stage('upgrade-23-24') {
           agent {
-            label 'jammy-16c-64g'
+            label 'jammy-2c-8g'
           }
           environment {
             KUBERNETES_VERSION="1.24.17"
@@ -73,7 +73,7 @@ pipeline {
         }
         stage('upgrade-22-23') {
           agent {
-            label 'jammy-16c-64g'
+            label 'jammy-2c-8g'
           }
           environment {
             KUBERNETES_VERSION="1.23.17"
@@ -85,7 +85,7 @@ pipeline {
         }
         stage('upgrade-21-22') {
           agent {
-            label 'jammy-16c-64g'
+            label 'jammy-2c-8g'
           }
           environment {
             KUBERNETES_VERSION="1.22.17"
@@ -97,7 +97,7 @@ pipeline {
         }
         stage('upgrade-20-21') {
           agent {
-            label 'jammy-16c-64g'
+            label 'jammy-2c-8g'
           }
           environment {
             KUBERNETES_VERSION="1.21.14"
@@ -109,7 +109,7 @@ pipeline {
         }
         stage('upgrade-19-20') {
           agent {
-            label 'jammy-16c-64g'
+            label 'jammy-2c-8g'
           }
           environment {
             KUBERNETES_VERSION="1.20.15"
