@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.13.1](https://github.com/vexxhost/ansible-collection-kubernetes/compare/v1.13.0...v1.13.1) (2024-03-22)
+
+
+### Miscellaneous Chores
+
+* adopt vexxhost.containers 1.2.0 ([658000c](https://github.com/vexxhost/ansible-collection-kubernetes/commit/658000cca674d98024bdf63919dd14b62a99917a))
+
 ## [1.13.0](https://github.com/vexxhost/ansible-collection-kubernetes/compare/v1.12.1...v1.13.0) (2024-03-13)
 
 
