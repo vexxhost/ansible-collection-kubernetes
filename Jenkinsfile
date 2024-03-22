@@ -11,13 +11,15 @@ def k8sUpgradeMaps = [['1.19.16', '1.20.15'], ['1.20.15', "1.21.14"],
 def integrationJobs = [:]
 k8sUpgradeMaps.each { k8sUpgradeMap ->
     integrationJobs["upgrade-${k8sUpgradeMap[0]}-${k8sUpgradeMap[1]}"] = {
-        node('jammy-2c-8g') {
-            checkout scm
-            withEnv([
-                "OLD_KUBERNETES_VERSION=${k8sUpgradeMap[0]}",
-                "KUBERNETES_VERSION=${k8sUpgradeMap[1]}"
-            ]) {
-                sh './.jenkins/upgrade.sh'
+        timeout(30) {
+            node('jammy-2c-8g') {
+                checkout scm
+                withEnv([
+                    "OLD_KUBERNETES_VERSION=${k8sUpgradeMap[0]}",
+                    "KUBERNETES_VERSION=${k8sUpgradeMap[1]}"
+                ]) {
+                    sh './.jenkins/upgrade.sh'
+                }
             }
         }
     }
