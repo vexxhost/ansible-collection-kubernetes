@@ -108,7 +108,7 @@ jobs:
           KUBERNETES_VERSION: ${{ matrix.version }}
 
   upgrades:
-    runs-on: v3-standard-8
+    runs-on: ubuntu-latest
     timeout-minutes: 30
     strategy:
       fail-fast: false
