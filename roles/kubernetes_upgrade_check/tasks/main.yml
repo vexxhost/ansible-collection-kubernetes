@@ -23,7 +23,9 @@
   register: kubernetes_upgrade_check_kubeadm_config
 
 - name: Determine if we are jumping multiple versions
-  when: kubernetes_upgrade_check_kubeadm_config is not failed
+  when:
+    - kubernetes_upgrade_check_kubeadm_config is not failed
+    - kubernetes_upgrade_check_kubeadm_config.resources | length > 0
   block:
     - name: Parse the ClusterConfiguration
       run_once: true
