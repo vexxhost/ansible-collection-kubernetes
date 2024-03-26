@@ -5,5 +5,5 @@ cilium_helm_chart_ref: /usr/local/src/cilium
 cilium_helm_release_namespace: kube-system
 cilium_helm_values: {}
 
-cilium_node_image: quay.io/cilium/cilium:v1.13.3@sha256:77176464a1e11ea7e89e984ac7db365e7af39851507e94f137dcf56c87746314
-cilium_operator_image: quay.io/cilium/operator-generic:v1.13.3@sha256:fa7003cbfdf8358cb71786afebc711b26e5e44a2ed99bd4944930bba915b8910
+cilium_node_image: quay.io/cilium/cilium:v1.14.8@sha256:7fca3ba4b04af066e8b086b5c1a52e30f52db01ffc642e7db0a439514aed3ada
+cilium_operator_image: quay.io/cilium/operator-generic:v1.14.8@sha256:56d373c12483c09964a00a29246595917603a077a298aa90a98e4de32c86b7dc

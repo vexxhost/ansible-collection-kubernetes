@@ -8,7 +8,7 @@
   {{- $defaultKeepDeprecatedProbes = false -}}
 {{- end -}}
 
-{{- $kubeProxyReplacement := (coalesce .Values.kubeProxyReplacement "disabled") -}}
+{{- $kubeProxyReplacement := (coalesce .Values.kubeProxyReplacement "false") -}}
 
 ---
 apiVersion: apps/v1
@@ -192,18 +192,6 @@ spec:
               fieldPath: metadata.namespace
         - name: CILIUM_CLUSTERMESH_CONFIG
           value: /var/lib/cilium/clustermesh/
-        - name: CILIUM_CNI_CHAINING_MODE
-          valueFrom:
-            configMapKeyRef:
-              name: cilium-config
-              key: cni-chaining-mode
-              optional: true
-        - name: CILIUM_CUSTOM_CNI_CONF
-          valueFrom:
-            configMapKeyRef:
-              name: cilium-config
-              key: custom-cni-conf
-              optional: true
         {{- if .Values.k8sServiceHost }}
         - name: KUBERNETES_SERVICE_HOST
           value: {{ .Values.k8sServiceHost | quote }}
@@ -217,16 +205,15 @@ spec:
         {{- end }}
         {{- if .Values.cni.install }}
         lifecycle:
+          {{- if ne .Values.cni.chainingMode "aws-cni" }}
           postStart:
             exec:
               command:
               - "bash"
               - "-c"
               - |
-                /cni-install.sh --enable-debug={{ .Values.debug.enabled }} --cni-exclusive={{ .Values.cni.exclusive }} --log-file={{ .Values.cni.logFile }}
-                {{- if .Values.eni.enabled }}
-                {{- tpl (.Files.Get "files/agent/poststart-eni.bash") . | nindent 16 }}
-                {{- end }}
+                {{- tpl (.Files.Get "files/agent/poststart-eni.bash") . | nindent 20 }}
+          {{- end }}
           preStop:
             exec:
               command:
@@ -238,21 +225,19 @@ spec:
         {{- end }}
         {{- if or .Values.prometheus.enabled .Values.hubble.metrics.enabled }}
         ports:
-        {{- if .Values.hubble.peerService.enabled }}
         - name: peer-service
           containerPort: {{ .Values.hubble.peerService.targetPort }}
           hostPort: {{ .Values.hubble.peerService.targetPort }}
           protocol: TCP
-        {{- end }}
         {{- if .Values.prometheus.enabled }}
         - name: prometheus
           containerPort: {{ .Values.prometheus.port }}
           hostPort: {{ .Values.prometheus.port }}
           protocol: TCP
-        {{- if .Values.proxy.prometheus.enabled }}
+        {{- if and .Values.proxy.prometheus.enabled .Values.envoy.prometheus.enabled (not .Values.envoy.enabled) }}
         - name: envoy-metrics
-          containerPort: {{ .Values.proxy.prometheus.port }}
-          hostPort: {{ .Values.proxy.prometheus.port }}
+          containerPort: {{ .Values.proxy.prometheus.port | default .Values.envoy.prometheus.port }}
+          hostPort: {{ .Values.proxy.prometheus.port | default .Values.envoy.prometheus.port }}
           protocol: TCP
         {{- end }}
         {{- end }}
@@ -281,6 +266,16 @@ spec:
           {{- end }}
         terminationMessagePolicy: FallbackToLogsOnError
         volumeMounts:
+        {{- if .Values.authentication.mutual.spire.enabled }}
+        - name: spire-agent-socket
+          mountPath: {{ dir .Values.authentication.mutual.spire.adminSocketPath }}
+          readOnly: false
+        {{- end }}
+        {{- if .Values.envoy.enabled }}
+        - name: envoy-sockets
+          mountPath: /var/run/cilium/envoy/sockets
+          readOnly: false
+        {{- end }}
         {{- if not .Values.securityContext.privileged }}
         # Unprivileged containers need to mount /proc/sys/net from the host
         # to have write access
@@ -292,7 +287,7 @@ spec:
           name: host-proc-sys-kernel
         {{- end}}
         {{- /* CRI-O already mounts the BPF filesystem */ -}}
-        {{- if not (eq .Values.containerRuntime.integration "crio") }}
+        {{- if and .Values.bpf.autoMount.enabled (not (eq .Values.containerRuntime.integration "crio")) }}
         - name: bpf-maps
           mountPath: /sys/fs/bpf
           {{- if .Values.securityContext.privileged }}
@@ -396,6 +391,9 @@ spec:
         volumeMounts:
         - name: cilium-run
           mountPath: /var/run/cilium
+        {{- with .Values.extraVolumeMounts }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
         {{- with .Values.monitor.resources }}
         resources:
           {{- toYaml . | trim | nindent 10 }}
@@ -439,9 +437,15 @@ spec:
         - name: KUBERNETES_SERVICE_PORT
           value: {{ .Values.k8sServicePort | quote }}
         {{- end }}
+        {{- with .Values.extraEnv }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
         volumeMounts:
         - name: tmp
           mountPath: /tmp
+        {{- with .Values.extraVolumeMounts }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
         terminationMessagePolicy: FallbackToLogsOnError
       {{- if .Values.cgroup.autoMount.enabled }}
       # Required to mount cgroup2 filesystem on the underlying Kubernetes node.
@@ -495,6 +499,10 @@ spec:
       - name: apply-sysctl-overwrites
         image: {{ include "cilium.image" .Values.image | quote }}
         imagePullPolicy: {{ .Values.image.pullPolicy }}
+        {{- with .Values.initResources }}
+        resources:
+          {{- toYaml . | trim | nindent 10 }}
+        {{- end }}
         env:
         - name: BIN_PATH
           value: {{ .Values.cni.binPath }}
@@ -533,13 +541,17 @@ spec:
               - ALL
           {{- end}}
       {{- end }}
-      {{- if not .Values.securityContext.privileged }}
+      {{- if and .Values.bpf.autoMount.enabled (not .Values.securityContext.privileged) }}
       # Mount the bpf fs if it is not mounted. We will perform this task
       # from a privileged container because the mount propagation bidirectional
       # only works from privileged containers.
       - name: mount-bpf-fs
         image: {{ include "cilium.image" .Values.image | quote }}
         imagePullPolicy: {{ .Values.image.pullPolicy }}
+        {{- with .Values.initResources }}
+        resources:
+          {{- toYaml . | trim | nindent 10 }}
+        {{- end }}
         args:
         - 'mount | grep "/sys/fs/bpf type bpf" || mount -t bpf bpf /sys/fs/bpf'
         command:
@@ -550,7 +562,7 @@ spec:
         securityContext:
           privileged: true
       {{- /* CRI-O already mounts the BPF filesystem */ -}}
-      {{- if not (eq .Values.containerRuntime.integration "crio") }}
+      {{- if and .Values.bpf.autoMount.enabled (not (eq .Values.containerRuntime.integration "crio")) }}
         volumeMounts:
         - name: bpf-maps
           mountPath: /sys/fs/bpf
@@ -561,6 +573,10 @@ spec:
       - name: wait-for-node-init
         image: {{ include "cilium.image" .Values.image | quote }}
         imagePullPolicy: {{ .Values.image.pullPolicy }}
+        {{- with .Values.initResources }}
+        resources:
+          {{- toYaml . | trim | nindent 10 }}
+        {{- end }}
         command:
         - sh
         - -c
@@ -622,7 +638,7 @@ spec:
           {{- end}}
         volumeMounts:
         {{- /* CRI-O already mounts the BPF filesystem */ -}}
-        {{- if not (eq .Values.containerRuntime.integration "crio") }}
+        {{- if and .Values.bpf.autoMount.enabled (not (eq .Values.containerRuntime.integration "crio")) }}
         - name: bpf-maps
           mountPath: /sys/fs/bpf
         {{- end }}
@@ -632,7 +648,10 @@ spec:
           mountPropagation: HostToContainer
         - name: cilium-run
           mountPath: /var/run/cilium
-        {{- with .Values.nodeinit.resources }}
+        {{- with .Values.extraVolumeMounts }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- with .Values.initResources }}
         resources:
           {{- toYaml . | trim | nindent 10 }}
         {{- end }}
@@ -640,6 +659,10 @@ spec:
       - name: wait-for-kube-proxy
         image: {{ include "cilium.image" .Values.image | quote }}
         imagePullPolicy: {{ .Values.image.pullPolicy }}
+        {{- with .Values.initResources }}
+        resources:
+          {{- toYaml . | trim | nindent 10 }}
+        {{- end }}
         securityContext:
           privileged: true
         command:
@@ -669,6 +692,7 @@ spec:
             done
         terminationMessagePolicy: FallbackToLogsOnError
       {{- end }} # wait-for-kube-proxy
+      {{- if .Values.cni.install }}
       # Install the CNI binaries in an InitContainer so we don't have a writable host mount in the agent
       - name: install-cni-binaries
         image: {{ include "cilium.image" .Values.image | quote }}
@@ -695,6 +719,7 @@ spec:
         volumeMounts:
           - name: cni-path
             mountPath: /host/opt/cni/bin
+      {{- end }} # .Values.cni.install
       restartPolicy: Always
       priorityClassName: {{ include "cilium.priorityClass" (list $ .Values.priorityClassName "system-node-critical") }}
       serviceAccount: {{ .Values.serviceAccounts.cilium.name | quote }}
@@ -721,7 +746,7 @@ spec:
       tolerations:
         {{- toYaml . | trim | nindent 8 }}
       {{- end }}
-      {{- if and .Values.clustermesh.useAPIServer .Values.clustermesh.config.enabled }}
+      {{- if and .Values.clustermesh.useAPIServer .Values.clustermesh.config.enabled (not .Values.clustermesh.apiserver.kvstoremesh.enabled) }}
       hostAliases:
       {{- range $cluster := .Values.clustermesh.config.clusters }}
       {{- range $ip := $cluster.ips }}
@@ -740,7 +765,7 @@ spec:
           path: {{ .Values.daemon.runPath }}
           type: DirectoryOrCreate
       {{- /* CRI-O already mounts the BPF filesystem */ -}}
-      {{- if not (eq .Values.containerRuntime.integration "crio") }}
+      {{- if and .Values.bpf.autoMount.enabled (not (eq .Values.containerRuntime.integration "crio")) }}
         # To keep state between restarts / upgrades for bpf maps
       - name: bpf-maps
         hostPath:
@@ -778,6 +803,19 @@ spec:
         hostPath:
           path: /run/xtables.lock
           type: FileOrCreate
+      {{- if .Values.authentication.mutual.spire.enabled }}
+      - name: spire-agent-socket
+        hostPath:
+          path: {{ dir .Values.authentication.mutual.spire.adminSocketPath }}
+          type: DirectoryOrCreate
+      {{- end }}
+      {{- if .Values.envoy.enabled }}
+      # Sharing socket with Cilium Envoy on the same node by using a host path
+      - name: envoy-sockets
+        hostPath:
+          path: "{{ .Values.daemon.runPath }}/envoy/sockets"
+          type: DirectoryOrCreate
+      {{- end }}
       {{- if .Values.kubeConfigPath }}
       - name: kube-config
         hostPath:
@@ -812,11 +850,36 @@ spec:
       {{- end }}
         # To read the clustermesh configuration
       - name: clustermesh-secrets
-        secret:
-          secretName: cilium-clustermesh
+        projected:
           # note: the leading zero means this number is in octal representation: do not remove it
           defaultMode: 0400
-          optional: true
+          sources:
+          - secret:
+              name: cilium-clustermesh
+              optional: true
+              # note: items are not explicitly listed here, since the entries of this secret
+              # depend on the peers configured, and that would cause a restart of all agents
+              # at every addition/removal. Leaving the field empty makes each secret entry
+              # to be automatically projected into the volume as a file whose name is the key.
+          - secret:
+              name: clustermesh-apiserver-remote-cert
+              optional: true
+              items:
+              - key: tls.key
+                path: common-etcd-client.key
+              - key: tls.crt
+                path: common-etcd-client.crt
+          {{- if not .Values.tls.caBundle.enabled }}
+              - key: ca.crt
+                path: common-etcd-client-ca.crt
+          {{- else }}
+          - {{ .Values.tls.caBundle.useSecret | ternary "secret" "configMap" }}:
+              name: {{ .Values.tls.caBundle.name }}
+              optional: true
+              items:
+              - key: {{ .Values.tls.caBundle.key }}
+                path: common-etcd-client-ca.crt
+          {{- end }}
       {{- if and .Values.ipMasqAgent .Values.ipMasqAgent.enabled }}
       - name: ip-masq-agent
         configMap:
@@ -861,12 +924,21 @@ spec:
               name: hubble-server-certs
               optional: true
               items:
-              - key: ca.crt
-                path: client-ca.crt
               - key: tls.crt
                 path: server.crt
               - key: tls.key
                 path: server.key
+          {{- if not .Values.tls.caBundle.enabled }}
+              - key: ca.crt
+                path: client-ca.crt
+          {{- else }}
+          - {{ .Values.tls.caBundle.useSecret | ternary "secret" "configMap" }}:
+              name: {{ .Values.tls.caBundle.name }}
+              optional: true
+              items:
+              - key: {{ .Values.tls.caBundle.key }}
+                path: client-ca.crt
+          {{- end }}
       {{- end }}
       {{- range .Values.extraHostPathMounts }}
       - name: {{ .name }}
