@@ -21,6 +21,7 @@ on:
 
 permissions:
   contents: write
+  packages: write
   pull-requests: write
 
 jobs:
@@ -32,5 +33,40 @@ jobs:
 
       - name: Run "release-please"
         uses: google-github-actions/release-please-action@v3
+        id: release
         with:
           command: manifest
+
+      - name: Checkout project
+        if: ${{ steps.release.outputs.release_created }}
+        uses: actions/checkout@v3
+
+      - name: Build and publish collection
+        if: ${{ steps.release.outputs.release_created }}
+        uses: artis3n/ansible_galaxy_collection@v2
+        with:
+          api_key: "${{ secrets.GALAXY_API_KEY }}"
+
+
+      - name: Get release
+        if: ${{ steps.release.outputs.release_created }}
+        uses: bruceadams/get-release@v1.3.2
+        id: get_release
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+
+      - name: Get file name for collection
+        if: ${{ steps.release.outputs.release_created }}
+        id: get_filename
+        run: echo ::set-output name=filename::$(ls *.tar.gz)
+
+      - name: Upload release asset
+        if: ${{ steps.release.outputs.release_created }}
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.get_release.outputs.upload_url }}
+          asset_path: ./${{ steps.get_filename.outputs.filename }}
+          asset_name: ${{ steps.get_filename.outputs.filename }}
+          asset_content_type: application/gzip
