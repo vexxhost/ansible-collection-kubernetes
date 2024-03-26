@@ -47,14 +47,6 @@ jobs:
         with:
           api_key: "${{ secrets.GALAXY_API_KEY }}"
 
-
-      - name: Get release
-        if: ${{ steps.release.outputs.release_created }}
-        uses: bruceadams/get-release@v1.3.2
-        id: get_release
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-
       - name: Get file name for collection
         if: ${{ steps.release.outputs.release_created }}
         id: get_filename
@@ -66,7 +58,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          upload_url: ${{ steps.get_release.outputs.upload_url }}
+          upload_url: ${{ steps.release.outputs.upload_url }}
           asset_path: ./${{ steps.get_filename.outputs.filename }}
           asset_name: ${{ steps.get_filename.outputs.filename }}
           asset_content_type: application/gzip
