@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.13.2](https://github.com/vexxhost/ansible-collection-kubernetes/compare/v1.13.1...v1.13.2) (2024-03-26)
+
+
+### Bug Fixes
+
+* **cilium:** bump to 1.14.8 ([#111](https://github.com/vexxhost/ansible-collection-kubernetes/issues/111)) ([656638c](https://github.com/vexxhost/ansible-collection-kubernetes/commit/656638c8718ec86d7a12c6e01a8038a81d484be2))
+
 ## [1.13.1](https://github.com/vexxhost/ansible-collection-kubernetes/compare/v1.13.1...v1.13.1) (2024-03-22)
 
 
