@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.13.3](https://github.com/vexxhost/ansible-collection-kubernetes/compare/v1.13.2...v1.13.3) (2024-04-01)
+
+
+### Bug Fixes
+
+* Update kubeadm.yaml.j2 ([53aff31](https://github.com/vexxhost/ansible-collection-kubernetes/commit/53aff31d8003042f65543ec8ce785b1f3ab9014f))
+
 ## [1.13.2](https://github.com/vexxhost/ansible-collection-kubernetes/compare/v1.13.1...v1.13.2) (2024-03-26)
 
 
