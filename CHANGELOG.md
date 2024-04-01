@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.13.3](https://github.com/vexxhost/ansible-collection-kubernetes/compare/v1.13.3...v1.13.3) (2024-04-01)
+
+
+### Miscellaneous Chores
+
+* release 1.13.3 ([1673e4a](https://github.com/vexxhost/ansible-collection-kubernetes/commit/1673e4a1e0e05374b8eaeff1c6049fa4b49e2f8f))
+
 ## [1.13.3](https://github.com/vexxhost/ansible-collection-kubernetes/compare/v1.13.2...v1.13.3) (2024-04-01)
 
 
