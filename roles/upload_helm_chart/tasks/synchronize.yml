@@ -12,10 +12,15 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-- name: Converge
-  hosts: all
-  become: true
-  roles:
-    - role: test-role
-      vars:
-        test_relative_path : "chart-v1/"
+- name: Upload Helm chart
+  run_once: true
+  # NOTE(mnaser): https://github.com/ansible-collections/ansible.posix/issues/381
+  #               https://github.com/ansible-collections/ansible.posix/pull/433
+  vexxhost.kubernetes.synchronize:
+    src: "{{ upload_helm_chart_src }}"
+    dest: "{{ upload_helm_chart_dest }}"
+    archive: false
+    recursive: true
+    checksum: true
+    delete: true
+    use_ssh_args: true

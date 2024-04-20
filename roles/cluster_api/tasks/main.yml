@@ -21,12 +21,12 @@
     group: root
 
 - name: Copy over all provider configuration to the remote system
-  ansible.posix.synchronize:
-    src: providers/
+  vexxhost.kubernetes.multi_copy:
+    src: "{{ role_path }}/files/providers"
     dest: "{{ cluster_api_provider_path }}"
-    archive: false
-    recursive: true
-    checksum: true
+    mode: "0755"
+    owner: root
+    group: root
 
 - name: Get a list of all Cluster API providers
   run_once: true
