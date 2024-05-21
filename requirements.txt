@@ -6,3 +6,5 @@ molecule-plugins[docker]
 pytest < 8.0.0
 pytest-forked
 pytest-xdist
+PyYAML > 6.0.0
+requests < 2.31.0
