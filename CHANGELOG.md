@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.14.0](https://github.com/vexxhost/ansible-collection-kubernetes/compare/v1.13.4...v1.14.0) (2024-06-04)
+
+
+### Features
+
+* add multi_copy mode ([#85](https://github.com/vexxhost/ansible-collection-kubernetes/issues/85)) ([9fac93a](https://github.com/vexxhost/ansible-collection-kubernetes/commit/9fac93a4d9a7e9c117f9d73796e3cd6edf20e396))
+
+
+### Bug Fixes
+
+* Check that resources are in kubeadm-config configmap before using them ([#102](https://github.com/vexxhost/ansible-collection-kubernetes/issues/102)) ([896d670](https://github.com/vexxhost/ansible-collection-kubernetes/commit/896d67092706d01b6fb9d7f4856750819f8898cf))
+* install python3-cryptography in containers ([#117](https://github.com/vexxhost/ansible-collection-kubernetes/issues/117)) ([#118](https://github.com/vexxhost/ansible-collection-kubernetes/issues/118)) ([d051c4e](https://github.com/vexxhost/ansible-collection-kubernetes/commit/d051c4e7634ccc861782863eba73524e89d2f7d3))
+
 ## [1.13.4](https://github.com/vexxhost/ansible-collection-kubernetes/compare/v1.13.3...v1.13.4) (2024-04-01)
 
 
