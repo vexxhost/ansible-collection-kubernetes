@@ -66,16 +66,9 @@ jobs:
       fail-fast: false
       matrix:
         version:
-          - 1.19.16
-          - 1.20.15
-          - 1.21.14
-          - 1.22.17
-          - 1.23.17
-          - 1.24.17
-          - 1.25.16
-          - 1.26.11
-          - 1.27.8
-          - 1.28.4
+          - 1.28.12
+          - 1.29.7
+          - 1.30.3
         distro:
           - rockylinux9
           - ubuntu2004
@@ -112,24 +105,12 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - old_version: 1.19.16
-            version: 1.20.15
-          - old_version: 1.20.15
-            version: 1.21.14
-          - old_version: 1.21.14
-            version: 1.22.17
-          - old_version: 1.22.17
-            version: 1.23.17
-          - old_version: 1.23.17
-            version: 1.24.17
-          - old_version: 1.24.17
-            version: 1.25.16
-          - old_version: 1.25.16
-            version: 1.26.11
-          - old_version: 1.26.11
-            version: 1.27.8
-          - old_version: 1.27.8
-            version: 1.28.4
+          - old_version: 1.27.15
+            version: 1.28.12
+          - old_version: 1.28.12
+            version: 1.29.7
+          - old_version: 1.29.7
+            version: 1.30.3
     steps:
       - name: Checkout project
         uses: actions/checkout@v3

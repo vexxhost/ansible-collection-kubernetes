@@ -49,7 +49,7 @@ provisioner:
     group_vars:
       all:
         old_kubernetes_version: ${OLD_KUBERNETES_VERSION-1.27.8}
-        kubernetes_version: ${KUBERNETES_VERSION-1.28.4}
+        kubernetes_version: ${KUBERNETES_VERSION-1.28.12}
         cilium_helm_values:
           operator:
             replicas: 1
