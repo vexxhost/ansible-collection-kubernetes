@@ -1,0 +1,14 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (c) VEXXHOST, Inc.
+
+support_bundle_version: 0.93.3
+
+support_bundle_checksums:
+  amd64:
+    0.93.3: 4ddff0865de75f88d7ab7e088cdf309e54af85a8bbd97346c04e72e269a6a351
+  arm64:
+    0.93.3: 9572085f23d437817d929ebb5db5e0df3747c34105ad937973d61d8f4e0eb687
+
+support_bundle_download_url: "https://github.com/replicatedhq/troubleshoot/releases/download/v{{ support_bundle_version }}/support-bundle_linux_{{ download_artifact_goarch }}.tar.gz" # noqa: yaml[line-length]
+support_bundle_download_dest: /usr/bin/kubectl-support_bundle
+support_bundle_binary_checksum: "{{ support_bundle_checksums[download_artifact_goarch][support_bundle_version] }}"
