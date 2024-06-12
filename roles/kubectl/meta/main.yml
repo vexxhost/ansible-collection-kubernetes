@@ -29,6 +29,7 @@ galaxy_info:
         - jammy
 
 dependencies:
+  - role: support_bundle
   - role: vexxhost.containers.forget_package
     forget_package_name: "{{ kubectl_package_name }}"
     when: ansible_facts['pkg_mgr'] == "apt"
