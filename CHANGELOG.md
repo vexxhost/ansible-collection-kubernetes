@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.14.1](https://github.com/vexxhost/ansible-collection-kubernetes/compare/v1.14.0...v1.14.1) (2024-06-13)
+
+
+### Bug Fixes
+
+* Remove always pull policy ([72534f9](https://github.com/vexxhost/ansible-collection-kubernetes/commit/72534f9f94d2dd8904376e2e33f05030a0fb4abe))
+
 ## [1.14.0](https://github.com/vexxhost/ansible-collection-kubernetes/compare/v1.13.4...v1.14.0) (2024-06-04)
 
 
