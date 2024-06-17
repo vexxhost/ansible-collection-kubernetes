@@ -1,6 +1,6 @@
 namespace: vexxhost
 name: kubernetes
-version: 1.14.0 # x-release-please-version
+version: 1.14.0
 readme: README.md
 authors:
   - Mohammed Naser <mnaser@vexxhost.com>
@@ -26,5 +26,3 @@ build_ignore:
   - .github
   - molecule
   - .pre-commit-config.yaml
-  - .release-please-manifest.json
-  - release-please-config.json
