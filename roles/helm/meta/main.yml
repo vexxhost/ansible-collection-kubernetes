@@ -35,7 +35,7 @@ dependencies:
   - role: vexxhost.containers.download_artifact
     download_artifact_url: "{{ helm_download_url }}"
     download_artifact_dest: "{{ helm_download_dest }}"
-    download_artifact_checksum: "sha256:{{ helm_binary_checksum }}"
+    download_artifact_checksum: "sha256:{{ helm_archive_checksum }}"
     download_artifact_owner: root
     download_artifact_mode: "0755"
     download_artifact_unarchive: true
