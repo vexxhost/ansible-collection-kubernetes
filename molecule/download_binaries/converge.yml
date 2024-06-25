@@ -1,0 +1,4 @@
+- name: include playbook
+  ansible.builtin.import_playbook: vexxhost.kubernetes.download_binaries
+  vars:
+    target: instance
