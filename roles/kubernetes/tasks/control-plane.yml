@@ -37,15 +37,14 @@
     insertbefore: EOF
 
 # TODO(fitbeard): Move common system packages from all roles to dedicated role.
-- name: Install PIP
+- name: Install distro packages
   ansible.builtin.package:
-    name:
-      - python3-pip
-      - python3-cryptography
+    name: "{{ kubernetes_distro_packages_install | select }}"
 
-- name: Install Kubernetes python package
+- name: Install pip packages
   ansible.builtin.pip:
-    name: kubernetes
+    name: "{{ kubernetes_pip_packages_install | select }}"
+    virtualenv: "{{ ansible_collection_kubernetes_target_venv | default(omit) }}"
 
 - name: Allow workload on control plane node
   kubernetes.core.k8s_taint:

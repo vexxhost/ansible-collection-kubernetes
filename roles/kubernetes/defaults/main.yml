@@ -43,3 +43,31 @@ kubernetes_coredns_node_selector:
 
 # Allow custom CA usage in the cluster
 kubernetes_allow_custom_ca: false
+
+# Base python packages required with, or without an ansible target venv
+# NOTE(jrosser) An ansible target venv must be used on python>=3.12 due to pep-668
+kubernetes_pip_packages_base:
+  - kubernetes     # this needs to be newer than the version in many distro packages
+
+# Additional python packages required if using an ansible target venv
+kubernetes_pip_packages_venv:
+  - cryptography   # required to examine certificates
+  - pyyaml         # required for helm
+  - kubernetes     # required for kubernetes upgrade check
+
+# Python packages to install
+kubernetes_pip_packages_install: "{{ kubernetes_pip_packages_base +
+                                        (ansible_collection_kubernetes_target_venv is defined) | ternary(kubernetes_pip_packages_venv, []) +
+                                        (kubernetes_pip_packages_extra | default([])) }}"
+
+# Distro packages to install
+kubernetes_distro_packages_base:
+  - python3-pip
+
+# Distro packages to install when an ansible target venv is not in use
+kubernetes_distro_packages_no_venv:
+  - python3-cryptography
+
+kubernetes_distro_packages_install: "{{ kubernetes_distro_packages_base +
+					(ansible_collection_kubernetes_target_venv is defined) | ternary([], kubernetes_distro_packages_no_venv) +
+                                        kubernetes_distro_packages_extra | default([]) }}"
