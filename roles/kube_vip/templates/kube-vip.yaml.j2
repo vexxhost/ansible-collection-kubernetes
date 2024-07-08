@@ -42,7 +42,6 @@ spec:
     - name: prometheus_server
       value: :2112
     image: "{{ kube_vip_image | vexxhost.kubernetes.docker_image('ref') }}"
-    imagePullPolicy: Always
     name: kube-vip
     resources: {}
     securityContext:
