@@ -32,7 +32,6 @@ jobs:
           - helm
           - upload-helm-chart
         distro:
-          - rockylinux8
           - rockylinux9
           - ubuntu2004
           - ubuntu2204
@@ -78,7 +77,6 @@ jobs:
           - 1.27.8
           - 1.28.4
         distro:
-          - rockylinux8
           - rockylinux9
           - ubuntu2004
           - ubuntu2204
