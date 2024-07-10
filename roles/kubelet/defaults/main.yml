@@ -64,6 +64,12 @@ kubelet_sysctls:
     value: 1
   - name: net.ipv4.conf.all.rp_filter
     value: 0
+  - name: fs.inotify.max_queued_events
+    value: 1048576
+  - name: fs.inotify.max_user_instances
+    value: 8192
+  - name: fs.inotify.max_user_watches
+    value: 1048576
 
 # CRI socket path
 kubelet_cri_socket: /run/containerd/containerd.sock
