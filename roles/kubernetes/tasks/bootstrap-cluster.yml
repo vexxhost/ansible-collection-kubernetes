@@ -101,13 +101,19 @@
 - name: Initialize cluster
   throttle: 1
   ansible.builtin.shell: |
-    kubeadm init --config /etc/kubernetes/kubeadm.yaml --upload-certs \
+    kubeadm init --v=5 --config /etc/kubernetes/kubeadm.yaml --upload-certs \
                  --ignore-preflight-errors=DirAvailable--etc-kubernetes-manifests{% if kubernetes_allow_unsafe_swap %},Swap{% endif %}
   args:
     creates: /etc/kubernetes/admin.conf
   environment:
     PATH: /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
   when: inventory_hostname == kubernetes_bootstrap_node
+  failed_when: false
+
+- name: debug logs
+  ansible.builtin.shell: |
+    PAGER= ip addr && ip route && PAGER= journalctl -u kubelet && PAGER= journalctl -u containerd && cat /etc/kubernetes/manifests/kube-vip.yaml && crictl ps -a
+  failed_when: true
 
 - name: Check if the node is already part of the cluster
   ansible.builtin.stat:

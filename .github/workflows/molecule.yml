@@ -57,6 +57,7 @@ jobs:
       - name: Run Molecule
         run: molecule test -s ${{ matrix.scenario }}
         env:
+          MOLECULE_VERBOSITY: 1
           MOLECULE_DISTRO: ${{ matrix.distro }}
 
   kubernetes:
