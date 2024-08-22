@@ -12,7 +12,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-clusterctl_version: 1.6.0
+clusterctl_version: 1.8.1
 clusterctl_checksums:
   amd64:
     1.3.2: d57adc75cd4359a9f660b2ecbbd0ef82ebfa643c1218a6ca8ca1778bdda72380
@@ -20,12 +20,14 @@ clusterctl_checksums:
     1.4.4: 0e8b878d307c11c67ab8233bc2f6fa1f13ed97894120f86e6965ed6eafce5345
     1.5.1: 849c0dd9523d2b4916b199946794ceb9ad7f5ea70c56a635b70cdcf328c7a242
     1.6.0: 1f9d967b0a8fa8cf50fd86203658a8ddacbc7b4d5aafafccb1653aa0b38169ce
+    1.8.1: 04f95a7ad03f9a31aaa268f30326075fbdf2e4b8af65173543e0e445ca4bdb2e
   arm64:
     1.3.2: 1c409918fdbe693f0c2a4558ea1a35a0bacb9dcee258177f11ecded1e669191c
     1.3.3: f34abc7047f17d522757eb341cf64f05761b85fa9e1a4390a96adbb2482de784
     1.4.4: 17782ec9151b7c9fc41538f7c65a53e3d922debc6e4f51aa2da460081384769f
     1.5.1: 053f31b6bcd1440ff2da1863a44a32123fbb050078786221be54edd88df57398
     1.6.0: 0fd6ef67b82a8e570d9701458ef33933f6fbacde094895b66b8fb6b36a0a85d1
+    1.8.1: cfc4413030b12e77cfd18fd541084ebc9e995b70832e0471409abe3b640dd3da
 
 clusterctl_download_url: "https://github.com/kubernetes-sigs/cluster-api/releases/download/v{{ clusterctl_version }}/clusterctl-linux-{{ download_artifact_goarch }}" # noqa: yaml[line-length]
 clusterctl_download_dest: /usr/local/bin/clusterctl
