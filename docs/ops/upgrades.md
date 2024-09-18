@@ -108,6 +108,7 @@ ansible-playbook -i inventory/hosts.ini /dev/stdin <<END
   hosts: "{{ kubernetes_group | default('all') }}"
   become: true
   roles:
+    - role: vexxhost.atmosphere.defaults
     - role: vexxhost.kubernetes.kubeadm
       vars:
         kubeadm_version: "{{ kubernetes_version }}"
@@ -117,6 +118,7 @@ ansible-playbook -i inventory/hosts.ini /dev/stdin <<END
     - role: vexxhost.kubernetes.kubelet
       vars:
         kubelet_version: "{{ kubernetes_version }}"
+        containerd_pause_image: "{{ atmosphere_images['pause'] }}"
 
 - name: Run the control plane upgrade
   hosts: "{{ kubernetes_control_plane_group | default('controllers') }}"
