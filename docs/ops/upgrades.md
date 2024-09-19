@@ -100,120 +100,120 @@ in `inventory/group_vars/kubernetes.yml` before running the steps below.
 
 === "Playbooks"
 
-  ``` bash
-  ansible-playbook -i inventory/hosts.ini /dev/stdin <<END
-  ---
-  # helm upgrade --values /tmp/mariadb.yml mariadb openstack-helm-infra/mariadb
-  # TODO: fix https://github.com/kubernetes/ingress-nginx/blob/712e10d4176da06e28a11eb6f9e2d7a263b887cb/rootfs/etc/nginx/template/nginx.tmpl#L1322
-  
-  - name: Upgrade all packages
-    hosts: "{{ kubernetes_group | default('all') }}"
-    become: true
-    roles:
-      - role: vexxhost.kubernetes.kubeadm
-        vars:
-          kubeadm_version: "{{ kubernetes_version }}"
-      - role: vexxhost.kubernetes.kubectl
-        vars:
-          kubectl_version: "{{ kubernetes_version }}"
-      - role: vexxhost.kubernetes.kubelet
-        vars:
-          kubelet_version: "{{ kubernetes_version }}"
-  
-  - name: Run the control plane upgrade
-    hosts: "{{ kubernetes_control_plane_group | default('controllers') }}"
-    become: true
-    tasks:
-      - name: Run "kubeadm upgrade plan"
-        changed_when: false
-        ansible.builtin.shell: kubeadm upgrade plan
-        when: ansible_play_hosts[0] == inventory_hostname
-  
-      - name: Run "kubeadm upgrade apply"
-        changed_when: false
-        ansible.builtin.shell: kubeadm upgrade apply v{{ kubernetes_version }} --yes
-        when: ansible_play_hosts[0] == inventory_hostname
-  
-      - name: Run "kubeadm upgrade node" on other controllers
-        changed_when: false
-        throttle: 1
-        ansible.builtin.shell: kubeadm upgrade node
-        when: ansible_play_hosts[0] != inventory_hostname
-  
-  # TODO: upgrade CNI
-  
-  - name: Run the "kubelet" upgrade
-    hosts: "{{ kubernetes_group | default('all') }}"
-    become: true
-    tasks:
-      - name: Run "kubeadm upgrade node"
-        changed_when: false
-        ansible.builtin.shell: kubeadm upgrade node
-  
-      - name: Restart "kubelet"
-        ansible.builtin.service:
-          name: kubelet
-          state: restarted
-  END
-  ```
+    ``` bash
+    ansible-playbook -i inventory/hosts.ini /dev/stdin <<END
+    ---
+    # helm upgrade --values /tmp/mariadb.yml mariadb openstack-helm-infra/mariadb
+    # TODO: fix https://github.com/kubernetes/ingress-nginx/blob/712e10d4176da06e28a11eb6f9e2d7a263b887cb/rootfs/etc/nginx/template/nginx.tmpl#L1322
+
+    - name: Upgrade all packages
+      hosts: "{{ kubernetes_group | default('all') }}"
+      become: true
+      roles:
+        - role: vexxhost.kubernetes.kubeadm
+          vars:
+            kubeadm_version: "{{ kubernetes_version }}"
+        - role: vexxhost.kubernetes.kubectl
+          vars:
+            kubectl_version: "{{ kubernetes_version }}"
+        - role: vexxhost.kubernetes.kubelet
+          vars:
+            kubelet_version: "{{ kubernetes_version }}"
+
+    - name: Run the control plane upgrade
+      hosts: "{{ kubernetes_control_plane_group | default('controllers') }}"
+      become: true
+      tasks:
+        - name: Run "kubeadm upgrade plan"
+          changed_when: false
+          ansible.builtin.shell: kubeadm upgrade plan
+          when: ansible_play_hosts[0] == inventory_hostname
+
+        - name: Run "kubeadm upgrade apply"
+          changed_when: false
+          ansible.builtin.shell: kubeadm upgrade apply v{{ kubernetes_version }} --yes
+          when: ansible_play_hosts[0] == inventory_hostname
+
+        - name: Run "kubeadm upgrade node" on other controllers
+          changed_when: false
+          throttle: 1
+          ansible.builtin.shell: kubeadm upgrade node
+          when: ansible_play_hosts[0] != inventory_hostname
+
+    # TODO: upgrade CNI
+
+    - name: Run the "kubelet" upgrade
+      hosts: "{{ kubernetes_group | default('all') }}"
+      become: true
+      tasks:
+        - name: Run "kubeadm upgrade node"
+          changed_when: false
+          ansible.builtin.shell: kubeadm upgrade node
+
+        - name: Restart "kubelet"
+          ansible.builtin.service:
+            name: kubelet
+            state: restarted
+    END
+    ```
 
 === "Atmosphere"
 
-  ``` bash
-  ansible-playbook -i inventory/hosts.ini /dev/stdin <<END
-  ---
-  # helm upgrade --values /tmp/mariadb.yml mariadb openstack-helm-infra/mariadb
-  # TODO: fix https://github.com/kubernetes/ingress-nginx/blob/712e10d4176da06e28a11eb6f9e2d7a263b887cb/rootfs/etc/nginx/template/nginx.tmpl#L1322
-  
-  - name: Upgrade all packages
-    hosts: "{{ kubernetes_group | default('all') }}"
-    become: true
-    roles:
-      - role: vexxhost.atmosphere.defaults
-      - role: vexxhost.kubernetes.kubeadm
-        vars:
-          kubeadm_version: "{{ kubernetes_version }}"
-      - role: vexxhost.kubernetes.kubectl
-        vars:
-          kubectl_version: "{{ kubernetes_version }}"
-      - role: vexxhost.kubernetes.kubelet
-        vars:
-          kubelet_version: "{{ kubernetes_version }}"
-          containerd_pause_image: "{{ atmosphere_images['pause'] }}"
-  
-  - name: Run the control plane upgrade
-    hosts: "{{ kubernetes_control_plane_group | default('controllers') }}"
-    become: true
-    tasks:
-      - name: Run "kubeadm upgrade plan"
-        changed_when: false
-        ansible.builtin.shell: kubeadm upgrade plan
-        when: ansible_play_hosts[0] == inventory_hostname
-  
-      - name: Run "kubeadm upgrade apply"
-        changed_when: false
-        ansible.builtin.shell: kubeadm upgrade apply v{{ kubernetes_version }} --yes
-        when: ansible_play_hosts[0] == inventory_hostname
-  
-      - name: Run "kubeadm upgrade node" on other controllers
-        changed_when: false
-        throttle: 1
-        ansible.builtin.shell: kubeadm upgrade node
-        when: ansible_play_hosts[0] != inventory_hostname
-  
-  # TODO: upgrade CNI
-  
-  - name: Run the "kubelet" upgrade
-    hosts: "{{ kubernetes_group | default('all') }}"
-    become: true
-    tasks:
-      - name: Run "kubeadm upgrade node"
-        changed_when: false
-        ansible.builtin.shell: kubeadm upgrade node
-  
-      - name: Restart "kubelet"
-        ansible.builtin.service:
-          name: kubelet
-          state: restarted
-  END
-  ```
+    ``` bash
+    ansible-playbook -i inventory/hosts.ini /dev/stdin <<END
+    ---
+    # helm upgrade --values /tmp/mariadb.yml mariadb openstack-helm-infra/mariadb
+    # TODO: fix https://github.com/kubernetes/ingress-nginx/blob/712e10d4176da06e28a11eb6f9e2d7a263b887cb/rootfs/etc/nginx/template/nginx.tmpl#L1322
+
+    - name: Upgrade all packages
+      hosts: "{{ kubernetes_group | default('all') }}"
+      become: true
+      roles:
+        - role: vexxhost.atmosphere.defaults
+        - role: vexxhost.kubernetes.kubeadm
+          vars:
+            kubeadm_version: "{{ kubernetes_version }}"
+        - role: vexxhost.kubernetes.kubectl
+          vars:
+            kubectl_version: "{{ kubernetes_version }}"
+        - role: vexxhost.kubernetes.kubelet
+          vars:
+            kubelet_version: "{{ kubernetes_version }}"
+            containerd_pause_image: "{{ atmosphere_images['pause'] }}"
+
+    - name: Run the control plane upgrade
+      hosts: "{{ kubernetes_control_plane_group | default('controllers') }}"
+      become: true
+      tasks:
+        - name: Run "kubeadm upgrade plan"
+          changed_when: false
+          ansible.builtin.shell: kubeadm upgrade plan
+          when: ansible_play_hosts[0] == inventory_hostname
+
+        - name: Run "kubeadm upgrade apply"
+          changed_when: false
+          ansible.builtin.shell: kubeadm upgrade apply v{{ kubernetes_version }} --yes
+          when: ansible_play_hosts[0] == inventory_hostname
+
+        - name: Run "kubeadm upgrade node" on other controllers
+          changed_when: false
+          throttle: 1
+          ansible.builtin.shell: kubeadm upgrade node
+          when: ansible_play_hosts[0] != inventory_hostname
+
+    # TODO: upgrade CNI
+
+    - name: Run the "kubelet" upgrade
+      hosts: "{{ kubernetes_group | default('all') }}"
+      become: true
+      tasks:
+        - name: Run "kubeadm upgrade node"
+          changed_when: false
+          ansible.builtin.shell: kubeadm upgrade node
+
+        - name: Restart "kubelet"
+          ansible.builtin.service:
+            name: kubelet
+            state: restarted
+    END
+    ```
