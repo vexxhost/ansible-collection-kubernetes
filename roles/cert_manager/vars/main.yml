@@ -45,7 +45,6 @@ _cert_manager_helm_values:
       repository: "{{ cert_manager_image_cli | vexxhost.kubernetes.docker_image('name') }}"
       tag: "{{ cert_manager_image_cli | vexxhost.kubernetes.docker_image('tag') }}"
   acmesolver:
-    nodeSelector: "{{ cert_manager_node_selector }}"
     image:
       repository: "{{ cert_manager_image_acmesolver | vexxhost.kubernetes.docker_image('name') }}"
       tag: "{{ cert_manager_image_acmesolver | vexxhost.kubernetes.docker_image('tag') }}"
