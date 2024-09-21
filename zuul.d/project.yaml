@@ -16,9 +16,11 @@
     merge-mode: squash-merge
     check:
       jobs:
+        - ansible-collection-kubernetes-linters
         - build-ansible-collection
     gate:
       jobs:
+        - ansible-collection-kubernetes-linters
         - build-ansible-collection
     release:
       jobs:

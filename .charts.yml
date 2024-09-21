@@ -1,0 +1,6 @@
+charts:
+  - name: cert-manager
+    directory: chart
+    version: 1.11.5
+    repository:
+      url: https://charts.jetstack.io
