@@ -37,7 +37,7 @@ jobs:
           - 1.25.16
           - 1.26.15
           - 1.27.16
-          - 1.28.14
+          - 1.28.13
         distro:
           - rockylinux9
           - ubuntu2004
@@ -91,7 +91,7 @@ jobs:
           - old_version: 1.26.15
             version: 1.27.16
           - old_version: 1.27.16
-            version: 1.28.14
+            version: 1.28.13
     steps:
       - name: Checkout project
         uses: actions/checkout@v3
