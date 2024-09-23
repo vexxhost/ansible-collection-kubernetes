@@ -27,6 +27,8 @@ kubectl_checksums:
     1.26.11: 27c34a0870230d9dd723e1e01114634e396cd2a3d25ced263b769a4bd53e4edd
     1.27.8: 027b3161e99fa0a7fa529e8f17f73ee2c0807c81c721ca7cf307f6b41c17bc57
     1.28.4: 893c92053adea6edbbd4e959c871f5c21edce416988f968bec565d115383f7b8
+    1.29.8: 038454e0d79748aab41668f44ca6e4ac8affd1895a94f592b9739a0ae2a5f06a
+    1.30.4: 2ffd023712bbc1a9390dbd8c0c15201c165a69d394787ef03eda3eccb4b9ac06
   arm64:
     1.19.16: 6ad55694db34b9ffbc3cb41761a50160eea0a962eb86899410593931b4e602d0
     1.20.15: d479febfb2e967bd86240b5c0b841e40e39e1ef610afd6f224281a23318c13dc
@@ -41,6 +43,8 @@ kubectl_checksums:
     1.26.11: 4a6d2b7204af3cf84cd0e2c670fbb211501050c9a288de49de3c6363d4e0a63e
     1.27.8: 97ed6739e2803e63fd2d9de78be22d5ba6205bb63179a16ec773063526525a8e
     1.28.4: edf1e17b41891ec15d59dd3cc62bcd2cdce4b0fd9c2ee058b0967b17534457d7
+    1.29.8: adf0007e702e05f59fb8de159463765c4440f872515bd04c24939d9c8fb5e4c7
+    1.30.4: 1d8b4e6443c7df8e92a065d88d146142a202fea5ec694135b83d9668529ea3b1
 
 kubectl_download_url: "https://storage.googleapis.com/kubernetes-release/release/v{{ kubectl_version }}/bin/{{ ansible_facts['system'] | lower }}/{{ download_artifact_goarch }}/kubectl" # noqa: yaml[line-length]
 kubectl_download_dest: /usr/bin/kubectl

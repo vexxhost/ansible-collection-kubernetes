@@ -43,7 +43,7 @@ provisioner:
   inventory:
     group_vars:
       all:
-        kubernetes_version: ${KUBERNETES_VERSION-1.28.4}
+        kubernetes_version: ${KUBERNETES_VERSION-1.30.4}
         cilium_helm_values:
           operator:
             replicas: 1
