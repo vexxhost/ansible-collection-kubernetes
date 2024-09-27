@@ -21,8 +21,8 @@ cert_manager_helm_values: {}
 
 cert_manager_node_selector: {}
 
-cert_manager_image_cli: quay.io/jetstack/cert-manager-ctl:v1.7.1
-cert_manager_image_controller: quay.io/jetstack/cert-manager-controller:v1.7.1
-cert_manager_image_cainjector: quay.io/jetstack/cert-manager-cainjector:v1.7.1
-cert_manager_image_webhook: quay.io/jetstack/cert-manager-webhook:v1.7.1
-cert_manager_image_acmesolver: quay.io/jetstack/cert-manager-acmesolver:v1.7.1
+cert_manager_image_cli: quay.io/jetstack/cert-manager-ctl:v1.11.5
+cert_manager_image_controller: quay.io/jetstack/cert-manager-controller:v1.11.5
+cert_manager_image_cainjector: quay.io/jetstack/cert-manager-cainjector:v1.11.5
+cert_manager_image_webhook: quay.io/jetstack/cert-manager-webhook:v1.11.5
+cert_manager_image_acmesolver: quay.io/jetstack/cert-manager-acmesolver:v1.11.5
