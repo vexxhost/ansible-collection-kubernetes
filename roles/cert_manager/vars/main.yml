@@ -14,6 +14,9 @@
 
 _cert_manager_helm_values:
   installCRDs: true
+  global:
+    leaderElection:
+      namespace: "{{ cert_manager_helm_release_namespace }}"
   featureGates: AdditionalCertificateOutputFormats=true
   image:
     repository: "{{ cert_manager_image_controller | vexxhost.kubernetes.docker_image('name') }}"
