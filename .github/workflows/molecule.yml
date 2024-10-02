@@ -29,6 +29,7 @@ jobs:
         scenario:
           - cluster-api
           - cluster-api-upgrade
+          - download-artifacts
           - helm
           - upload-helm-chart
         distro:

@@ -12,6 +12,9 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+kubelet_versions: "{{ kubelet_checksums['amd64'].keys() | list | community.general.version_sort }}"
+kubelet_version: "{{ kubelet_versions | last }}"
+
 kubelet_checksums:
   amd64:
     1.19.16: 26b707d1c38135c72612f5272c30a0a3aeec66b971fb2258a714c687bceb85b5

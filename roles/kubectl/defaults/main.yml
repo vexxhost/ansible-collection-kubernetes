@@ -12,6 +12,9 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+kubectl_versions: "{{ kubectl_checksums['amd64'].keys() | list | community.general.version_sort }}"
+kubectl_version: "{{ kubectl_versions | last }}"
+
 kubectl_checksums:
   amd64:
     1.19.16: 6b9d9315877c624097630ac3c9a13f1f7603be39764001da7a080162f85cbc7e
