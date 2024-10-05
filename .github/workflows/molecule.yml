@@ -38,6 +38,9 @@ jobs:
           - 1.26.11
           - 1.27.8
           - 1.28.4
+          - 1.29.9
+          - 1.30.5
+          - 1.31.1
         distro:
           - rockylinux9
           - ubuntu2004
@@ -92,6 +95,12 @@ jobs:
             version: 1.27.8
           - old_version: 1.27.8
             version: 1.28.4
+          - old_version: 1.28.4
+            version: 1.29.9
+          - old_version: 1.29.9
+            version: 1.30.5
+          - old_version: 1.30.5
+            version: 1.31.1
     steps:
       - name: Checkout project
         uses: actions/checkout@v3

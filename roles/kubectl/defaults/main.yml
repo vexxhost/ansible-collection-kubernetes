@@ -27,6 +27,9 @@ kubectl_checksums:
     1.26.11: 27c34a0870230d9dd723e1e01114634e396cd2a3d25ced263b769a4bd53e4edd
     1.27.8: 027b3161e99fa0a7fa529e8f17f73ee2c0807c81c721ca7cf307f6b41c17bc57
     1.28.4: 893c92053adea6edbbd4e959c871f5c21edce416988f968bec565d115383f7b8
+    1.29.9: 7b0de2466458cc3c12cf8742dc800c77d4fa72e831aa522df65e510d33b329e2
+    1.30.5: b8aa921a580c3d8ba473236815de5ce5173d6fbfa2ccff453fa5eef46cc5ee7a
+    1.31.1: 57b514a7facce4ee62c93b8dc21fda8cf62ef3fed22e44ffc9d167eab843b2ae
   arm64:
     1.19.16: 6ad55694db34b9ffbc3cb41761a50160eea0a962eb86899410593931b4e602d0
     1.20.15: d479febfb2e967bd86240b5c0b841e40e39e1ef610afd6f224281a23318c13dc
@@ -41,8 +44,11 @@ kubectl_checksums:
     1.26.11: 4a6d2b7204af3cf84cd0e2c670fbb211501050c9a288de49de3c6363d4e0a63e
     1.27.8: 97ed6739e2803e63fd2d9de78be22d5ba6205bb63179a16ec773063526525a8e
     1.28.4: edf1e17b41891ec15d59dd3cc62bcd2cdce4b0fd9c2ee058b0967b17534457d7
+    1.29.9: 0fc73b3e4bf5395e0182ae62df24a96d5870baa44fabcc50b5eb2d8dcf22dd78
+    1.30.5: efc594857f9255fc33bcda9409b8862a3b47ce5f4e09d51c3427b85dd769b9b9
+    1.31.1: 3af2451191e27ecd4ac46bb7f945f76b71e934d54604ca3ffc7fe6f5dd123edb
 
-kubectl_download_url: "https://storage.googleapis.com/kubernetes-release/release/v{{ kubectl_version }}/bin/{{ ansible_facts['system'] | lower }}/{{ download_artifact_goarch }}/kubectl" # noqa: yaml[line-length]
+kubectl_download_url: "https://cdn.dl.k8s.io/release/v{{ kubectl_version }}/bin/{{ ansible_facts['system'] | lower }}/{{ download_artifact_goarch }}/kubectl" # noqa: yaml[line-length]
 kubectl_download_dest: /usr/bin/kubectl
 kubectl_binary_checksum: "{{ kubectl_checksums[download_artifact_goarch][kubectl_version] }}"
 
