@@ -42,7 +42,7 @@ kubeadm_checksums:
     1.27.8: 0d0f5b2781d663d314e785d14361aa5a09cfaf6e1694aa3cc731f4f06342ec13
     1.28.4: a4422780020954436b8e76ab1c59b68c5581a54432dd3e566c4709bb40c8d4f9
 
-kubeadm_download_url: "https://storage.googleapis.com/kubernetes-release/release/v{{ kubeadm_version }}/bin/{{ ansible_facts['system'] | lower }}/{{ download_artifact_goarch }}/kubeadm" # noqa: yaml[line-length]
+kubeadm_download_url: "https://cdn.dl.k8s.io/release/v{{ kubeadm_version }}/bin/{{ ansible_facts['system'] | lower }}/{{ download_artifact_goarch }}/kubeadm" # noqa: yaml[line-length]
 kubeadm_download_dest: /usr/bin/kubeadm
 kubeadm_binary_checksum: "{{ kubeadm_checksums[download_artifact_goarch][kubeadm_version] }}"
 
