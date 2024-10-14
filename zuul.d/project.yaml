@@ -16,6 +16,7 @@
     merge-mode: squash-merge
     check:
       jobs:
+        - ansible-collection-kubernetes-chart-vendor
         - ansible-collection-kubernetes-linters
         - ansible-collection-kubernetes-molecule-cluster-api
         - ansible-collection-kubernetes-molecule-cluster-api-upgrade
@@ -24,6 +25,7 @@
         - build-ansible-collection
     gate:
       jobs:
+        - ansible-collection-kubernetes-chart-vendor
         - ansible-collection-kubernetes-linters
         - ansible-collection-kubernetes-molecule-cluster-api
         - ansible-collection-kubernetes-molecule-cluster-api-upgrade

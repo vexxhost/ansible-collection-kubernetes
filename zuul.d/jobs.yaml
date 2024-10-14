@@ -4,8 +4,12 @@
 - job:
     name: ansible-collection-kubernetes-linters
     parent: tox-linters
-    required-projects:
-      - name: vexxhost/chart-vendor
+
+- job:
+    name: ansible-collection-kubernetes-chart-vendor
+    parent: chart-vendor
+    vars:
+      chart_vendor_charts_root: roles/cert_manager/files
 
 - job:
     name: ansible-collection-kubernetes-molecule
