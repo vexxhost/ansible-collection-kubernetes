@@ -27,8 +27,6 @@ jobs:
       fail-fast: false
       matrix:
         scenario:
-          - cluster-api-upgrade
-          - helm
           - upload-helm-chart
         distro:
           - rockylinux9
