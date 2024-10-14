@@ -1,0 +1,59 @@
+# Copyright (c) 2024 VEXXHOST, Inc.
+# SPDX-License-Identifier: Apache-2.0
+
+- job:
+    name: ansible-collection-kubernetes-molecule-jammy
+    parent: ansible-collection-kubernetes-molecule
+    nodeset:
+      nodes:
+        - name: ubuntu-jammy
+          label: jammy-2c-8g
+
+- job:
+    name: ansible-collection-kubernetes-molecule-jammy-aio
+    parent: ansible-collection-kubernetes-molecule-jammy
+    vars:
+      tox_envlist: molecule-aio
+
+- job:
+    name: ansible-collection-kubernetes-molecule-jammy-aio-1-28
+    parent: ansible-collection-kubernetes-molecule-jammy-aio
+    vars:
+      tox_environment:
+        KUBERNETES_VERSION: 1.28.4
+
+- job:
+    name: ansible-collection-kubernetes-molecule-jammy-aio-1-29
+    parent: ansible-collection-kubernetes-molecule-jammy-aio
+    vars:
+      tox_environment:
+        KUBERNETES_VERSION: 1.29.9
+
+- job:
+    name: ansible-collection-kubernetes-molecule-jammy-aio-1-30
+    parent: ansible-collection-kubernetes-molecule-jammy-aio
+    vars:
+      tox_environment:
+        KUBERNETES_VERSION: 1.30.5
+
+- job:
+    name: ansible-collection-kubernetes-molecule-jammy-aio-1-31
+    parent: ansible-collection-kubernetes-molecule-jammy-aio
+    vars:
+      tox_environment:
+        KUBERNETES_VERSION: 1.31.1
+
+- project-template:
+    name: ansible-collection-kubernetes-molecule-jammy
+    check:
+      jobs:
+        - ansible-collection-kubernetes-molecule-jammy-aio-1-28
+        - ansible-collection-kubernetes-molecule-jammy-aio-1-29
+        - ansible-collection-kubernetes-molecule-jammy-aio-1-30
+        - ansible-collection-kubernetes-molecule-jammy-aio-1-31
+    gate:
+      jobs:
+        - ansible-collection-kubernetes-molecule-jammy-aio-1-28
+        - ansible-collection-kubernetes-molecule-jammy-aio-1-29
+        - ansible-collection-kubernetes-molecule-jammy-aio-1-30
+        - ansible-collection-kubernetes-molecule-jammy-aio-1-31
