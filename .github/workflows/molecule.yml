@@ -74,6 +74,9 @@ jobs:
           - old_version: 1.27.16
             version: 1.28.13
           - old_version: 1.28.13
+          - old_version: 1.27.8
+            version: 1.28.4
+          - old_version: 1.28.4
             version: 1.29.9
           - old_version: 1.29.9
             version: 1.30.5
