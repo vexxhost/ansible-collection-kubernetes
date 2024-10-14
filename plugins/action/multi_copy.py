@@ -12,16 +12,16 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from __future__ import (absolute_import, division, print_function)
-__metaclass__ = type
+from __future__ import absolute_import, division, print_function
 
-from ansible.errors import AnsibleActionFail
-from ansible.plugins.action import ActionBase
+__metaclass__ = type
 
 import os
 import shutil
 from tempfile import TemporaryDirectory
-from zipfile import ZipFile, ZipInfo
+
+from ansible.errors import AnsibleActionFail
+from ansible.plugins.action import ActionBase
 
 
 class ActionModule(ActionBase):
@@ -36,24 +36,31 @@ class ActionModule(ActionBase):
                 raise AnsibleActionFail("Missing '{}' argument.".format(required_arg))
 
         with TemporaryDirectory() as tmp_dir:
-          zip_file_name = os.path.join(tmp_dir, "multi_copy.zip")
-          source = self._find_needle('files', self._task.args['src'])
-          shutil.make_archive(zip_file_name, 'gztar', source)
+            zip_file_name = os.path.join(tmp_dir, "multi_copy.zip")
+            source = self._find_needle("files", self._task.args["src"])
+            shutil.make_archive(zip_file_name, "gztar", source)
 
-          # Upload and extract the files
-          unarchive_args = {
-              "src": zip_file_name + ".tar.gz",
-          }
-          for attr_arg in ["dest", "mode", "group", "owner", "attributes", "list_files"]:
-              if attr_arg in self._task.args:
-                  unarchive_args[attr_arg] = self._task.args[attr_arg]
-          unarchive_result = self._execute_action_plugin(
-              name='ansible.builtin.unarchive',
-              args=unarchive_args,
-              task_vars=task_vars,
-          )
+            # Upload and extract the files
+            unarchive_args = {
+                "src": zip_file_name + ".tar.gz",
+            }
+            for attr_arg in [
+                "dest",
+                "mode",
+                "group",
+                "owner",
+                "attributes",
+                "list_files",
+            ]:
+                if attr_arg in self._task.args:
+                    unarchive_args[attr_arg] = self._task.args[attr_arg]
+            unarchive_result = self._execute_action_plugin(
+                name="ansible.builtin.unarchive",
+                args=unarchive_args,
+                task_vars=task_vars,
+            )
 
-          return unarchive_result
+            return unarchive_result
 
     def _execute_action_plugin(self, name, args, task_vars):
         task = self._task.copy()
