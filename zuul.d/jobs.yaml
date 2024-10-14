@@ -6,3 +6,16 @@
     parent: tox-linters
     required-projects:
       - name: vexxhost/chart-vendor
+
+- job:
+    name: ansible-collection-kubernetes-molecule
+    parent: tox
+    abstract: true
+    pre-run: zuul.d/playbooks/molecule/pre.yml
+    run: zuul.d/playbooks/molecule/run.yml
+
+- job:
+    name: ansible-collection-kubernetes-molecule-cluster-api
+    parent: ansible-collection-kubernetes-molecule
+    vars:
+      tox_envlist: molecule-cluster-api
