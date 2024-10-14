@@ -21,41 +21,6 @@ on:
       - main
 
 jobs:
-  test:
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        scenario:
-          - upload-helm-chart
-        distro:
-          - rockylinux9
-          - ubuntu2004
-          - ubuntu2204
-    steps:
-      - name: Checkout project
-        uses: actions/checkout@v3
-
-      - name: Setup Python
-        uses: actions/setup-python@v2
-        with:
-          python-version: "3.10"
-          cache: pip
-
-      - name: Install Molecule
-        run: pip install -r requirements.txt
-
-      - name: Turn off swap
-        run: sudo swapoff -a
-
-      - name: Bump number of inotify watchers
-        run: sudo sysctl fs.inotify.max_user_watches=524288
-
-      - name: Run Molecule
-        run: molecule test -s ${{ matrix.scenario }}
-        env:
-          MOLECULE_DISTRO: ${{ matrix.distro }}
-
   kubernetes:
     runs-on: ubuntu-latest
     timeout-minutes: 15
