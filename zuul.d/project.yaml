@@ -18,11 +18,13 @@
       jobs:
         - ansible-collection-kubernetes-linters
         - ansible-collection-kubernetes-molecule-cluster-api
+        - ansible-collection-kubernetes-molecule-cluster-api-upgrade
         - build-ansible-collection
     gate:
       jobs:
         - ansible-collection-kubernetes-linters
         - ansible-collection-kubernetes-molecule-cluster-api
+        - ansible-collection-kubernetes-molecule-cluster-api-upgrade
         - build-ansible-collection
     release:
       jobs:

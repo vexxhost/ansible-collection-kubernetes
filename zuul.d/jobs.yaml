@@ -19,3 +19,9 @@
     parent: ansible-collection-kubernetes-molecule
     vars:
       tox_envlist: molecule-cluster-api
+
+- job:
+    name: ansible-collection-kubernetes-molecule-cluster-api-upgrade
+    parent: ansible-collection-kubernetes-molecule
+    vars:
+      tox_envlist: molecule-cluster-api-upgrade
