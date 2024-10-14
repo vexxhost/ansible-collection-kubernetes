@@ -17,10 +17,12 @@
     check:
       jobs:
         - ansible-collection-kubernetes-linters
+        - ansible-collection-kubernetes-molecule-cluster-api
         - build-ansible-collection
     gate:
       jobs:
         - ansible-collection-kubernetes-linters
+        - ansible-collection-kubernetes-molecule-cluster-api
         - build-ansible-collection
     release:
       jobs:
