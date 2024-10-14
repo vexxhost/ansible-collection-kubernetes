@@ -21,6 +21,16 @@
     - "{{ ansible_facts['distribution'] | lower }}.yml"
     - "{{ ansible_facts['os_family'] | lower }}.yml"
 
+# NOTE(mnaser): Sometimes EL ships with coreutils, sometimes it ships
+#               with coreutils-single.  We need to ensure that we have
+#               coreutils installed.
+- name: Install coreutils
+  ansible.builtin.dnf:
+    name: coreutils
+    allowerasing: true
+  when:
+    - ansible_facts['os_family'] == 'RedHat'
+
 # NOTE(mnaser): This is a list of packages that are needed for `kubeadm`
 #               validation.
 #

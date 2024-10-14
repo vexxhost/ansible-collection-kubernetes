@@ -35,3 +35,7 @@
     release:
       jobs:
         - publish-ansible-collection-vexxhost
+    templates:
+      - ansible-collection-kubernetes-molecule-focal
+      - ansible-collection-kubernetes-molecule-jammy
+      - ansible-collection-kubernetes-molecule-rockylinux9

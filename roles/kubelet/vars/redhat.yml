@@ -1,9 +1,6 @@
 kubelet_package_dependencies:
   - conntrack
-  # NOTE(fitbeard): This is to allow our tests to run on Docker containers since
-  #                 Rocky Linux images comes with pre-installed thiner versions
-  #                 of some packages.
-  - "{{ 'coreutils-single' if ansible_connection == 'community.docker.docker' else 'coreutils' }}"
+  - coreutils
   - ebtables
   - ethtool
   - iproute
