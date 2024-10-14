@@ -1,2 +1,2 @@
-- name: Import help chart upload method tasks
-  ansible.builtin.import_tasks: "{{ upload_helm_chart_method }}.yml"
+- name: Include help chart upload method tasks
+  ansible.builtin.include_tasks: "{{ upload_helm_chart_method }}.yml"
