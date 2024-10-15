@@ -41,3 +41,9 @@
     parent: ansible-collection-kubernetes-molecule
     vars:
       tox_envlist: molecule-upload-helm-chart
+
+- job:
+    name: ansible-collection-kubernetes-molecule-download-binaries
+    parent: ansible-collection-kubernetes-molecule
+    vars:
+      tox_envlist: molecule-download-binaries

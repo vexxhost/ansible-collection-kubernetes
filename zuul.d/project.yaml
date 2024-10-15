@@ -22,6 +22,7 @@
         - ansible-collection-kubernetes-molecule-cluster-api-upgrade
         - ansible-collection-kubernetes-molecule-helm
         - ansible-collection-kubernetes-molecule-upload-helm-chart
+        - ansible-collection-kubernetes-molecule-download-binaries
         - build-ansible-collection
     gate:
       jobs:
@@ -31,6 +32,7 @@
         - ansible-collection-kubernetes-molecule-cluster-api-upgrade
         - ansible-collection-kubernetes-molecule-helm
         - ansible-collection-kubernetes-molecule-upload-helm-chart
+        - ansible-collection-kubernetes-molecule-download-binaries
         - build-ansible-collection
     release:
       jobs:
