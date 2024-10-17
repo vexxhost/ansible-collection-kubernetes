@@ -1,4 +1,4 @@
-# Copyright (c) 2023 VEXXHOST, Inc.
+# Copyright (c) 2024 VEXXHOST, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may
 # not use this file except in compliance with the License. You may obtain
@@ -12,22 +12,10 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-name: linters
-
-on:
-  pull_request:
-  push:
-    branches:
-      - main
-
-jobs:
-  ansible-lint:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout project
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-
-      - name: Run "ansible-lint"
-        uses: ansible/ansible-lint-action@main
+- name: Prepare host for Molecule tests
+  hosts: all
+  tasks:
+    - name: Disable swap
+      become: true
+      ansible.builtin.command: swapoff -a
+      ignore_errors: yes
