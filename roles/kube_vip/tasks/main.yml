@@ -40,23 +40,13 @@
   notify:
     - Restart "kubelet" service
 
-- name: Upload Kubernetes manifest (if ARP for VIP)
+- name: Upload Kubernetes manifest 
   ansible.builtin.template:
     src: kube-vip.yaml.j2
     dest: /etc/kubernetes/manifests/kube-vip.yaml
     owner: root
     group: root
     mode: "0644"
-  when: not kube_vip_bgp_enabled
-
-- name: Upload Kubernetes manifest (if BGP for VIP)
-  ansible.builtin.template:
-    src: kube-vip-bgp.yaml.j2
-    dest: /etc/kubernetes/manifests/kube-vip.yaml
-    owner: root
-    group: root
-    mode: "0644"
-  when: kube_vip_bgp_enabled
 
 - name: Flush handlers
   ansible.builtin.meta: flush_handlers
