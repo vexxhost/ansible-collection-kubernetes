@@ -40,7 +40,4 @@ kube_vip_mode: arp
 # kube_vip_bgp_peeraddress:
 
 # password to work with a single BGP Peer, if BGP is enabled
-
 # kube_vip_bgp_peerpass:
-
-
