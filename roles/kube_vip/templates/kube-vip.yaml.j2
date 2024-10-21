@@ -23,7 +23,7 @@ spec:
       value: kube-system
     - name: vip_ddns
       value: "false"
-    {% if {{ kube_vip_mode }} == "arp" %}
+    {% if kube_vip_mode == "arp" %}
     - name: svc_enable
       value: "true"
     - name: svc_leasename
@@ -38,7 +38,7 @@ spec:
       value: "10"
     - name: vip_retryperiod
       value: "2"
-    {% elif {{ kube_vip_mode }} == "bgp" %}
+    {% elif kube_vip_mode == "bgp" %}
     - name: bgp_enable
       value: "true"
     - name: bgp_routerid
