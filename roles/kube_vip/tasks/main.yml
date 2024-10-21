@@ -40,7 +40,7 @@
   notify:
     - Restart "kubelet" service
 
-- name: Upload Kubernetes manifest 
+- name: Upload Kubernetes manifest
   ansible.builtin.template:
     src: kube-vip.yaml.j2
     dest: /etc/kubernetes/manifests/kube-vip.yaml
