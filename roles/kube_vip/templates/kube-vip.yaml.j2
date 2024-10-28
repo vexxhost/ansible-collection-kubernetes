@@ -59,6 +59,6 @@ spec:
   hostNetwork: true
   volumes:
   - hostPath:
-      path: /etc/kubernetes/admin.conf
+      path: "{{ kube_vip_kubeconfig_path }}"
     name: kubeconfig
 status: {}
