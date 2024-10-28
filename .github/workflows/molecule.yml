@@ -28,13 +28,6 @@ jobs:
       fail-fast: false
       matrix:
         version:
-          - 1.19.16
-          - 1.20.15
-          - 1.21.14
-          - 1.22.17
-          - 1.23.17
-          - 1.24.17
-          - 1.25.16
           - 1.26.15
           - 1.27.16
           - 1.28.13
@@ -74,18 +67,6 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - old_version: 1.19.16
-            version: 1.20.15
-          - old_version: 1.20.15
-            version: 1.21.14
-          - old_version: 1.21.14
-            version: 1.22.17
-          - old_version: 1.22.17
-            version: 1.23.17
-          - old_version: 1.23.17
-            version: 1.24.17
-          - old_version: 1.24.17
-            version: 1.25.16
           - old_version: 1.25.16
             version: 1.26.15
           - old_version: 1.26.15

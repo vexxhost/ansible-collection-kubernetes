@@ -17,6 +17,7 @@
     abstract: true
     pre-run: zuul.d/playbooks/molecule/pre.yml
     run: zuul.d/playbooks/molecule/run.yml
+    post-run: zuul.d/playbooks/molecule/post.yml
 
 - job:
     name: ansible-collection-kubernetes-molecule-cluster-api
