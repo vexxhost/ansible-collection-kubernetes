@@ -13,7 +13,7 @@
 # under the License.
 
 # Kuberentes version
-kubernetes_version: 1.28.4
+kubernetes_version: 1.28.13
 
 # Name of Ansible group containing all control-plane nodes
 kubernetes_control_plane_group: controllers
