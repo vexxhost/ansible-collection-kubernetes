@@ -12,9 +12,6 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-# Inventory group containing controllers
-kube_vip_control_plane_group: "{{ kubernetes_control_plane_group | default('controllers') }}"
-
 # Image to use for kube-vip
 kube_vip_image: ghcr.io/kube-vip/kube-vip:v0.6.4
 
