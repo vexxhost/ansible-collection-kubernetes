@@ -36,7 +36,6 @@ jobs:
           - ubuntu2004
           - ubuntu2204
         scenario:
-          - aio
           - ha
     steps:
       - name: Checkout project
