@@ -73,6 +73,7 @@
     owner: root
     group: root
     mode: "0644"
+  changed_when: false
 
 - name: Flush handlers
   ansible.builtin.meta: flush_handlers

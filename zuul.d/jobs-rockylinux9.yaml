@@ -76,7 +76,6 @@
         - ansible-collection-kubernetes-molecule-rockylinux9-aio-1-26
         - ansible-collection-kubernetes-molecule-rockylinux9-aio-1-27
         - ansible-collection-kubernetes-molecule-rockylinux9-aio-1-28
-        - ansible-collection-kubernetes-molecule-rockylinux9-aio-1-28
         - ansible-collection-kubernetes-molecule-rockylinux9-aio-1-29
         - ansible-collection-kubernetes-molecule-rockylinux9-aio-1-30
         - ansible-collection-kubernetes-molecule-rockylinux9-aio-1-31
