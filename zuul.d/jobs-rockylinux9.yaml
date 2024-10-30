@@ -38,7 +38,7 @@
     parent: ansible-collection-kubernetes-molecule-rockylinux9-aio
     vars:
       tox_environment:
-        KUBERNETES_VERSION: 1.28.4
+        KUBERNETES_VERSION: 1.28.13
 
 - job:
     name: ansible-collection-kubernetes-molecule-rockylinux9-aio-1-29
