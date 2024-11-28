@@ -29,6 +29,7 @@ provisioner:
           operator:
             replicas: 1
       controllers:
+        clusterctl_version: 1.6.0
         cluster_api_node_selector:
           kubernetes.io/os: linux
         keepalived_interface: "{{ ansible_facts['default_ipv4'].interface }}"
