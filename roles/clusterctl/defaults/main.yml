@@ -12,7 +12,9 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-clusterctl_version: 1.6.0
+
+# clusterctl_version:
+
 clusterctl_checksums:
   amd64:
     1.3.2: d57adc75cd4359a9f660b2ecbbd0ef82ebfa643c1218a6ca8ca1778bdda72380
