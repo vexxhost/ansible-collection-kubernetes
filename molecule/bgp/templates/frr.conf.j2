@@ -1,0 +1,12 @@
+# {{ ansible_managed }}
+
+frr defaults traditional
+log syslog informational
+debug bgp events
+debug bgp filters
+debug bgp fsm
+debug bgp keepalives
+debug bgp updates
+router bgp 65001
+bgp router-id 172.17.0.100
+bgp log-neighbor-changes
