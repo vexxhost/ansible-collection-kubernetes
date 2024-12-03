@@ -9,8 +9,6 @@ spec:
   - args:
     - manager
     env:
-    - name: vip_arp
-      value: "true"
     - name: port
       value: "6443"
     - name: vip_interface
@@ -24,6 +22,8 @@ spec:
     - name: vip_ddns
       value: "false"
     {% if kube_vip_mode == "arp" %}
+    - name: vip_arp
+      value: "true"
     - name: svc_enable
       value: "true"
     - name: svc_leasename
@@ -39,6 +39,8 @@ spec:
     - name: vip_retryperiod
       value: "2"
     {% elif kube_vip_mode == "bgp" %}
+    - name: vip_arp
+      value: "false"
     - name: bgp_enable
       value: "true"
     - name: bgp_routerid
@@ -48,13 +50,11 @@ spec:
     - name: bgp_peeraddress
       value: "{{ kube_vip_bgp_peeraddress }}"
     - name: bgp_peerpass
-      value: "{{ kube_vip_bgp_peerpass}}"
+      value: "{{ kube_vip_bgp_peerpass }}"
     - name: bgp_peeras
       value: "{{ kube_vip_bgp_peeras }}"
     - name: bgp_peers
       value:  "{{ kube_vip_bgp_peers }}"
-    - name: address
-      value: "{{ kube_vip_address }}"
     {% endif %}
     - name: address
       value: "{{ kube_vip_address }}"
