@@ -21,7 +21,7 @@ kube_vip_interface: "{{ keepalived_interface | default(kubernetes_keepalived_int
 # IP address to use for kube-vip
 kube_vip_address: "{{ keepalived_vip | default(kubernetes_keepalived_vip) }}"
 
-# use bgp for kube-vip
+# VIP mode for kube-vip (valide options: arp or bgp)
 kube_vip_mode: arp
 
 # BGP peers, if BGP is enabled
@@ -35,6 +35,8 @@ kube_vip_mode: arp
 
 # BGP router id, if BGP is enabled
 # kube_vip_bgp_routerid: 192.168.0.2
+#
+# kube_vip_bgp_routerinterface: ens3
 
 # Address of a single BGP Peer, if BGP is enabled
 # kube_vip_bgp_peeraddress:
