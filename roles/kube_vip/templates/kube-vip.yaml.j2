@@ -43,18 +43,34 @@ spec:
       value: "false"
     - name: bgp_enable
       value: "true"
+    {% if kube_vip_bgp_routerid is defined %}
     - name: bgp_routerid
       value: "{{ kube_vip_bgp_routerid }}"
+    {% endif %}
+    {% if kube_vip_bgp_routerinterface is defined %}
+    - name: bgp_routerinterface
+      value: "{{ kube_vip_bgp_routerinterface }}"
+    {% endif %}
+    {% if kube_vip_bgp_as is defined %}
     - name: bgp_as
       value: "{{ kube_vip_bgp_as }}"
+    {% endif %}
+    {% if kube_vip_bgp_peeraddress is defined %}
     - name: bgp_peeraddress
       value: "{{ kube_vip_bgp_peeraddress }}"
+    {% endif %}
+    {% if kube_vip_bgp_peerpass is defined %}
     - name: bgp_peerpass
       value: "{{ kube_vip_bgp_peerpass }}"
+    {% endif %}
+    {% if kube_vip_bgp_peeras is defined %}
     - name: bgp_peeras
       value: "{{ kube_vip_bgp_peeras }}"
+    {% endif %}
+    {% if kube_vip_bgp_peers is defined %}
     - name: bgp_peers
       value:  "{{ kube_vip_bgp_peers }}"
+    {% endif %}
     {% endif %}
     - name: address
       value: "{{ kube_vip_address }}"
