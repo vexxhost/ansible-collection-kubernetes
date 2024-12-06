@@ -18,7 +18,6 @@ cert_manager_helm_chart_ref: /usr/local/src/cert-manager
 cert_manager_helm_release_name: cert-manager
 cert_manager_helm_release_namespace: cert-manager
 cert_manager_helm_values: {}
-
 cert_manager_node_selector: {}
 
 cert_manager_image_cli: quay.io/jetstack/cert-manager-ctl:v1.11.5
