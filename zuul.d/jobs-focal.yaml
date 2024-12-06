@@ -3,7 +3,7 @@
 
 - job:
     name: ansible-collection-kubernetes-molecule-focal
-    parent: ansible-collection-kubernetes-molecule
+    parent: ansible-collection-kubernetes-molecule-py38
     vars:
       # NOTE(mnaser): Ubuntu Focal ships with an old Python
       python_use_pyenv: true
