@@ -36,6 +36,14 @@
       tox_environment:
         KUBERNETES_VERSION: 1.28.13
 
+- job:
+    name: ansible-collection-kubernetes-molecule-jammy-aio-1-28-bgp
+    parent: ansible-collection-kubernetes-molecule-jammy-aio-1-28
+    vars:
+      tox_envlist: molecule-bgp
+      tox_environment:
+        KUBERNETES_VERSION: 1.28.13
+
 - project-template:
     name: ansible-collection-kubernetes-molecule-jammy
     check:
@@ -43,8 +51,10 @@
         - ansible-collection-kubernetes-molecule-jammy-aio-1-26
         - ansible-collection-kubernetes-molecule-jammy-aio-1-27
         - ansible-collection-kubernetes-molecule-jammy-aio-1-28
+        - ansible-collection-kubernetes-molecule-jammy-aio-1-28-bgp
     gate:
       jobs:
         - ansible-collection-kubernetes-molecule-jammy-aio-1-26
         - ansible-collection-kubernetes-molecule-jammy-aio-1-27
         - ansible-collection-kubernetes-molecule-jammy-aio-1-28
+        - ansible-collection-kubernetes-molecule-jammy-aio-1-28-bgp
