@@ -70,8 +70,12 @@ spec:
 {% if kube_vip_bgp_peers is defined %}
     - name: bgp_peers
       value:  "{{ kube_vip_bgp_peers }}"
-    {% endif %}
-    {% endif %}
+{% endif %}
+{% if kube_vip_bgp_sourceip is defined %}
+    - name: bgp_sourceip
+      value:  "{{ kube_vip_bgp_sourceip }}"
+{% endif %}
+{% endif %}
     - name: address
       value: "{{ kube_vip_address }}"
     - name: prometheus_server
