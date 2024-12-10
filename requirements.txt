@@ -1,7 +1,7 @@
 ansible-core
 docker-image-py
 jmespath
-molecule
+molecule<=24.9.0
 molecule-plugins[docker]
 pytest < 8.0.0
 pytest-forked
