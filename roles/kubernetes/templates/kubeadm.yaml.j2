@@ -67,8 +67,8 @@ dns:
 {% endif %}
 apiServer:
   extraArgs:
-    oidc-username-claim: email
 {% if kubernetes_oidc_issuer_url is defined %}
+    oidc-username-claim: "{{ kubernetes_oidc_username_claim }}"
     oidc-issuer-url: {{ kubernetes_oidc_issuer_url }}
     oidc-client-id: {{ kubernetes_oidc_client_id }}
 {% endif %}
