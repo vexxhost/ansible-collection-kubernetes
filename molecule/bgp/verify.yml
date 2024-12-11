@@ -1,0 +1,22 @@
+# Copyright (c) 2024 VEXXHOST, Inc.
+# SPDX-License-Identifier: Apache-2.0
+
+- ansible.builtin.import_playbook: ../kubernetes/verify.yml
+
+- name: verify BGP
+  hosts: all
+  become: true
+  tasks:
+    - name: Get all nodes
+      ansible.builtin.command: |
+        vtysh -c 'show ip bgp neighbors 172.17.0.100 received-routes'
+      register: received
+      retries: 60
+      delay: 2
+      until:
+        - received.rc == 0
+        - received.stdout.find('172.17.0.100/32') != -1
+
+    - name: Print bgp neighbors received-routes
+      ansible.builtin.debug:
+        msg: "{{ received.stdout_lines }}"
