@@ -27,9 +27,8 @@ provisioner:
           operator:
             replicas: 1
       controllers:
-        keepalived_interface: "{{ ansible_facts['default_ipv4'].interface }}"
-        keepalived_vip: 172.17.0.100
-        keepalived_vrid: 42
+        kube_vip_interface: "{{ ansible_facts['default_ipv4'].interface }}"
+        kube_vip_address: 172.17.0.100
         kubernetes_hostname: "{{ ansible_facts['default_ipv4'].address }}"
         # use bgp for kube-vip
         kube_vip_mode: bgp
