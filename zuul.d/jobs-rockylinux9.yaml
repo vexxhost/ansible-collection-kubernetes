@@ -40,6 +40,20 @@
       tox_environment:
         KUBERNETES_VERSION: 1.28.13
 
+- job:
+    name: ansible-collection-kubernetes-molecule-rockylinux9-aio-1-29
+    parent: ansible-collection-kubernetes-molecule-rockylinux9-aio
+    vars:
+      tox_environment:
+        KUBERNETES_VERSION: 1.29.12
+
+- job:
+    name: ansible-collection-kubernetes-molecule-rockylinux9-aio-1-30
+    parent: ansible-collection-kubernetes-molecule-rockylinux9-aio
+    vars:
+      tox_environment:
+        KUBERNETES_VERSION: 1.30.8
+
 - project-template:
     name: ansible-collection-kubernetes-molecule-rockylinux9
     check:
@@ -47,8 +61,12 @@
         - ansible-collection-kubernetes-molecule-rockylinux9-aio-1-26
         - ansible-collection-kubernetes-molecule-rockylinux9-aio-1-27
         - ansible-collection-kubernetes-molecule-rockylinux9-aio-1-28
+        - ansible-collection-kubernetes-molecule-rockylinux9-aio-1-29
+        - ansible-collection-kubernetes-molecule-rockylinux9-aio-1-30
     gate:
       jobs:
         - ansible-collection-kubernetes-molecule-rockylinux9-aio-1-26
         - ansible-collection-kubernetes-molecule-rockylinux9-aio-1-27
         - ansible-collection-kubernetes-molecule-rockylinux9-aio-1-28
+        - ansible-collection-kubernetes-molecule-rockylinux9-aio-1-29
+        - ansible-collection-kubernetes-molecule-rockylinux9-aio-1-30
