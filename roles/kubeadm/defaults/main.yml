@@ -30,6 +30,8 @@ kubeadm_checksums:
     1.27.16: 33622018f83515331ac70c2041eba5d814a6d78a40b8869f089ea502f63a1421
     1.28.4: b4d2531b7cddf782f59555436bc098485b5fa6c05afccdeecf0d62d21d84f5bd
     1.28.13: f23e9586811312998bc5e8847f6df52fc04809aed8c2c2fd750f2c42b3f87192
+    1.29.12: bce712631bc425726b45930e58b00790c2ab3deec4282f86af353ea907817c46
+    1.30.8: ffe1a2b6345fae55e059afe7eed90ae9f46f0a755fde5fc17b9113134ab8b79e
   arm64:
     1.19.16: f72db475c7a52deaab3ac04ee66e2c99dc4dc50b4fa85faf34ff319de869e1d6
     1.20.15: 76e132da8185a7c33e6178348d05570a1f78878d5e118c7402c9ad02e8b6fb77
@@ -47,8 +49,10 @@ kubeadm_checksums:
     1.27.16: 39fb88ab0f6b943bbe61dde5d7ea58ce728045a0556f9b6f56d66fe1f20affcc
     1.28.4: a4422780020954436b8e76ab1c59b68c5581a54432dd3e566c4709bb40c8d4f9
     1.28.13: 989630fb0de6fe750c6ee25ee01b72654a3087434ff488ff8fddedd0278720cc
+    1.29.12: d953ed504c2ddd08272d45cc94439fc69b7ffd77ff1d0c78917b3275a5c9c044
+    1.30.8: 7bca884b54e2c3988e81250f8eba6a49d718994dd7fe67d14905cb65dcec8b56
 
-kubeadm_download_url: "https://storage.googleapis.com/kubernetes-release/release/v{{ kubeadm_version }}/bin/{{ ansible_facts['system'] | lower }}/{{ download_artifact_goarch }}/kubeadm" # noqa: yaml[line-length]
+kubeadm_download_url: "https://cdn.dl.k8s.io/release/v{{ kubeadm_version }}/bin/{{ ansible_facts['system'] | lower }}/{{ download_artifact_goarch }}/kubeadm" # noqa: yaml[line-length]
 kubeadm_download_dest: /usr/bin/kubeadm
 kubeadm_binary_checksum: "{{ kubeadm_checksums[download_artifact_goarch][kubeadm_version] }}"
 
