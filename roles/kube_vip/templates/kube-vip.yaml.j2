@@ -55,21 +55,21 @@ spec:
     - name: bgp_as
       value: "{{ kube_vip_bgp_as }}"
 {% endif %}
+{% if kube_vip_bgp_peers is defined %}
+    - name: bgp_peers
+      value:  "{{ kube_vip_bgp_peers }}"
+{% endif %}
 {% if kube_vip_bgp_peeraddress is defined %}
     - name: bgp_peeraddress
       value: "{{ kube_vip_bgp_peeraddress }}"
-{% endif %}
-{% if kube_vip_bgp_peerpass is defined %}
-    - name: bgp_peerpass
-      value: "{{ kube_vip_bgp_peerpass }}"
 {% endif %}
 {% if kube_vip_bgp_peeras is defined %}
     - name: bgp_peeras
       value: "{{ kube_vip_bgp_peeras }}"
 {% endif %}
-{% if kube_vip_bgp_peers is defined %}
-    - name: bgp_peers
-      value:  "{{ kube_vip_bgp_peers }}"
+{% if kube_vip_bgp_peerpass is defined %}
+    - name: bgp_peerpass
+      value: "{{ kube_vip_bgp_peerpass }}"
 {% endif %}
 {% if kube_vip_bgp_sourceip is defined %}
     - name: bgp_sourceip
