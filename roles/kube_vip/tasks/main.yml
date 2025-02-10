@@ -40,6 +40,32 @@
   notify:
     - Restart "kubelet" service
 
+- name: Check if super-admin.conf exists
+  ansible.builtin.stat:
+    path: /etc/kubernetes/super-admin.conf
+  failed_when: false
+  changed_when: false
+  register: kube_vip_stat_super_admin
+
+- name: Check if kubeadm has already run
+  ansible.builtin.stat:
+    path: /var/lib/kubelet/config.yaml
+    get_attributes: false
+    get_checksum: false
+    get_mime: false
+  register: kube_vip_stat_kubelet_config
+
+- name: Set fact with KUBECONFIG path
+  ansible.builtin.set_fact:
+    kube_vip_kubeconfig_path: /etc/kubernetes/admin.conf
+
+- name: Set fact with KUBECONFIG path (with super-admin.conf)
+  ansible.builtin.set_fact:
+    kube_vip_kubeconfig_path: /etc/kubernetes/super-admin.conf
+  when:
+    - inventory_hostname == groups[kube_vip_control_plane_group] | first
+    - (kube_vip_stat_super_admin.stat.exists and kube_vip_stat_super_admin.stat.isreg) or (not kube_vip_stat_kubelet_config.stat.exists)
+
 - name: Upload Kubernetes manifest
   ansible.builtin.template:
     src: kube-vip.yaml.j2
@@ -47,6 +73,7 @@
     owner: root
     group: root
     mode: "0644"
+  changed_when: false
 
 - name: Flush handlers
   ansible.builtin.meta: flush_handlers
