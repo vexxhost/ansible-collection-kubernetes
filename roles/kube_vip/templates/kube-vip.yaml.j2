@@ -9,8 +9,6 @@ spec:
   - args:
     - manager
     env:
-    - name: vip_arp
-      value: "true"
     - name: port
       value: "6443"
     - name: vip_interface
@@ -23,6 +21,9 @@ spec:
       value: kube-system
     - name: vip_ddns
       value: "false"
+{% if kube_vip_mode == "arp" %}
+    - name: vip_arp
+      value: "true"
     - name: svc_enable
       value: "true"
     - name: svc_leasename
@@ -37,6 +38,44 @@ spec:
       value: "10"
     - name: vip_retryperiod
       value: "2"
+{% elif kube_vip_mode == "bgp" %}
+    - name: vip_arp
+      value: "false"
+    - name: bgp_enable
+      value: "true"
+{% if kube_vip_bgp_routerid is defined %}
+    - name: bgp_routerid
+      value: "{{ kube_vip_bgp_routerid }}"
+{% endif %}
+{% if kube_vip_bgp_routerinterface is defined %}
+    - name: bgp_routerinterface
+      value: "{{ kube_vip_bgp_routerinterface }}"
+{% endif %}
+{% if kube_vip_bgp_as is defined %}
+    - name: bgp_as
+      value: "{{ kube_vip_bgp_as }}"
+{% endif %}
+{% if kube_vip_bgp_peers is defined %}
+    - name: bgp_peers
+      value:  "{{ kube_vip_bgp_peers }}"
+{% endif %}
+{% if kube_vip_bgp_peeraddress is defined %}
+    - name: bgp_peeraddress
+      value: "{{ kube_vip_bgp_peeraddress }}"
+{% endif %}
+{% if kube_vip_bgp_peeras is defined %}
+    - name: bgp_peeras
+      value: "{{ kube_vip_bgp_peeras }}"
+{% endif %}
+{% if kube_vip_bgp_peerpass is defined %}
+    - name: bgp_peerpass
+      value: "{{ kube_vip_bgp_peerpass }}"
+{% endif %}
+{% if kube_vip_bgp_sourceip is defined %}
+    - name: bgp_sourceip
+      value:  "{{ kube_vip_bgp_sourceip }}"
+{% endif %}
+{% endif %}
     - name: address
       value: "{{ kube_vip_address }}"
     - name: prometheus_server
