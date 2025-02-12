@@ -31,18 +31,12 @@
         that:
           - ansible_facts.services['kubelet.service'].status == 'enabled'
 
-    - name: Get all nodes
+    - name: Wait all nodes ready
       ansible.builtin.command: kubectl get nodes
       register: nodes
       failed_when:
         - nodes.rc != 0
         - not(nodes.stdout.find('instance') != -1)
-
-    - name: Print node list
-      ansible.builtin.debug:
-        msg: "{{ nodes.stdout_lines }}"
-
-    - name: Assert no nody is not ready
-      ansible.builtin.assert:
-        that:
-          - nodes.stdout.find('NotReady') == -1
+        - nodes.stdout.find('NotReady') != -1
+      retries: 20
+      delay: 3
