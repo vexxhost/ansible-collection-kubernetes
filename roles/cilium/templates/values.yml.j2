@@ -21,4 +21,10 @@ ipam:
   operator:
     clusterPoolIPv4PodCIDRList:
       - "{{ cilium_ipv4_cidr | default('10.0.0.0/8') }}"
+{% if cilium_replace_kube_proxy %}
+k8sServiceHost: "{{ kubernetes_hostname }}"
+k8sServicePort: 6443
+kubeProxyReplacement: "true"
+kubeProxyReplacementHealthzBindAddr: "0.0.0.0:10256"
+{% endif %}
 upgradeCompatibility: "1.13"
