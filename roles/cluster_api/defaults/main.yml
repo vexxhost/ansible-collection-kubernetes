@@ -20,6 +20,9 @@ cluster_api_control_plane_version: "{{ cluster_api_version }}"
 # cluster_api_infrastructure_provider:
 # cluster_api_infrastructure_version:
 
+cluster_api_openstack_controller_image: quay.io/orc/openstack-resource-controller
+cluster_api_openstack_controller_version: 2.0.3
+
 cluster_api_node_selector: {}
 
 # https://cluster-api-openstack.sigs.k8s.io/clusteropenstack/configuration.html#timeout-settings
