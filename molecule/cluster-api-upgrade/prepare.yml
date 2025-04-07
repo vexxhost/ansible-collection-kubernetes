@@ -24,4 +24,4 @@
         clusterctl_version: 1.6.0
         cluster_api_version: 1.6.0
         cluster_api_infrastructure_provider: openstack
-        cluster_api_infrastructure_version: 0.9.0
+        cluster_api_infrastructure_version: 0.11.2
