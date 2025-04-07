@@ -17,6 +17,7 @@
   become: true
   roles:
     - role: kube_vip
+      when: kube_vip_enabled | default(true)
       tags:
         - kube-vip
 
