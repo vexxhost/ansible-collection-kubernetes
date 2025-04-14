@@ -12,6 +12,9 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+# Enable kube-vip
+kube_vip_enabled: true
+
 # Inventory group containing controllers
 kube_vip_control_plane_group: "{{ kubernetes_control_plane_group | default('controllers') }}"
 
