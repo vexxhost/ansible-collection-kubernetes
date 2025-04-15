@@ -43,3 +43,6 @@ kubernetes_coredns_node_selector:
 
 # Allow custom CA usage in the cluster
 kubernetes_allow_custom_ca: false
+
+# Do not use kube-proxy. Instead use/configure cni replacement.
+kubernetes_remove_kube_proxy: false
