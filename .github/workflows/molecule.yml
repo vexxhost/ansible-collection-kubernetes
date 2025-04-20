@@ -32,7 +32,8 @@ jobs:
           - 1.27.16
           - 1.28.13
           - 1.29.12
-          - 1.30.8
+          - 1.30.11
+          - 1.31.7
         distro:
           - rockylinux9
           - ubuntu2004
@@ -44,7 +45,7 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Setup Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v5
         with:
           python-version: "3.10"
           cache: pip
@@ -77,13 +78,15 @@ jobs:
           - old_version: 1.28.13
             version: 1.29.12
           - old_version: 1.29.12
-            version: 1.30.8
+            version: 1.30.11
+          - old_version: 1.30.11
+            version: 1.31.7
     steps:
       - name: Checkout project
         uses: actions/checkout@v3
 
       - name: Setup Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v5
         with:
           python-version: "3.10"
           cache: pip

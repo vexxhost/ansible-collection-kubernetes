@@ -1,10 +1,14 @@
 {{- if and .Values.operator.enabled .Values.operator.podDisruptionBudget.enabled }}
 {{- $component := .Values.operator.podDisruptionBudget }}
-apiVersion: {{ include "podDisruptionBudget.apiVersion" . }}
+apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
   name: cilium-operator
   namespace: {{ .Release.Namespace }}
+  {{- with .Values.operator.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
   labels:
     io.cilium/app: operator
     name: cilium-operator
