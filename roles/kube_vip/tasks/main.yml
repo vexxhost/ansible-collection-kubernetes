@@ -73,13 +73,16 @@
     dest: /etc/kubernetes/manifests/kube-vip.yaml
     owner: root
     group: root
-    mode: "0644"
+    mode: "0640"
   changed_when: false
 
 - name: Ensure kube-vip configuration file
   ansible.builtin.file:
     path: /etc/kubernetes/manifests/kube-vip.yaml
     state: "{{ kube_vip_enabled | ternary('file', 'absent') }}"
+    owner: root
+    group: root
+    mode: "0640"
 
 - name: Flush handlers
   ansible.builtin.meta: flush_handlers
