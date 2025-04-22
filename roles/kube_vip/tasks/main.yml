@@ -67,6 +67,7 @@
     - (kube_vip_stat_super_admin.stat.exists and kube_vip_stat_super_admin.stat.isreg) or (not kube_vip_stat_kubelet_config.stat.exists)
 
 - name: Upload Kubernetes manifest
+  when: kube_vip_enabled
   ansible.builtin.template:
     src: kube-vip.yaml.j2
     dest: /etc/kubernetes/manifests/kube-vip.yaml
@@ -74,6 +75,11 @@
     group: root
     mode: "0644"
   changed_when: false
+
+- name: Ensure kube-vip configuration file
+  ansible.builtin.file:
+    path: /etc/kubernetes/manifests/kube-vip.yaml
+    state: "{{ kube_vip_enabled | ternary('file', 'absent') }}"
 
 - name: Flush handlers
   ansible.builtin.meta: flush_handlers
