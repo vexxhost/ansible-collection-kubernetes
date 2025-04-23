@@ -14,7 +14,6 @@
 
 - name: Prepare
   hosts: all
-  become: true
   pre_tasks:
     - name: Wait for systemd to complete initialization
       ansible.builtin.command: systemctl is-system-running
@@ -52,6 +51,12 @@
           # NOTE(mnaser): In order to get "ansible_facts['default_ipv4']"
           - iproute
       when: ansible_facts['os_family'] == "RedHat"
+
+    - name: fix rocky9 sudo issue
+      ansible.builtin.shell:
+        cmd: |
+          chmod 0400 /etc/shadow
+      when: ansible_facts['distribution'] == "Rocky"
 
     - name: Uninstall RHEL packages
       ansible.builtin.package:
