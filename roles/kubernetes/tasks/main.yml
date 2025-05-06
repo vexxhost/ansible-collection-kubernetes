@@ -37,6 +37,7 @@
   run_once: true
   delegate_to: "{{ kubernetes_bootstrap_node | default(groups[kubernetes_control_plane_group][0]) }}"
   kubernetes.core.k8s:
+    kubeconfig: /etc/kubernetes/admin.conf
     definition:
       apiVersion: apps/v1
       kind: Deployment

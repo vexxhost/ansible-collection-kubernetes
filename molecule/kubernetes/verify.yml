@@ -17,10 +17,15 @@
   become: true
 
   pre_tasks:
+    - name: Set KUBECONFIG environment variable
+      ansible.builtin.set_fact:
+        ansible_env:
+          KUBECONFIG: /etc/kubernetes/admin.conf
+
+  tasks:
     - name: Gather service facts
       service_facts:
 
-  tasks:
     - name: Make sure kubelet service is running
       ansible.builtin.assert:
         that:
@@ -32,7 +37,7 @@
           - ansible_facts.services['kubelet.service'].status == 'enabled'
 
     - name: Get all nodes
-      ansible.builtin.command: kubectl get nodes
+      ansible.builtin.command: kubectl get nodes --kubeconfig=/etc/kubernetes/admin.conf
       register: nodes
       failed_when:
         - nodes.rc != 0
