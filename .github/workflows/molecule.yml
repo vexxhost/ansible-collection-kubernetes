@@ -37,8 +37,10 @@ jobs:
           - rockylinux9
           - ubuntu2004
           - ubuntu2204
+          - ubuntu2404
         scenario:
           - ha
+          - aio
     steps:
       - name: Checkout project
         uses: actions/checkout@v3
