@@ -37,8 +37,10 @@ jobs:
           - rockylinux9
           - ubuntu2004
           - ubuntu2204
+          - ubuntu2404
         scenario:
           - ha
+          - aio
     steps:
       - name: Checkout project
         uses: actions/checkout@v3
@@ -56,7 +58,8 @@ jobs:
         run: sudo swapoff -a
 
       - name: Run Molecule
-        run: molecule test -s ${{ matrix.scenario }}
+        run: |
+          sudo -E env PATH=$PATH molecule test -s ${{ matrix.scenario }}
         env:
           MOLECULE_DISTRO: ${{ matrix.distro }}
           KUBERNETES_VERSION: ${{ matrix.version }}
