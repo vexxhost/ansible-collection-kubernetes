@@ -35,3 +35,5 @@ cluster_api_control_plane_version: "{{ cluster_api_version }}"
 # cluster_api_infrastructure_version:
 
 cluster_api_node_selector: {}
+
+cluster_api_capo_instance_creation_timeout: 10
