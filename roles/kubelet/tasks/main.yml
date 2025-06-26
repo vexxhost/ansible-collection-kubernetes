@@ -125,6 +125,13 @@
     enabled: true
     state: started
 
+- name: Ensure availability of dbus on Debian
+  ansible.builtin.package:
+    name: dbus
+    state: present
+  when:
+    - ansible_facts['os_family'] == 'Debian'
+
 - name: Configure short hostname
   ansible.builtin.hostname:
     name: "{{ kubelet_hostname }}"
