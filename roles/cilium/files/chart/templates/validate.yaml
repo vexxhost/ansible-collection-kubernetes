@@ -1,3 +1,17 @@
+{{/* validate deprecated options are not being used */}}
+{{- if .Values.tunnel }}
+  {{ fail "tunnel was deprecated in v1.14 and has been removed in v1.15. For details please refer to https://docs.cilium.io/en/v1.15/operations/upgrade/#helm-options" }}
+{{- end }}
+{{- if or (dig "clustermesh" "apiserver" "tls" "ca" "cert" "" .Values.AsMap) (dig "clustermesh" "apiserver" "tls" "ca" "key" "" .Values.AsMap) }}
+  {{ fail "clustermesh.apiserver.tls.ca.cert and clustermesh.apiserver.tls.ca.key were deprecated in v1.14 and has been removed in v1.15. For details please refer to https://docs.cilium.io/en/v1.15/operations/upgrade/#helm-options" }}
+{{- end }}
+{{- if .Values.enableK8sEventHandover }}
+  {{ fail "enableK8sEventHandover was deprecated in v1.14 and has been removed in v1.15. For details please refer to https://docs.cilium.io/en/v1.15/operations/upgrade/#helm-options" }}
+{{- end }}
+{{- if .Values.enableCnpStatusUpdates }}
+  {{ fail "enableCnpStatusUpdates was deprecated in v1.14 and has been removed in v1.15. For details please refer to https://docs.cilium.io/en/v1.15/operations/upgrade/#helm-options" }}
+{{- end }}
+
 {{/* validate hubble config */}}
 {{- if and .Values.hubble.ui.enabled (not .Values.hubble.ui.standalone.enabled) }}
   {{- if not .Values.hubble.relay.enabled }}
@@ -28,6 +42,10 @@
   {{- if not .Values.hubble.tls.auto.certManagerIssuerRef }}
     {{ fail "Hubble TLS certgen method=certmanager requires that user specifies .Values.hubble.tls.auto.certManagerIssuerRef" }}
   {{- end }}
+{{- end }}
+
+{{- if and .Values.hubble.redact.http.headers.allow .Values.hubble.redact.http.headers.deny }}
+  {{ fail "Only one of .Values.hubble.redact.http.headers.allow, .Values.hubble.redact.http.headers.deny can be specified"}}
 {{- end }}
 
 {{- if and (or .Values.externalWorkloads.enabled .Values.clustermesh.useAPIServer) .Values.clustermesh.apiserver.tls.auto.enabled (eq .Values.clustermesh.apiserver.tls.auto.method "certmanager") }}
@@ -73,4 +91,27 @@
   {{- if eq .Values.disableEndpointCRD true }}
     {{ fail "if Cilium Endpoint Slice is enabled (.Values.enableCiliumEndpointSlice=true), it requires .Values.disableEndpointCRD=false" }}
   {{- end }}
+{{- end }}
+
+{{/* validate clustermesh-apiserver */}}
+{{- if .Values.clustermesh.useAPIServer }}
+  {{- if ne .Values.identityAllocationMode "crd" }}
+    {{ fail (printf "The clustermesh-apiserver cannot be enabled in combination with .Values.identityAllocationMode=%s. To establish a Cluster Mesh, directly configure the parameters to access the remote kvstore through .Values.clustermesh.config" .Values.identityAllocationMode ) }}
+  {{- end }}
+  {{- if .Values.disableEndpointCRD }}
+    {{ fail "The clustermesh-apiserver cannot be enabled in combination with .Values.disableEndpointCRD=true" }}
+  {{- end }}
+{{- end }}
+{{- if .Values.externalWorkloads.enabled }}
+  {{- if ne .Values.identityAllocationMode "crd" }}
+    {{ fail (printf "External workloads support cannot be enabled in combination with .Values.identityAllocationMode=%s" .Values.identityAllocationMode ) }}
+  {{- end }}
+  {{- if .Values.disableEndpointCRD }}
+    {{ fail "External workloads support cannot be enabled in combination with .Values.disableEndpointCRD=true" }}
+  {{- end }}
+{{- end }}
+
+{{/*validate ClusterMesh */}}
+{{- if and (ne (int .Values.clustermesh.maxConnectedClusters) 255) (ne (int .Values.clustermesh.maxConnectedClusters) 511) }}
+  {{- fail "max-connected-clusters must be set to 255 or 511" }}
 {{- end }}

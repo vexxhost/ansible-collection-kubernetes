@@ -6,6 +6,10 @@ kind: DaemonSet
 metadata:
   name: cilium-envoy
   namespace: {{ .Release.Namespace }}
+  {{- with .Values.envoy.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
   labels:
     k8s-app: cilium-envoy
     app.kubernetes.io/part-of: cilium
@@ -22,19 +26,17 @@ spec:
   template:
     metadata:
       annotations:
-        {{- if and .Values.proxy.prometheus.enabled .Values.envoy.prometheus.enabled (not .Values.envoy.prometheus.serviceMonitor.enabled) }}
-        prometheus.io/port: "{{ .Values.proxy.prometheus.port | default .Values.envoy.prometheus.port }}"
-        prometheus.io/scrape: "true"
-        {{- end }}
         {{- if .Values.envoy.rollOutPods }}
         # ensure pods roll when configmap updates
         cilium.io/cilium-envoy-configmap-checksum: {{ include (print $.Template.BasePath "/cilium-envoy/configmap.yaml") . | sha256sum | quote }}
         {{- end }}
         {{- if not .Values.envoy.securityContext.privileged }}
+        {{- if semverCompare "<1.30.0" (printf "%d.%d.0" (semver .Capabilities.KubeVersion.Version).Major (semver .Capabilities.KubeVersion.Version).Minor) }}
         # Set app AppArmor's profile to "unconfined". The value of this annotation
         # can be modified as long users know which profiles they have available
         # in AppArmor.
         container.apparmor.security.beta.kubernetes.io/cilium-envoy: "unconfined"
+        {{- end }}
         {{- end }}
         {{- with .Values.envoy.podAnnotations }}
         {{- toYaml . | nindent 8 }}
@@ -52,6 +54,11 @@ spec:
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      {{- /* K8s version lower than 1.30.0 don't support the "appArmorProfile" field, */}}
+      {{- /* thus we have to remove it. */}}
+      {{- if semverCompare "<1.30.0" (printf "%d.%d.0" (semver .Capabilities.KubeVersion.Version).Major (semver .Capabilities.KubeVersion.Version).Minor) }}
+        {{- $_ := unset .Values.envoy.podSecurityContext "appArmorProfile" }}
+      {{- end }}
       {{- with .Values.envoy.podSecurityContext }}
       securityContext:
         {{- toYaml . | nindent 8 }}
@@ -61,11 +68,11 @@ spec:
         image: {{ include "cilium.image" .Values.envoy.image | quote }}
         imagePullPolicy: {{ .Values.envoy.image.pullPolicy }}
         command:
-        - /usr/bin/cilium-envoy
+        - /usr/bin/cilium-envoy-starter
         args:
         - '-c /var/run/cilium/envoy/bootstrap-config.json'
         - '--base-id 0'
-        {{- if and (hasKey .Values.debug "verbose") (.Values.debug.verbose) (has "envoy" ( splitList " " .Values.debug.verbose )) }}
+        {{- if and (.Values.debug.enabled) (hasKey .Values.debug "verbose") (.Values.debug.verbose) (has "envoy" ( splitList " " .Values.debug.verbose )) }}
         - '--log-level trace'
         {{- else if and (.Values.debug.enabled) (hasKey .Values.debug "verbose") (.Values.debug.verbose) (has "flow" ( splitList " " .Values.debug.verbose )) }}
         - '--log-level debug'
@@ -79,7 +86,6 @@ spec:
         {{- with .Values.envoy.extraArgs }}
         {{- toYaml . | trim | nindent 8 }}
         {{- end }}
-        {{- if semverCompare ">=1.20-0" .Capabilities.KubeVersion.Version }}
         startupProbe:
           httpGet:
             host: {{ .Values.ipv4.enabled | ternary "127.0.0.1" "::1" | quote }}
@@ -89,21 +95,13 @@ spec:
           failureThreshold: {{ .Values.envoy.startupProbe.failureThreshold }}
           periodSeconds: {{ .Values.envoy.startupProbe.periodSeconds }}
           successThreshold: 1
-        {{- end }}
+          initialDelaySeconds: 5
         livenessProbe:
           httpGet:
             host: {{ .Values.ipv4.enabled | ternary "127.0.0.1" "::1" | quote }}
             path: /healthz
             port: {{ .Values.envoy.healthPort }}
             scheme: HTTP
-          {{- if semverCompare "<1.20-0" .Capabilities.KubeVersion.Version }}
-          # The initial delay for the liveness probe is intentionally large to
-          # avoid an endless kill & restart cycle if in the event that the initial
-          # bootstrapping takes longer than expected.
-          # Starting from Kubernetes 1.20, we are using startupProbe instead
-          # of this field.
-          initialDelaySeconds: 120
-          {{- end }}
           periodSeconds: {{ .Values.envoy.livenessProbe.periodSeconds }}
           successThreshold: 1
           failureThreshold: {{ .Values.envoy.livenessProbe.failureThreshold }}
@@ -114,9 +112,6 @@ spec:
             path: /healthz
             port: {{ .Values.envoy.healthPort }}
             scheme: HTTP
-          {{- if semverCompare "<1.20-0" .Capabilities.KubeVersion.Version }}
-          initialDelaySeconds: 5
-          {{- end }}
           periodSeconds: {{ .Values.envoy.readinessProbe.periodSeconds }}
           successThreshold: 1
           failureThreshold: {{ .Values.envoy.readinessProbe.failureThreshold }}
@@ -175,6 +170,9 @@ spec:
         - name: envoy-sockets
           mountPath: /var/run/cilium/envoy/sockets
           readOnly: false
+        - name: envoy-artifacts
+          mountPath: /var/run/cilium/envoy/artifacts
+          readOnly: true
         - name: envoy-config
           mountPath: /var/run/cilium/envoy/
           readOnly: true
@@ -199,7 +197,6 @@ spec:
       {{- end }}
       restartPolicy: Always
       priorityClassName: {{ include "cilium.priorityClass" (list $ .Values.envoy.priorityClassName "system-node-critical") }}
-      serviceAccount: {{ .Values.serviceAccounts.envoy.name | quote }}
       serviceAccountName: {{ .Values.serviceAccounts.envoy.name | quote }}
       automountServiceAccountToken: {{ .Values.serviceAccounts.envoy.automount }}
       terminationGracePeriodSeconds: {{ .Values.envoy.terminationGracePeriodSeconds }}
@@ -223,6 +220,10 @@ spec:
       - name: envoy-sockets
         hostPath:
           path: "{{ .Values.daemon.runPath }}/envoy/sockets"
+          type: DirectoryOrCreate
+      - name: envoy-artifacts
+        hostPath:
+          path: "{{ .Values.daemon.runPath }}/envoy/artifacts"
           type: DirectoryOrCreate
       - name: envoy-config
         configMap:

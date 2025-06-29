@@ -3194,7 +3194,23 @@
   "style": "dark",
   "tags": [],
   "templating": {
-    "list": []
+    "list": [
+      {
+        "current": {},
+        "hide": 0,
+        "includeAll": false,
+        "label": "Prometheus",
+        "multi": false,
+        "name": "DS_PROMETHEUS",
+        "options": [],
+        "query": "prometheus",
+        "queryValue": "",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "type": "datasource"
+      }
+    ]
   },
   "time": {
     "from": "now-6h",
@@ -3226,7 +3242,7 @@
     ]
   },
   "timezone": "",
-  "title": "Hubble",
+  "title": "Hubble Metrics and Monitoring",
   "uid": "5HftnJAWz",
   "version": 24
 }

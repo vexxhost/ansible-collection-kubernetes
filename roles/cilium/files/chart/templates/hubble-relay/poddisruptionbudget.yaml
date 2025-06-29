@@ -1,10 +1,14 @@
 {{- if and .Values.hubble.enabled .Values.hubble.relay.enabled .Values.hubble.relay.podDisruptionBudget.enabled }}
 {{- $component := .Values.hubble.relay.podDisruptionBudget }}
-apiVersion: {{ include "podDisruptionBudget.apiVersion" . }}
+apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
   name: hubble-relay
   namespace: {{ .Release.Namespace }}
+  {{- with .Values.hubble.relay.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
   labels:
     k8s-app: hubble-relay
     app.kubernetes.io/name: hubble-relay
