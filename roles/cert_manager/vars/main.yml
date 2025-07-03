@@ -24,7 +24,7 @@ _cert_manager_helm_values:
   volumes:
     - name: etc-ssl-certs
       hostPath:
-        path: /etc/ssl/certs
+        path: "{{ '/etc/ssl/certs' if ansible_facts['os_family'] in ['Debian'] else '/etc/pki/ca-trust/extracted/openssl' }}"
   volumeMounts:
     - name: etc-ssl-certs
       mountPath: /etc/ssl/certs
