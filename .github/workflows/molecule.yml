@@ -28,15 +28,12 @@ jobs:
       fail-fast: false
       matrix:
         version:
-          - 1.26.15
-          - 1.27.16
-          - 1.28.13
-          - 1.29.12
           - 1.30.8
+          - 1.31.1
         distro:
-          - rockylinux9
-          - ubuntu2004
-          - ubuntu2204
+          - rockylinux10
+          - ubuntu2404
+          - debian12
         scenario:
           - ha
     steps:
@@ -46,7 +43,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.10"
+          python-version: "3.12"
           cache: pip
 
       - name: Install Molecule
@@ -68,16 +65,10 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - old_version: 1.25.16
-            version: 1.26.15
-          - old_version: 1.26.15
-            version: 1.27.16
-          - old_version: 1.27.16
-            version: 1.28.13
-          - old_version: 1.28.13
-            version: 1.29.12
           - old_version: 1.29.12
             version: 1.30.8
+          - old_version: 1.30.8
+            version: 1.31.1
     steps:
       - name: Checkout project
         uses: actions/checkout@v3
@@ -85,7 +76,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.10"
+          python-version: "3.12"
           cache: pip
 
       - name: Install Molecule

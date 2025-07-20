@@ -1,8 +1,7 @@
 # Ansible collection for Kubernetes
 
 This is a collection which contains playbooks and roles which allow you to
-deploy a Kubernetes cluster using Ansible.  This collection is used by the
-[Atmosphere](https://github.com/vexxhost/atmosphere) project.
+deploy a Kubernetes cluster using Ansible.
 
 ## Contributing
 
