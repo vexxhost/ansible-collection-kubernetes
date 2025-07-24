@@ -1,0 +1,27 @@
+# Copyright (c) 2025 VEXXHOST, Inc.
+# SPDX-License-Identifier: Apache-2.0
+
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions: {}
+
+jobs:
+  ansible-test:
+    runs-on: ubuntu-latest
+    permissions:
+      checks: write
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: astral-sh/setup-uv@bd01e18f51369d5a26f1651c3cb451d3417e3bba # v6.3.1
+      - run: uv run ansible-galaxy collection install .
+      - run: uv run ansible-test units
+        working-directory: /home/runner/.ansible/collections/ansible_collections/vexxhost/ceph
+      - uses: mikepenz/action-junit-report@a83fd2b5d58d4fc702e690c1ea688d702d28d281 # v5.6.1
+        if: always()
+        with:
+          report_paths: /home/runner/.ansible/collections/ansible_collections/vexxhost/ceph/tests/output/junit/*.xml

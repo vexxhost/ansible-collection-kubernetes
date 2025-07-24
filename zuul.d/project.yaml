@@ -32,9 +32,6 @@
         - ansible-collection-kubernetes-molecule-helm
         - ansible-collection-kubernetes-molecule-upload-helm-chart
         - build-ansible-collection
-    release:
-      jobs:
-        - publish-ansible-collection-vexxhost
     templates:
       - ansible-collection-kubernetes-molecule-focal
       - ansible-collection-kubernetes-molecule-jammy

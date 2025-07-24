@@ -1,0 +1,42 @@
+[project]
+name = "ansible-collection-kubernetes"
+version = "2.2.0"
+authors = [{ name = "VEXXHOST, Inc.", email = "support@vexxhost.com" }]
+description = "Ansible collection for deploying Kubernetes clusters"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "Apache-2.0"
+classifiers = [
+  "Development Status :: 5 - Production/Stable",
+  "Environment :: OpenStack",
+  "Intended Audience :: Information Technology",
+  "Intended Audience :: System Administrators",
+  "Operating System :: POSIX :: Linux",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: Implementation :: CPython",
+]
+dependencies = [
+  "ansible-core>=2.15.9",
+  "docker-image-py>=0.1.12",
+  "jmespath>=1.0.1",
+]
+
+[dependency-groups]
+dev = [
+  "molecule>=25.5.0",
+  "molecule-plugins[docker]>=23.7.0",
+  "pytest>=8.4.1",
+  "pytest-forked>=1.6.0",
+  "pytest-xdist>=3.7.0",
+]
+
+[project.urls]
+source = "https://github.com/vexxhost/ansible-collection-kubernetes"
+issues = "https://github.com/vexxhost/ansible-collection-kubernetes/issues"
+
+[tool.uv]
+package = false
