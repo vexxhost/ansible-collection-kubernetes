@@ -12,6 +12,12 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+# Enable kube-vip
+kube_vip_enabled: true
+
+# Inventory group containing controllers
+kube_vip_control_plane_group: "{{ kubernetes_control_plane_group | default('controllers') }}"
+
 # Image to use for kube-vip
 kube_vip_image: ghcr.io/kube-vip/kube-vip:v0.6.4
 
@@ -20,3 +26,29 @@ kube_vip_interface: "{{ keepalived_interface | default(kubernetes_keepalived_int
 
 # IP address to use for kube-vip
 kube_vip_address: "{{ keepalived_vip | default(kubernetes_keepalived_vip) }}"
+
+# VIP mode for kube-vip (valide options: arp or bgp)
+kube_vip_mode: arp
+
+# BGP peers, if BGP is enabled
+# kube_vip_bgp_peers: 192.168.0.10:65000::false,192.168.0.11:65000::false
+
+# BGP peer as, if BGP is enabled
+# kube_vip_bgp_peeras: "65000"
+
+# AS of a single BGP Peer, if BGP is enabled
+# kube_vip_bgp_as: "65000"
+
+# BGP router id, if BGP is enabled
+# kube_vip_bgp_routerid: 192.168.0.2
+#
+# kube_vip_bgp_routerinterface: ens3
+
+# Address of a single BGP Peer, if BGP is enabled
+# kube_vip_bgp_peeraddress:
+
+# password to work with a single BGP Peer, if BGP is enabled
+# kube_vip_bgp_peerpass:
+
+# Determines which IP address BGP should peer from
+# kube_vip_bgp_sourceip: 192.168.0.2

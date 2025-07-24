@@ -1,0 +1,71 @@
+# Copyright (c) 2024 VEXXHOST, Inc.
+# SPDX-License-Identifier: Apache-2.0
+
+- job:
+    name: ansible-collection-kubernetes-molecule-focal
+    parent: ansible-collection-kubernetes-molecule
+    vars:
+      # NOTE(mnaser): Ubuntu Focal ships with an old Python
+      python_use_pyenv: true
+    nodeset:
+      nodes:
+        - name: ubuntu-focal
+          label: focal-2c-8g
+
+- job:
+    name: ansible-collection-kubernetes-molecule-focal-aio
+    parent: ansible-collection-kubernetes-molecule-focal
+    vars:
+      tox_envlist: molecule-aio
+
+- job:
+    name: ansible-collection-kubernetes-molecule-focal-aio-1-26
+    parent: ansible-collection-kubernetes-molecule-focal-aio
+    vars:
+      tox_environment:
+        KUBERNETES_VERSION: 1.26.15
+
+- job:
+    name: ansible-collection-kubernetes-molecule-focal-aio-1-27
+    parent: ansible-collection-kubernetes-molecule-focal-aio
+    vars:
+      tox_environment:
+        KUBERNETES_VERSION: 1.27.16
+
+- job:
+    name: ansible-collection-kubernetes-molecule-focal-aio-1-28
+    parent: ansible-collection-kubernetes-molecule-focal-aio
+    vars:
+      tox_environment:
+        KUBERNETES_VERSION: 1.28.13
+
+- job:
+    name: ansible-collection-kubernetes-molecule-focal-aio-1-29
+    parent: ansible-collection-kubernetes-molecule-focal-aio
+    vars:
+      tox_environment:
+        KUBERNETES_VERSION: 1.29.12
+
+- job:
+    name: ansible-collection-kubernetes-molecule-focal-aio-1-30
+    parent: ansible-collection-kubernetes-molecule-focal-aio
+    vars:
+      tox_environment:
+        KUBERNETES_VERSION: 1.30.8
+
+- project-template:
+    name: ansible-collection-kubernetes-molecule-focal
+    check:
+      jobs:
+        - ansible-collection-kubernetes-molecule-focal-aio-1-26
+        - ansible-collection-kubernetes-molecule-focal-aio-1-27
+        - ansible-collection-kubernetes-molecule-focal-aio-1-28
+        - ansible-collection-kubernetes-molecule-focal-aio-1-29
+        - ansible-collection-kubernetes-molecule-focal-aio-1-30
+    gate:
+      jobs:
+        - ansible-collection-kubernetes-molecule-focal-aio-1-26
+        - ansible-collection-kubernetes-molecule-focal-aio-1-27
+        - ansible-collection-kubernetes-molecule-focal-aio-1-28
+        - ansible-collection-kubernetes-molecule-focal-aio-1-29
+        - ansible-collection-kubernetes-molecule-focal-aio-1-30

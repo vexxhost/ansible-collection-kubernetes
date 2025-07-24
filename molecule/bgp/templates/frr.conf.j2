@@ -1,0 +1,14 @@
+# {{ ansible_managed }}
+
+frr defaults traditional
+log syslog informational
+debug bgp events
+debug bgp filters
+debug bgp fsm
+debug bgp keepalives
+debug bgp updates
+router bgp 65000
+bgp router-id {{ ansible_facts['default_ipv4'].address }}
+bgp log-neighbor-changes
+neighbor 172.17.0.100 remote-as 65000
+neighbor 172.17.0.100 soft-reconfiguration inbound

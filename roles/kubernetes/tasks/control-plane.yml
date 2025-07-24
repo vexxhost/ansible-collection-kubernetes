@@ -39,7 +39,9 @@
 # TODO(fitbeard): Move common system packages from all roles to dedicated role.
 - name: Install PIP
   ansible.builtin.package:
-    name: python3-pip
+    name:
+      - python3-pip
+      - python3-cryptography
 
 - name: Install Kubernetes python package
   ansible.builtin.pip:

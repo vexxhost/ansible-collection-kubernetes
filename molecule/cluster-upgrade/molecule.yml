@@ -48,12 +48,13 @@ provisioner:
   inventory:
     group_vars:
       all:
-        old_kubernetes_version: ${OLD_KUBERNETES_VERSION-1.27.8}
-        kubernetes_version: ${KUBERNETES_VERSION-1.28.4}
+        old_kubernetes_version: ${OLD_KUBERNETES_VERSION-1.27.16}
+        kubernetes_version: ${KUBERNETES_VERSION-1.28.13}
         cilium_helm_values:
           operator:
             replicas: 1
       controllers:
+        clusterctl_version: 1.6.0
         cluster_api_node_selector:
           kubernetes.io/os: linux
         keepalived_interface: "{{ ansible_facts['default_ipv4'].interface }}"
