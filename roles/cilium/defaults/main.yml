@@ -7,3 +7,7 @@ cilium_helm_values: {}
 
 cilium_node_image: quay.io/cilium/cilium:v1.14.8@sha256:7fca3ba4b04af066e8b086b5c1a52e30f52db01ffc642e7db0a439514aed3ada
 cilium_operator_image: quay.io/cilium/operator-generic:v1.14.8@sha256:56d373c12483c09964a00a29246595917603a077a298aa90a98e4de32c86b7dc
+
+# With kubernetes_remove_kube_proxy set to 'true' configure Cilium to replace kube-proxy.
+# If set to 'false', Cilium will not replace kube-proxy. 
+cilium_replace_kube_proxy: "{{ kubernetes_remove_kube_proxy | default(false) }}"
