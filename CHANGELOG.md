@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.3.1](https://github.com/vexxhost/ansible-collection-kubernetes/compare/v2.3.0...v2.3.1) (2025-07-30)
+
+
+### Bug Fixes
+
+* skip all tasks if kube_vip_enabled is false ([#178](https://github.com/vexxhost/ansible-collection-kubernetes/issues/178)) ([8c66ecc](https://github.com/vexxhost/ansible-collection-kubernetes/commit/8c66ecc637e9976ac4f178bcbafd49351b519e2f))
+
 ## [2.3.0](https://github.com/vexxhost/ansible-collection-kubernetes/compare/v2.2.0...v2.3.0) (2025-07-24)
 
 
