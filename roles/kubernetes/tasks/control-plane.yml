@@ -44,13 +44,29 @@
       - python3-cryptography
 
 - name: Install Kubernetes python package
-  ansible.builtin.pip:
-    name: kubernetes
+  block:
+    - name: Update apt cache
+      ansible.builtin.apt:
+        update_cache: true
+        cache_valid_time: 3600
+      when: ansible_distribution == "Ubuntu" and ansible_distribution_version == "24.04"
+
+    - name: Install python3-kubernetes via apt
+      ansible.builtin.apt:
+        name: python3-kubernetes
+        state: present
+      when: ansible_distribution == "Ubuntu" and ansible_distribution_version == "24.04"
+
+    - name: Install kubernetes via pip
+      ansible.builtin.pip:
+        name: kubernetes
+      when: not (ansible_distribution == "Ubuntu" and ansible_distribution_version == "24.04")
 
 - name: Allow workload on control plane node
   kubernetes.core.k8s_taint:
     state: absent
     name: "{{ kubelet_hostname }}"
+    kubeconfig: /etc/kubernetes/admin.conf
     taints:
       - effect: NoSchedule
         key: node-role.kubernetes.io/control-plane
