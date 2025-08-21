@@ -29,8 +29,8 @@ provisioner:
           operator:
             replicas: 1
       controllers:
-        clusterctl_version: 1.8.4
-        cluster_api_version: 1.8.4
+        clusterctl_version: 1.10.5
+        cluster_api_version: 1.10.5
         cluster_api_infrastructure_provider: openstack
         cluster_api_infrastructure_version: 0.11.2
         cluster_api_node_selector:
