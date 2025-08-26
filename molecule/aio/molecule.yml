@@ -4,14 +4,19 @@
 dependency:
   name: galaxy
 driver:
-  name: default
-  options:
-    managed: False
-    ansible_connection_options:
-      ansible_become: "true"
-      ansible_connection: local
+  name: docker
 platforms:
   - name: instance
+    image: geerlingguy/docker-${MOLECULE_DISTRO:-debian13}-ansible
+    pre_build_image: true
+    override_command: false
+    privileged: true
+    cgroupns_mode: host
+    tmpfs:
+      - /var/lib/containerd
+    volumes:
+      - /lib/modules:/lib/modules:ro
+      - /sys/fs/cgroup:/sys/fs/cgroup:rw
     groups:
       - controllers
 provisioner:
