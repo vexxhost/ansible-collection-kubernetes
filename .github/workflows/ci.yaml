@@ -61,7 +61,6 @@ jobs:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
       - uses: astral-sh/setup-uv@4959332f0f014c5280e7eac8b70c90cb574c9f9b # v6.6.0
       - run: sudo swapoff -a
-      - run: sudo apt-get install -y linux-image-$(uname -r) linux-modules-$(uname -r) linux-modules-extra-$(uname -r) && sudo modprobe configs
       - run: uv run molecule test --destroy never -s ${{ matrix.scenario }}
         env:
           MOLECULE_DISTRO: ${{ matrix.distro }}
