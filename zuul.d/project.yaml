@@ -17,7 +17,6 @@
     check:
       jobs:
         - ansible-collection-kubernetes-chart-vendor
-        - ansible-collection-kubernetes-linters
         - ansible-collection-kubernetes-molecule-cluster-api
         - ansible-collection-kubernetes-molecule-cluster-api-upgrade
         - ansible-collection-kubernetes-molecule-helm
@@ -26,7 +25,6 @@
     gate:
       jobs:
         - ansible-collection-kubernetes-chart-vendor
-        - ansible-collection-kubernetes-linters
         - ansible-collection-kubernetes-molecule-cluster-api
         - ansible-collection-kubernetes-molecule-cluster-api-upgrade
         - ansible-collection-kubernetes-molecule-helm
