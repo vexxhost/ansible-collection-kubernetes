@@ -287,7 +287,6 @@
     name: ansible-collection-kubernetes-molecule-cluster-upgrade
     parent: ansible-collection-kubernetes-molecule
     abstract: true
-    nodeset: debian-13-triple-node
     vars:
       molecule_scenario: cluster-upgrade
     group-vars:
@@ -333,96 +332,20 @@
         kubernetes_hostname: "{{ hostvars['controller-1'].ansible_facts['default_ipv4'].address }}"
 
 - job:
-    name: ansible-collection-kubernetes-molecule-ha-debian-13
+    name: ansible-collection-kubernetes-molecule-ha-v131
     parent: ansible-collection-kubernetes-molecule-ha
-    nodeset: debian-13-triple-node
-    voting: false
-
-- job:
-    name: ansible-collection-kubernetes-molecule-ha-debian-13-v131
-    parent: ansible-collection-kubernetes-molecule-ha-debian-13
     vars:
       kubernetes_version: 1.31.12
 
 - job:
-    name: ansible-collection-kubernetes-molecule-ha-debian-13-v132
-    parent: ansible-collection-kubernetes-molecule-ha-debian-13
-    vars:
-      kubernetes_version: 1.32.8
-
-- job:
-    name: ansible-collection-kubernetes-molecule-ha-debian-13-v133
-    parent: ansible-collection-kubernetes-molecule-ha-debian-13
-    vars:
-      kubernetes_version: 1.33.4
-
-- job:
-    name: ansible-collection-kubernetes-molecule-ha-rockylinux-9
+    name: ansible-collection-kubernetes-molecule-ha-v132
     parent: ansible-collection-kubernetes-molecule-ha
-    nodeset: rockylinux-9-triple-node
-
-- job:
-    name: ansible-collection-kubernetes-molecule-ha-rockylinux-9-v131
-    parent: ansible-collection-kubernetes-molecule-ha-rockylinux-9
-    vars:
-      kubernetes_version: 1.31.12
-
-- job:
-    name: ansible-collection-kubernetes-molecule-ha-rockylinux-9-v132
-    parent: ansible-collection-kubernetes-molecule-ha-rockylinux-9
     vars:
       kubernetes_version: 1.32.8
 
 - job:
-    name: ansible-collection-kubernetes-molecule-ha-rockylinux-9-v133
-    parent: ansible-collection-kubernetes-molecule-ha-rockylinux-9
-    vars:
-      kubernetes_version: 1.33.4
-
-- job:
-    name: ansible-collection-kubernetes-molecule-ha-ubuntu-jammy
+    name: ansible-collection-kubernetes-molecule-ha-v133
     parent: ansible-collection-kubernetes-molecule-ha
-    nodeset: ubuntu-jammy-triple-node
-
-- job:
-    name: ansible-collection-kubernetes-molecule-ha-ubuntu-jammy-v131
-    parent: ansible-collection-kubernetes-molecule-ha-ubuntu-jammy
-    vars:
-      kubernetes_version: 1.31.12
-
-- job:
-    name: ansible-collection-kubernetes-molecule-ha-ubuntu-jammy-v132
-    parent: ansible-collection-kubernetes-molecule-ha-ubuntu-jammy
-    vars:
-      kubernetes_version: 1.32.8
-
-- job:
-    name: ansible-collection-kubernetes-molecule-ha-ubuntu-jammy-v133
-    parent: ansible-collection-kubernetes-molecule-ha-ubuntu-jammy
-    vars:
-      kubernetes_version: 1.33.4
-
-- job:
-    name: ansible-collection-kubernetes-molecule-ha-ubuntu-noble
-    parent: ansible-collection-kubernetes-molecule-ha
-    nodeset: ubuntu-noble-triple-node
-    voting: false
-
-- job:
-    name: ansible-collection-kubernetes-molecule-ha-ubuntu-noble-v131
-    parent: ansible-collection-kubernetes-molecule-ha-ubuntu-noble
-    vars:
-      kubernetes_version: 1.31.12
-
-- job:
-    name: ansible-collection-kubernetes-molecule-ha-ubuntu-noble-v132
-    parent: ansible-collection-kubernetes-molecule-ha-ubuntu-noble
-    vars:
-      kubernetes_version: 1.32.8
-
-- job:
-    name: ansible-collection-kubernetes-molecule-ha-ubuntu-noble-v133
-    parent: ansible-collection-kubernetes-molecule-ha-ubuntu-noble
     vars:
       kubernetes_version: 1.33.4
 
@@ -466,18 +389,9 @@
         # - ansible-collection-kubernetes-molecule-cluster-upgrade-v131
         # - ansible-collection-kubernetes-molecule-cluster-upgrade-v132
         # - ansible-collection-kubernetes-molecule-cluster-upgrade-v133
-        # - ansible-collection-kubernetes-molecule-ha-debian-13-v131
-        # - ansible-collection-kubernetes-molecule-ha-debian-13-v132
-        # - ansible-collection-kubernetes-molecule-ha-debian-13-v133
-        # - ansible-collection-kubernetes-molecule-ha-rockylinux-9-v131
-        # - ansible-collection-kubernetes-molecule-ha-rockylinux-9-v132
-        # - ansible-collection-kubernetes-molecule-ha-rockylinux-9-v133
-        # - ansible-collection-kubernetes-molecule-ha-ubuntu-jammy-v131
-        # - ansible-collection-kubernetes-molecule-ha-ubuntu-jammy-v132
-        # - ansible-collection-kubernetes-molecule-ha-ubuntu-jammy-v133
-        # - ansible-collection-kubernetes-molecule-ha-ubuntu-noble-v131
-        # - ansible-collection-kubernetes-molecule-ha-ubuntu-noble-v132
-        # - ansible-collection-kubernetes-molecule-ha-ubuntu-noble-v133
+        # - ansible-collection-kubernetes-molecule-ha-v131
+        # - ansible-collection-kubernetes-molecule-ha-v132
+        # - ansible-collection-kubernetes-molecule-ha-v133
         # - ansible-collection-kubernetes-molecule-helm
         # - ansible-collection-kubernetes-molecule-upload-helm-chart
         # - ansible-test
@@ -508,18 +422,9 @@
         # - ansible-collection-kubernetes-molecule-cluster-upgrade-v131
         # - ansible-collection-kubernetes-molecule-cluster-upgrade-v132
         # - ansible-collection-kubernetes-molecule-cluster-upgrade-v133
-        # - ansible-collection-kubernetes-molecule-ha-debian-13-v131
-        # - ansible-collection-kubernetes-molecule-ha-debian-13-v132
-        # - ansible-collection-kubernetes-molecule-ha-debian-13-v133
-        # - ansible-collection-kubernetes-molecule-ha-rockylinux-9-v131
-        # - ansible-collection-kubernetes-molecule-ha-rockylinux-9-v132
-        # - ansible-collection-kubernetes-molecule-ha-rockylinux-9-v133
-        # - ansible-collection-kubernetes-molecule-ha-ubuntu-jammy-v131
-        # - ansible-collection-kubernetes-molecule-ha-ubuntu-jammy-v132
-        # - ansible-collection-kubernetes-molecule-ha-ubuntu-jammy-v133
-        # - ansible-collection-kubernetes-molecule-ha-ubuntu-noble-v131
-        # - ansible-collection-kubernetes-molecule-ha-ubuntu-noble-v132
-        # - ansible-collection-kubernetes-molecule-ha-ubuntu-noble-v133
+        # - ansible-collection-kubernetes-molecule-ha-v131
+        # - ansible-collection-kubernetes-molecule-ha-v132
+        # - ansible-collection-kubernetes-molecule-ha-v133
         # - ansible-collection-kubernetes-molecule-helm
         # - ansible-collection-kubernetes-molecule-upload-helm-chart
         # - ansible-test
