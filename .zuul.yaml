@@ -9,22 +9,6 @@
           - controller
 
 - nodeset:
-    name: debian-13-triple-node
-    nodes:
-      - name: controller-1
-        label: debian-13
-      - name: controller-2
-        label: debian-13
-      - name: controller-3
-        label: debian-13
-    groups: &triple_node_groups
-      - name: controllers
-        nodes:
-          - controller-1
-          - controller-2
-          - controller-3
-
-- nodeset:
     name: rockylinux-9-single-node
     nodes:
       - name: controller
@@ -32,21 +16,17 @@
     groups: *single_node_groups
 
 - nodeset:
-    name: rockylinux-9-triple-node
-    nodes:
-      - name: controller-1
-        label: rockylinux-9
-      - name: controller-2
-        label: rockylinux-9
-      - name: controller-3
-        label: rockylinux-9
-    groups: *triple_node_groups
-
-- nodeset:
     name: ubuntu-jammy-single-node
     nodes:
       - name: controller
         label: ubuntu-jammy
+    groups: *single_node_groups
+
+- nodeset:
+    name: ubuntu-noble-single-node
+    nodes:
+      - name: controller
+        label: ubuntu-noble
     groups: *single_node_groups
 
 - nodeset:
@@ -58,25 +38,12 @@
         label: ubuntu-jammy
       - name: controller-3
         label: ubuntu-jammy
-    groups: *triple_node_groups
-
-- nodeset:
-    name: ubuntu-noble-single-node
-    nodes:
-      - name: controller
-        label: ubuntu-noble
-    groups: *single_node_groups
-
-- nodeset:
-    name: ubuntu-noble-triple-node
-    nodes:
-      - name: controller-1
-        label: ubuntu-noble
-      - name: controller-2
-        label: ubuntu-noble
-      - name: controller-3
-        label: ubuntu-noble
-    groups: *triple_node_groups
+    groups: &triple_node_groups
+      - name: controllers
+        nodes:
+          - controller-1
+          - controller-2
+          - controller-3
 
 - job:
     name: ansible-collection-kubernetes-molecule
@@ -172,7 +139,8 @@
 - job:
     name: ansible-collection-kubernetes-molecule-ha
     parent: ansible-collection-kubernetes-molecule
-    abstract: true
+    # TODO(mnaser): Switch to debian-13
+    nodeset: ubuntu-jammy-triple-node
     vars:
       molecule_scenario: ha
     group-vars:
