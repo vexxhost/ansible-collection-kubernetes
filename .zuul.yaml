@@ -1,0 +1,195 @@
+- nodeset:
+    name: debian-13-single-node
+    nodes:
+      - name: controller
+        label: debian-13
+    groups: &single_node_groups
+      - name: controllers
+        nodes:
+          - controller
+
+- nodeset:
+    name: rockylinux-9-single-node
+    nodes:
+      - name: controller
+        label: rockylinux-9
+    groups: *single_node_groups
+
+- nodeset:
+    name: ubuntu-jammy-single-node
+    nodes:
+      - name: controller
+        label: ubuntu-jammy
+    groups: *single_node_groups
+
+- nodeset:
+    name: ubuntu-noble-single-node
+    nodes:
+      - name: controller
+        label: ubuntu-noble
+    groups: *single_node_groups
+
+- nodeset:
+    name: ubuntu-jammy-triple-node
+    nodes:
+      - name: controller-1
+        label: ubuntu-jammy
+      - name: controller-2
+        label: ubuntu-jammy
+      - name: controller-3
+        label: ubuntu-jammy
+    groups: &triple_node_groups
+      - name: controllers
+        nodes:
+          - controller-1
+          - controller-2
+          - controller-3
+
+- job:
+    name: ansible-collection-kubernetes-molecule
+    parent: molecule
+    abstract: true
+    vars:
+      kubernetes_version: 1.33.4
+    group-vars:
+      all:
+        cilium_helm_values:
+          operator:
+            replicas: 1
+      controllers:
+        kube_vip_interface: "{{ ansible_facts['default_ipv4'].interface }}"
+        kube_vip_address: 172.17.0.100
+        kubernetes_hostname: "{{ ansible_facts['default_ipv4'].address }}"
+        cilium_ipv4_cidr: 172.24.0.0/16
+    # TODO(mnaser): Switch to debian-13
+    nodeset: ubuntu-jammy-single-node
+
+- job:
+    name: ansible-collection-kubernetes-molecule-aio
+    parent: ansible-collection-kubernetes-molecule
+    abstract: true
+    vars:
+      molecule_scenario: aio
+
+- job:
+    name: ansible-collection-kubernetes-molecule-aio-debian-13
+    parent: ansible-collection-kubernetes-molecule-aio
+    nodeset: debian-13-single-node
+    voting: false
+
+- job:
+    name: ansible-collection-kubernetes-molecule-aio-rockylinux-9
+    parent: ansible-collection-kubernetes-molecule-aio
+    nodeset: rockylinux-9-single-node
+
+- job:
+    name: ansible-collection-kubernetes-molecule-aio-ubuntu-jammy
+    parent: ansible-collection-kubernetes-molecule-aio
+    nodeset: ubuntu-jammy-single-node
+
+- job:
+    name: ansible-collection-kubernetes-molecule-aio-ubuntu-noble
+    parent: ansible-collection-kubernetes-molecule-aio
+    nodeset: ubuntu-noble-single-node
+    voting: false
+
+- job:
+    name: ansible-collection-kubernetes-molecule-bgp
+    parent: ansible-collection-kubernetes-molecule
+    vars:
+      molecule_scenario: bgp
+    group-vars:
+      controllers:
+        kube_vip_mode: bgp
+        kube_vip_bgp_routerid: 172.17.0.100
+        kube_vip_bgp_peeraddress: "{{ ansible_facts['default_ipv4'].address }}"
+        kube_vip_bgp_sourceip: 172.17.0.100
+        kube_vip_bgp_multihop: true
+
+- job:
+    name: ansible-collection-kubernetes-molecule-cluster-api
+    parent: ansible-collection-kubernetes-molecule
+    vars:
+      molecule_scenario: cluster-api
+    group-vars:
+      controllers:
+        clusterctl_version: 1.8.4
+        cluster_api_version: 1.8.4
+        cluster_api_infrastructure_provider: openstack
+        cluster_api_infrastructure_version: 0.11.2
+        cluster_api_node_selector:
+          kubernetes.io/os: linux
+
+- job:
+    name: ansible-collection-kubernetes-molecule-cluster-upgrade
+    parent: ansible-collection-kubernetes-molecule
+    # TODO(mnaser): Switch to debian-13
+    nodeset: ubuntu-jammy-triple-node
+    vars:
+      molecule_scenario: cluster-upgrade
+      old_kubernetes_version: 1.32.8
+      kubernetes_version: 1.33.4
+    group-vars:
+      controllers:
+        # NOTE(mnaser): Since we're running in clouds, we use the first controller IP
+        #               address as the hostname.
+        kubernetes_hostname: "{{ hostvars['controller-1'].ansible_facts['default_ipv4'].address }}"
+    # NOTE(mnaser): Cilium operator restarts during upgrades that's causing
+    #               failures for now, so set as non-voting for now.
+    voting: false
+
+- job:
+    name: ansible-collection-kubernetes-molecule-ha
+    parent: ansible-collection-kubernetes-molecule
+    # TODO(mnaser): Switch to debian-13
+    nodeset: ubuntu-jammy-triple-node
+    vars:
+      molecule_scenario: ha
+    group-vars:
+      controllers:
+        # NOTE(mnaser): Since we're running in clouds, we use the first controller IP
+        #               address as the hostname.
+        kubernetes_hostname: "{{ hostvars['controller-1'].ansible_facts['default_ipv4'].address }}"
+
+- job:
+    name: ansible-collection-kubernetes-molecule-helm
+    parent: ansible-collection-kubernetes-molecule
+    vars:
+      molecule_scenario: helm
+
+- job:
+    name: ansible-collection-kubernetes-molecule-upload-helm-chart
+    parent: ansible-collection-kubernetes-molecule
+    vars:
+      molecule_scenario: upload-helm-chart
+
+- project:
+    merge-mode: squash-merge
+    check:
+      jobs:
+        - ansible-collection-kubernetes-molecule-aio-debian-13
+        - ansible-collection-kubernetes-molecule-aio-rockylinux-9
+        - ansible-collection-kubernetes-molecule-aio-ubuntu-jammy
+        - ansible-collection-kubernetes-molecule-aio-ubuntu-noble
+        - ansible-collection-kubernetes-molecule-bgp
+        - ansible-collection-kubernetes-molecule-cluster-api
+        - ansible-collection-kubernetes-molecule-cluster-upgrade
+        - ansible-collection-kubernetes-molecule-ha
+        - ansible-collection-kubernetes-molecule-helm
+        - ansible-collection-kubernetes-molecule-upload-helm-chart
+        - ansible-test
+        - pre-commit
+    gate:
+      jobs:
+        - ansible-collection-kubernetes-molecule-aio-debian-13
+        - ansible-collection-kubernetes-molecule-aio-rockylinux-9
+        - ansible-collection-kubernetes-molecule-aio-ubuntu-jammy
+        - ansible-collection-kubernetes-molecule-aio-ubuntu-noble
+        - ansible-collection-kubernetes-molecule-bgp
+        - ansible-collection-kubernetes-molecule-cluster-api
+        - ansible-collection-kubernetes-molecule-cluster-upgrade
+        - ansible-collection-kubernetes-molecule-ha
+        - ansible-collection-kubernetes-molecule-helm
+        - ansible-collection-kubernetes-molecule-upload-helm-chart
+        - ansible-test
+        - pre-commit

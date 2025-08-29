@@ -12,5 +12,12 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-- ansible.builtin.import_playbook: ../kubernetes/prepare.yml
-- ansible.builtin.import_playbook: ../kubernetes/converge.yml
+- name: Prepare
+  hosts: all
+  tasks:
+    - name: Install Debian packages
+      become: true
+      ansible.builtin.apt:
+        name: ["gnupg"]
+        update_cache: true
+      when: ansible_facts['os_family'] == "Debian"
