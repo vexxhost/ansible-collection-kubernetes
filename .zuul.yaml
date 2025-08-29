@@ -123,6 +123,8 @@
 - job:
     name: ansible-collection-kubernetes-molecule-cluster-upgrade
     parent: ansible-collection-kubernetes-molecule
+    # TODO(mnaser): Switch to debian-13
+    nodeset: ubuntu-jammy-triple-node
     vars:
       molecule_scenario: cluster-upgrade
       old_kubernetes_version: 1.32.8
