@@ -43,24 +43,6 @@
     groups: *triple_node_groups
 
 - nodeset:
-    name: ubuntu-focal-single-node
-    nodes:
-      - name: controller
-        label: ubuntu-focal
-    groups: *single_node_groups
-
-- nodeset:
-    name: ubuntu-focal-triple-node
-    nodes:
-      - name: controller-1
-        label: ubuntu-focal
-      - name: controller-2
-        label: ubuntu-focal
-      - name: controller-3
-        label: ubuntu-focal
-    groups: *triple_node_groups
-
-- nodeset:
     name: ubuntu-jammy-single-node
     nodes:
       - name: controller
@@ -164,29 +146,6 @@
 - job:
     name: ansible-collection-kubernetes-molecule-aio-rockylinux-9-v133
     parent: ansible-collection-kubernetes-molecule-aio-rockylinux-9
-    vars:
-      kubernetes_version: 1.33.4
-
-- job:
-    name: ansible-collection-kubernetes-molecule-aio-ubuntu-focal
-    parent: ansible-collection-kubernetes-molecule-aio
-    nodeset: ubuntu-focal-single-node
-
-- job:
-    name: ansible-collection-kubernetes-molecule-aio-ubuntu-focal-v131
-    parent: ansible-collection-kubernetes-molecule-aio-ubuntu-focal
-    vars:
-      kubernetes_version: 1.31.12
-
-- job:
-    name: ansible-collection-kubernetes-molecule-aio-ubuntu-focal-v132
-    parent: ansible-collection-kubernetes-molecule-aio-ubuntu-focal
-    vars:
-      kubernetes_version: 1.32.8
-
-- job:
-    name: ansible-collection-kubernetes-molecule-aio-ubuntu-focal-v133
-    parent: ansible-collection-kubernetes-molecule-aio-ubuntu-focal
     vars:
       kubernetes_version: 1.33.4
 
@@ -392,32 +351,6 @@
       kubernetes_version: 1.33.4
 
 - job:
-    name: ansible-collection-kubernetes-molecule-cluster-upgrade-ubuntu-focal
-    parent: ansible-collection-kubernetes-molecule-cluster-upgrade
-    nodeset: ubuntu-focal-triple-node
-
-- job:
-    name: ansible-collection-kubernetes-molecule-cluster-upgrade-ubuntu-focal-v131
-    parent: ansible-collection-kubernetes-molecule-cluster-upgrade-ubuntu-focal
-    vars:
-      old_kubernetes_version: 1.30.14
-      kubernetes_version: 1.31.12
-
-- job:
-    name: ansible-collection-kubernetes-molecule-cluster-upgrade-ubuntu-focal-v132
-    parent: ansible-collection-kubernetes-molecule-cluster-upgrade-ubuntu-focal
-    vars:
-      old_kubernetes_version: 1.31.12
-      kubernetes_version: 1.32.8
-
-- job:
-    name: ansible-collection-kubernetes-molecule-cluster-upgrade-ubuntu-focal-v133
-    parent: ansible-collection-kubernetes-molecule-cluster-upgrade-ubuntu-focal
-    vars:
-      old_kubernetes_version: 1.32.8
-      kubernetes_version: 1.33.4
-
-- job:
     name: ansible-collection-kubernetes-molecule-cluster-upgrade-ubuntu-jammy
     parent: ansible-collection-kubernetes-molecule-cluster-upgrade
     nodeset: ubuntu-jammy-triple-node
@@ -529,29 +462,6 @@
       kubernetes_version: 1.33.4
 
 - job:
-    name: ansible-collection-kubernetes-molecule-ha-ubuntu-focal
-    parent: ansible-collection-kubernetes-molecule-ha
-    nodeset: ubuntu-focal-triple-node
-
-- job:
-    name: ansible-collection-kubernetes-molecule-ha-ubuntu-focal-v131
-    parent: ansible-collection-kubernetes-molecule-ha-ubuntu-focal
-    vars:
-      kubernetes_version: 1.31.12
-
-- job:
-    name: ansible-collection-kubernetes-molecule-ha-ubuntu-focal-v132
-    parent: ansible-collection-kubernetes-molecule-ha-ubuntu-focal
-    vars:
-      kubernetes_version: 1.32.8
-
-- job:
-    name: ansible-collection-kubernetes-molecule-ha-ubuntu-focal-v133
-    parent: ansible-collection-kubernetes-molecule-ha-ubuntu-focal
-    vars:
-      kubernetes_version: 1.33.4
-
-- job:
     name: ansible-collection-kubernetes-molecule-ha-ubuntu-jammy
     parent: ansible-collection-kubernetes-molecule-ha
     nodeset: ubuntu-jammy-triple-node
@@ -623,9 +533,6 @@
         # - ansible-collection-kubernetes-molecule-aio-rockylinux-9-v131
         # - ansible-collection-kubernetes-molecule-aio-rockylinux-9-v132
         # - ansible-collection-kubernetes-molecule-aio-rockylinux-9-v133
-        # - ansible-collection-kubernetes-molecule-aio-ubuntu-focal-v131
-        # - ansible-collection-kubernetes-molecule-aio-ubuntu-focal-v132
-        # - ansible-collection-kubernetes-molecule-aio-ubuntu-focal-v133
         # - ansible-collection-kubernetes-molecule-aio-ubuntu-jammy-v131
         # - ansible-collection-kubernetes-molecule-aio-ubuntu-jammy-v132
         # - ansible-collection-kubernetes-molecule-aio-ubuntu-jammy-v133
@@ -644,9 +551,6 @@
         # - ansible-collection-kubernetes-molecule-cluster-upgrade-rockylinux-9-v131
         # - ansible-collection-kubernetes-molecule-cluster-upgrade-rockylinux-9-v132
         # - ansible-collection-kubernetes-molecule-cluster-upgrade-rockylinux-9-v133
-        # - ansible-collection-kubernetes-molecule-cluster-upgrade-ubuntu-focal-v131
-        # - ansible-collection-kubernetes-molecule-cluster-upgrade-ubuntu-focal-v132
-        # - ansible-collection-kubernetes-molecule-cluster-upgrade-ubuntu-focal-v133
         - ansible-collection-kubernetes-molecule-cluster-upgrade-ubuntu-jammy-v131
         # - ansible-collection-kubernetes-molecule-cluster-upgrade-ubuntu-jammy-v132
         # - ansible-collection-kubernetes-molecule-cluster-upgrade-ubuntu-jammy-v133
@@ -659,9 +563,6 @@
         # - ansible-collection-kubernetes-molecule-ha-rockylinux-9-v131
         # - ansible-collection-kubernetes-molecule-ha-rockylinux-9-v132
         # - ansible-collection-kubernetes-molecule-ha-rockylinux-9-v133
-        # - ansible-collection-kubernetes-molecule-ha-ubuntu-focal-v131
-        # - ansible-collection-kubernetes-molecule-ha-ubuntu-focal-v132
-        # - ansible-collection-kubernetes-molecule-ha-ubuntu-focal-v133
         # - ansible-collection-kubernetes-molecule-ha-ubuntu-jammy-v131
         # - ansible-collection-kubernetes-molecule-ha-ubuntu-jammy-v132
         # - ansible-collection-kubernetes-molecule-ha-ubuntu-jammy-v133
@@ -683,9 +584,6 @@
         # - ansible-collection-kubernetes-molecule-aio-rockylinux-9-v131
         # - ansible-collection-kubernetes-molecule-aio-rockylinux-9-v132
         # - ansible-collection-kubernetes-molecule-aio-rockylinux-9-v133
-        # - ansible-collection-kubernetes-molecule-aio-ubuntu-focal-v131
-        # - ansible-collection-kubernetes-molecule-aio-ubuntu-focal-v132
-        # - ansible-collection-kubernetes-molecule-aio-ubuntu-focal-v133
         # - ansible-collection-kubernetes-molecule-aio-ubuntu-jammy-v131
         # - ansible-collection-kubernetes-molecule-aio-ubuntu-jammy-v132
         # - ansible-collection-kubernetes-molecule-aio-ubuntu-jammy-v133
@@ -704,9 +602,6 @@
         # - ansible-collection-kubernetes-molecule-cluster-upgrade-rockylinux-9-v131
         # - ansible-collection-kubernetes-molecule-cluster-upgrade-rockylinux-9-v132
         # - ansible-collection-kubernetes-molecule-cluster-upgrade-rockylinux-9-v133
-        # - ansible-collection-kubernetes-molecule-cluster-upgrade-ubuntu-focal-v131
-        # - ansible-collection-kubernetes-molecule-cluster-upgrade-ubuntu-focal-v132
-        # - ansible-collection-kubernetes-molecule-cluster-upgrade-ubuntu-focal-v133
         - ansible-collection-kubernetes-molecule-cluster-upgrade-ubuntu-jammy-v131
         # - ansible-collection-kubernetes-molecule-cluster-upgrade-ubuntu-jammy-v132
         # - ansible-collection-kubernetes-molecule-cluster-upgrade-ubuntu-jammy-v133
@@ -719,9 +614,6 @@
         # - ansible-collection-kubernetes-molecule-ha-rockylinux-9-v131
         # - ansible-collection-kubernetes-molecule-ha-rockylinux-9-v132
         # - ansible-collection-kubernetes-molecule-ha-rockylinux-9-v133
-        # - ansible-collection-kubernetes-molecule-ha-ubuntu-focal-v131
-        # - ansible-collection-kubernetes-molecule-ha-ubuntu-focal-v132
-        # - ansible-collection-kubernetes-molecule-ha-ubuntu-focal-v133
         # - ansible-collection-kubernetes-molecule-ha-ubuntu-jammy-v131
         # - ansible-collection-kubernetes-molecule-ha-ubuntu-jammy-v132
         # - ansible-collection-kubernetes-molecule-ha-ubuntu-jammy-v133
