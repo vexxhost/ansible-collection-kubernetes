@@ -151,6 +151,7 @@
     parent: ansible-collection-kubernetes-molecule
     vars:
       molecule_scenario: cluster-api
+      kubernetes_version: 1.33.4
     group-vars:
       controllers:
         clusterctl_version: 1.8.4
@@ -159,24 +160,6 @@
         cluster_api_infrastructure_version: 0.11.2
         cluster_api_node_selector:
           kubernetes.io/os: linux
-
-- job:
-    name: ansible-collection-kubernetes-molecule-cluster-api-v131
-    parent: ansible-collection-kubernetes-molecule-cluster-api
-    vars:
-      kubernetes_version: 1.31.12
-
-- job:
-    name: ansible-collection-kubernetes-molecule-cluster-api-v132
-    parent: ansible-collection-kubernetes-molecule-cluster-api
-    vars:
-      kubernetes_version: 1.32.8
-
-- job:
-    name: ansible-collection-kubernetes-molecule-cluster-api-v133
-    parent: ansible-collection-kubernetes-molecule-cluster-api
-    vars:
-      kubernetes_version: 1.33.4
 
 - job:
     name: ansible-collection-kubernetes-molecule-cluster-upgrade
@@ -265,9 +248,7 @@
         - ansible-collection-kubernetes-molecule-aio-ubuntu-jammy
         - ansible-collection-kubernetes-molecule-aio-ubuntu-noble
         - ansible-collection-kubernetes-molecule-bgp
-        - ansible-collection-kubernetes-molecule-cluster-api-v131
-        - ansible-collection-kubernetes-molecule-cluster-api-v132
-        - ansible-collection-kubernetes-molecule-cluster-api-v133
+        - ansible-collection-kubernetes-molecule-cluster-api
         - ansible-collection-kubernetes-molecule-cluster-upgrade-v131
         - ansible-collection-kubernetes-molecule-cluster-upgrade-v132
         - ansible-collection-kubernetes-molecule-cluster-upgrade-v133
@@ -285,9 +266,7 @@
         - ansible-collection-kubernetes-molecule-aio-ubuntu-jammy
         - ansible-collection-kubernetes-molecule-aio-ubuntu-noble
         - ansible-collection-kubernetes-molecule-bgp
-        - ansible-collection-kubernetes-molecule-cluster-api-v131
-        - ansible-collection-kubernetes-molecule-cluster-api-v132
-        - ansible-collection-kubernetes-molecule-cluster-api-v133
+        - ansible-collection-kubernetes-molecule-cluster-api
         - ansible-collection-kubernetes-molecule-cluster-upgrade-v131
         - ansible-collection-kubernetes-molecule-cluster-upgrade-v132
         - ansible-collection-kubernetes-molecule-cluster-upgrade-v133
