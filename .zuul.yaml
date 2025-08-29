@@ -201,6 +201,7 @@
     parent: ansible-collection-kubernetes-molecule
     vars:
       molecule_scenario: bgp
+      kubernetes_version: 1.33.4
     group-vars:
       controllers:
         kube_vip_mode: bgp
@@ -208,24 +209,6 @@
         kube_vip_bgp_peeraddress: "{{ ansible_facts['default_ipv4'].address }}"
         kube_vip_bgp_sourceip: 172.17.0.100
         kube_vip_bgp_multihop: true
-
-- job:
-    name: ansible-collection-kubernetes-molecule-bgp-v131
-    parent: ansible-collection-kubernetes-molecule-bgp
-    vars:
-      kubernetes_version: 1.31.12
-
-- job:
-    name: ansible-collection-kubernetes-molecule-bgp-v132
-    parent: ansible-collection-kubernetes-molecule-bgp
-    vars:
-      kubernetes_version: 1.32.8
-
-- job:
-    name: ansible-collection-kubernetes-molecule-bgp-v133
-    parent: ansible-collection-kubernetes-molecule-bgp
-    vars:
-      kubernetes_version: 1.33.4
 
 - job:
     name: ansible-collection-kubernetes-molecule-cluster-api
@@ -341,9 +324,6 @@
     merge-mode: squash-merge
     check:
       jobs:
-        # - ansible-collection-kubernetes-molecule-bgp-v131
-        # - ansible-collection-kubernetes-molecule-bgp-v132
-        # - ansible-collection-kubernetes-molecule-bgp-v133
         # - ansible-collection-kubernetes-molecule-aio-debian-13-v131
         # - ansible-collection-kubernetes-molecule-aio-debian-13-v132
         # - ansible-collection-kubernetes-molecule-aio-debian-13-v133
@@ -356,6 +336,7 @@
         # - ansible-collection-kubernetes-molecule-aio-ubuntu-noble-v131
         # - ansible-collection-kubernetes-molecule-aio-ubuntu-noble-v132
         # - ansible-collection-kubernetes-molecule-aio-ubuntu-noble-v133
+        # - ansible-collection-kubernetes-molecule-bgp
         # - ansible-collection-kubernetes-molecule-cluster-api-v131
         # - ansible-collection-kubernetes-molecule-cluster-api-v132
         # - ansible-collection-kubernetes-molecule-cluster-api-v133
@@ -371,9 +352,6 @@
         # - pre-commit
     gate:
       jobs:
-        # - ansible-collection-kubernetes-molecule-bgp-v131
-        # - ansible-collection-kubernetes-molecule-bgp-v132
-        # - ansible-collection-kubernetes-molecule-bgp-v133
         # - ansible-collection-kubernetes-molecule-aio-debian-13-v131
         # - ansible-collection-kubernetes-molecule-aio-debian-13-v132
         # - ansible-collection-kubernetes-molecule-aio-debian-13-v133
@@ -386,6 +364,7 @@
         # - ansible-collection-kubernetes-molecule-aio-ubuntu-noble-v131
         # - ansible-collection-kubernetes-molecule-aio-ubuntu-noble-v132
         # - ansible-collection-kubernetes-molecule-aio-ubuntu-noble-v133
+        # - ansible-collection-kubernetes-molecule-bgp
         # - ansible-collection-kubernetes-molecule-cluster-api-v131
         # - ansible-collection-kubernetes-molecule-cluster-api-v132
         # - ansible-collection-kubernetes-molecule-cluster-api-v133
