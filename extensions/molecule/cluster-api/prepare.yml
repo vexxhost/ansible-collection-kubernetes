@@ -14,3 +14,15 @@
 
 - ansible.builtin.import_playbook: ../kubernetes/prepare.yml
 - ansible.builtin.import_playbook: ../kubernetes/converge.yml
+
+- name: Install older version of Cluster API
+  hosts: all
+  become: true
+  roles:
+    - role: vexxhost.kubernetes.cert_manager
+    - role: vexxhost.kubernetes.cluster_api
+      vars:
+        clusterctl_version: 1.6.0
+        cluster_api_version: 1.6.0
+        cluster_api_infrastructure_provider: openstack
+        cluster_api_infrastructure_version: 0.9.0
