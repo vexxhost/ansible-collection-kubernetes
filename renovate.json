@@ -4,6 +4,6 @@
     "local>vexxhost/.github"
   ],
   "ignorePaths": [
-    "roles/cilium/files/charts/**"
+    "roles/cilium/files/chart/**"
   ]
 }
