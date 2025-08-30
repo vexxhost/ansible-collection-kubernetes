@@ -3180,7 +3180,7 @@ authentication:
           securityContext: {}
         server:
           # -- SPIRE server image
-          image: ghcr.io/spiffe/spire-server:1.6.3@sha256:f4bc49fb0bd1d817a6c46204cc7ce943c73fb0a5496a78e0e4dc20c9a816ad7f
+          image: ghcr.io/spiffe/spire-server:1.13.0@sha256:d715435ba011eca7a3c098ca66a781d2ab2cecf5de9afcfb0a0e071957ef1d32
           # -- SPIRE server service account
           serviceAccount:
             create: true
