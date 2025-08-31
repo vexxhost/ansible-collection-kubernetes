@@ -138,7 +138,7 @@
     name: ansible-collection-kubernetes-molecule-download-binaries
     parent: ansible-collection-kubernetes-molecule
     vars:
-      molecule_scenario: cluster-upgrade
+      molecule_scenario: download-binaries
 
 - job:
     name: ansible-collection-kubernetes-molecule-ha
