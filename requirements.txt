@@ -1,8 +1,0 @@
-ansible-core
-docker-image-py
-jmespath
-molecule
-molecule-plugins[docker]
-pytest < 8.0.0
-pytest-forked
-pytest-xdist

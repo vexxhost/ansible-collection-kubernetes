@@ -65,22 +65,40 @@ imageRepository: "{{ kubernetes_image_repository }}"
 dns:
   imageRepository: "{{ kubernetes_image_repository }}/coredns"
 {% endif %}
+etcd:
+  local:
+    extraArgs:
+{% if kubernetes_version is ansible.builtin.version('1.28.0', '>=') %}
+      tls-min-version: TLS1.3
+{% endif %}
 apiServer:
   extraArgs:
-    oidc-username-claim: email
+{% if kubernetes_version is ansible.builtin.version('1.28.0', '>=') %}
+    tls-min-version: VersionTLS13
+{% endif %}
 {% if kubernetes_oidc_issuer_url is defined %}
+    oidc-username-claim: "{{ kubernetes_oidc_username_claim }}"
     oidc-issuer-url: {{ kubernetes_oidc_issuer_url }}
     oidc-client-id: {{ kubernetes_oidc_client_id }}
 {% endif %}
 controllerManager:
   extraArgs:
     bind-address: 0.0.0.0
+{% if kubernetes_version is ansible.builtin.version('1.28.0', '>=') %}
+    tls-min-version: VersionTLS13
+{% endif %}
 scheduler:
   extraArgs:
     bind-address: 0.0.0.0
+{% if kubernetes_version is ansible.builtin.version('1.28.0', '>=') %}
+    tls-min-version: VersionTLS13
+{% endif %}
 ---
 apiVersion: kubelet.config.k8s.io/v1beta1
 kind: KubeletConfiguration
+{% if kubernetes_version is ansible.builtin.version('1.28.0', '>=') %}
+tlsMinVersion: VersionTLS13
+{% endif %}
 ---
 apiVersion: kubeproxy.config.k8s.io/v1alpha1
 kind: KubeProxyConfiguration

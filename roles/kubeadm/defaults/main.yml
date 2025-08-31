@@ -25,8 +25,15 @@ kubeadm_checksums:
     1.25.16: 11c70502ac5bad303b5b4103b9eb5b2a83376cf6a1bce878b6018c6ca44a7d6e
     1.26.3: 87a1bf6603e252a8fa46be44382ea218cb8e4f066874d149dc589d0f3a405fed
     1.26.11: 58f886e39e517ba1a92493f136e80f1b6ea9362966ad9d2accdf2133004161f2
+    1.26.15: 7e0f5bd34ddc6fac932cf9a137c57ade150ec53f9558d693e336ed9948d6ba76
     1.27.8: f8864769b8b2d7a14f53eb983f23317ff14d68ab76aba71e9de17ce84c38d4eb
+    1.27.16: 33622018f83515331ac70c2041eba5d814a6d78a40b8869f089ea502f63a1421
     1.28.4: b4d2531b7cddf782f59555436bc098485b5fa6c05afccdeecf0d62d21d84f5bd
+    1.28.13: f23e9586811312998bc5e8847f6df52fc04809aed8c2c2fd750f2c42b3f87192
+    1.30.14: bf1f8af81af8ecf003cbc03a8700c6e94a74c183ee092bbc77b92270ada2be70
+    1.31.12: 3228da53372fb8ffab303e7d8b1b0f78c016e461216b6535609e4f2377424349
+    1.32.8: da4cc996800db14f82fce8813caa55be318e52ef69d82e50e728ef4cfa18b69f
+    1.33.4: a109ebcb68e52d3dd605d92f92460c884dcc8b68aebe442404af19b6d9d778ec
   arm64:
     1.19.16: f72db475c7a52deaab3ac04ee66e2c99dc4dc50b4fa85faf34ff319de869e1d6
     1.20.15: 76e132da8185a7c33e6178348d05570a1f78878d5e118c7402c9ad02e8b6fb77
@@ -39,10 +46,17 @@ kubeadm_checksums:
     1.25.16: 55cc8e3c5985858b9f683bf6c7352d76f073d3dc136f450e8761c0ed7092c0f3
     1.26.3: e9a7dbca77f9576a98af1db8747e9dc13e930e40295eaa259dd99fd6e17a173f
     1.26.11: a13318c1493e58a9f7c4359c79443f3c86a690ec601bcc76308c809d8d61edb8
+    1.26.15: 881a76cc98da0fe91394cb26f909186d0dcbf378262d11803ccf76f2a84a9039
     1.27.8: 0d0f5b2781d663d314e785d14361aa5a09cfaf6e1694aa3cc731f4f06342ec13
+    1.27.16: 39fb88ab0f6b943bbe61dde5d7ea58ce728045a0556f9b6f56d66fe1f20affcc
     1.28.4: a4422780020954436b8e76ab1c59b68c5581a54432dd3e566c4709bb40c8d4f9
+    1.28.13: 989630fb0de6fe750c6ee25ee01b72654a3087434ff488ff8fddedd0278720cc
+    1.30.14: 8020618ad265918cbf0268afda624923587ac5d7545848a3029a77f6322093e4
+    1.31.12: 88fc31963e833d72d1e26159166591aea537d762debb5cc0f0d059fdc717b43b
+    1.32.8: 8dbd3fa2d94335d763b983caaf2798caae2d4183f6a95ebff28289f2e86edf68
+    1.33.4: ef471b454d68ee211e279ddeaebde6ee7a8e14b66ae58e0d0184e967c3595892
 
-kubeadm_download_url: "https://storage.googleapis.com/kubernetes-release/release/v{{ kubeadm_version }}/bin/{{ ansible_facts['system'] | lower }}/{{ download_artifact_goarch }}/kubeadm" # noqa: yaml[line-length]
+kubeadm_download_url: "https://cdn.dl.k8s.io/release/v{{ kubeadm_version }}/bin/{{ ansible_facts['system'] | lower }}/{{ download_artifact_goarch }}/kubeadm" # noqa: yaml[line-length]
 kubeadm_download_dest: /usr/bin/kubeadm
 kubeadm_binary_checksum: "{{ kubeadm_checksums[download_artifact_goarch][kubeadm_version] }}"
 
