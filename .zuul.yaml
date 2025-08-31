@@ -30,14 +30,14 @@
     groups: *single_node_groups
 
 - nodeset:
-    name: ubuntu-jammy-triple-node
+    name: debian-13-triple-node
     nodes:
       - name: controller-1
-        label: ubuntu-jammy
+        label: debian-13
       - name: controller-2
-        label: ubuntu-jammy
+        label: debian-13
       - name: controller-3
-        label: ubuntu-jammy
+        label: debian-13
     groups: &triple_node_groups
       - name: controllers
         nodes:
@@ -49,6 +49,7 @@
     name: ansible-collection-kubernetes-molecule
     parent: molecule
     abstract: true
+    nodeset: debian-13-single-node
     vars:
       kubernetes_version: 1.33.4
     group-vars:
@@ -61,8 +62,6 @@
         kube_vip_address: 172.17.0.100
         kubernetes_hostname: "{{ ansible_facts['default_ipv4'].address }}"
         cilium_ipv4_cidr: 172.24.0.0/16
-    # TODO(mnaser): Switch to debian-13
-    nodeset: ubuntu-jammy-single-node
 
 - job:
     name: ansible-collection-kubernetes-molecule-aio
@@ -75,7 +74,6 @@
     name: ansible-collection-kubernetes-molecule-aio-debian-13
     parent: ansible-collection-kubernetes-molecule-aio
     nodeset: debian-13-single-node
-    voting: false
 
 - job:
     name: ansible-collection-kubernetes-molecule-aio-rockylinux-9
@@ -91,7 +89,6 @@
     name: ansible-collection-kubernetes-molecule-aio-ubuntu-noble
     parent: ansible-collection-kubernetes-molecule-aio
     nodeset: ubuntu-noble-single-node
-    voting: false
 
 - job:
     name: ansible-collection-kubernetes-molecule-bgp
@@ -123,8 +120,7 @@
 - job:
     name: ansible-collection-kubernetes-molecule-cluster-upgrade
     parent: ansible-collection-kubernetes-molecule
-    # TODO(mnaser): Switch to debian-13
-    nodeset: ubuntu-jammy-triple-node
+    nodeset: debian-13-triple-node
     vars:
       molecule_scenario: cluster-upgrade
       old_kubernetes_version: 1.32.8
@@ -141,8 +137,7 @@
 - job:
     name: ansible-collection-kubernetes-molecule-ha
     parent: ansible-collection-kubernetes-molecule
-    # TODO(mnaser): Switch to debian-13
-    nodeset: ubuntu-jammy-triple-node
+    nodeset: debian-13-triple-node
     vars:
       molecule_scenario: ha
     group-vars:

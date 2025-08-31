@@ -36,30 +36,30 @@
     line: "source <(kubectl completion bash)"
     insertbefore: EOF
 
-# TODO(fitbeard): Move common system packages from all roles to dedicated role.
-- name: Install PIP
-  ansible.builtin.package:
-    name:
-      - python3-pip
-      - python3-cryptography
-
-- name: Install Kubernetes Python package using pip on supported systems
-  ansible.builtin.pip:
-    name: kubernetes
+- name: Install Kubernetes python package using PIP
   when: >
-    (ansible_facts['distribution'] == 'Ubuntu' and ansible_facts['distribution_major_version'] | int <= 22) or
-    (ansible_facts['distribution'] == 'Debian' and ansible_facts['distribution_major_version'] | int <= 12) or
-    (ansible_facts['distribution'] == 'RedHat' and ansible_facts['distribution_major_version'] | int <= 9) or
-    (ansible_facts['distribution'] == 'Rocky' and ansible_facts['distribution_major_version'] | int <= 9)
+    (ansible_facts['distribution'] == 'Ubuntu' and ansible_facts['distribution_major_version'] is version('22', '<=')) or
+    (ansible_facts['distribution'] == 'Debian' and ansible_facts['distribution_major_version'] is version('12', '<=')) or
+    (ansible_facts['distribution'] in ['RedHat', 'Rocky'] and ansible_facts['distribution_major_version'] is version('9', '<='))
+  block:
+    # TODO(fitbeard): Move common system packages from all roles to dedicated role.
+    - name: Install PIP
+      ansible.builtin.package:
+        name:
+          - python3-pip
+          - python3-cryptography
 
-- name: Install Kubernetes Python package using package manager on other systems
+    - name: Install Kubernetes Python package using pip on supported systems
+      ansible.builtin.pip:
+        name: kubernetes
+
+- name: Install Kubernetes Python package using package manager
   ansible.builtin.package:
     name: python3-kubernetes
   when: >
-    (ansible_facts['distribution'] == 'Ubuntu' and ansible_facts['distribution_major_version'] | int > 22) or
-    (ansible_facts['distribution'] == 'Debian' and ansible_facts['distribution_major_version'] | int > 12) or
-    (ansible_facts['distribution'] == 'RedHat' and ansible_facts['distribution_major_version'] | int > 9) or
-    (ansible_facts['distribution'] == 'Rocky' and ansible_facts['distribution_major_version'] | int > 9)
+    (ansible_facts['distribution'] == 'Ubuntu' and ansible_facts['distribution_major_version'] is version('22', '>')) or
+    (ansible_facts['distribution'] == 'Debian' and ansible_facts['distribution_major_version'] is version('12', '>')) or
+    (ansible_facts['distribution'] in ['RedHat', 'Rocky'] and ansible_facts['distribution_major_version'] is version('9', '>'))
 
 - name: Allow workload on control plane node
   kubernetes.core.k8s_taint:
