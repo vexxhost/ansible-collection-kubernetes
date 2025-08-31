@@ -1,5 +1,27 @@
 # Changelog
 
+## [2.3.1](https://github.com/vexxhost/ansible-collection-kubernetes/compare/v2.3.0...v2.3.1) (2025-07-30)
+
+
+### Bug Fixes
+
+* skip all tasks if kube_vip_enabled is false ([#178](https://github.com/vexxhost/ansible-collection-kubernetes/issues/178)) ([8c66ecc](https://github.com/vexxhost/ansible-collection-kubernetes/commit/8c66ecc637e9976ac4f178bcbafd49351b519e2f))
+
+## [2.3.0](https://github.com/vexxhost/ansible-collection-kubernetes/compare/v2.2.0...v2.3.0) (2025-07-24)
+
+
+### Features
+
+* allow set capo instance creation timeout ([#161](https://github.com/vexxhost/ansible-collection-kubernetes/issues/161)) ([2376ef9](https://github.com/vexxhost/ansible-collection-kubernetes/commit/2376ef95951b0ba8916ad63939f4e7bb67e693b2))
+* replace kube-proxy with cni functionality ([#105](https://github.com/vexxhost/ansible-collection-kubernetes/issues/105)) ([3438c0d](https://github.com/vexxhost/ansible-collection-kubernetes/commit/3438c0d39fb0c76046711eb8dca2c0b16b24058e))
+
+
+### Bug Fixes
+
+* cert-manager custom volumemount for /etc/ssl/certs ([#164](https://github.com/vexxhost/ansible-collection-kubernetes/issues/164)) ([9e65a58](https://github.com/vexxhost/ansible-collection-kubernetes/commit/9e65a58fd3c5ecb56ef9bc552156264e464e8696))
+* **ci:** update path for unit tests ([a14d0e0](https://github.com/vexxhost/ansible-collection-kubernetes/commit/a14d0e0ae43659fd1e5edc90b209a250eb0313cf))
+* Ensure dbus is installed on Debian to set hostname ([#163](https://github.com/vexxhost/ansible-collection-kubernetes/issues/163)) ([4a62afe](https://github.com/vexxhost/ansible-collection-kubernetes/commit/4a62afead2d5035b09f6e827b667d62c7b5e876c))
+
 ## [1.14.0](https://github.com/vexxhost/ansible-collection-kubernetes/compare/v1.13.4...v1.14.0) (2024-06-04)
 
 
