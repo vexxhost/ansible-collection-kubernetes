@@ -22,7 +22,7 @@
     - role: vexxhost.kubernetes.cert_manager
     - role: vexxhost.kubernetes.cluster_api
       vars:
-        clusterctl_version: 1.6.0
-        cluster_api_version: 1.6.0
+        clusterctl_version: 1.8.4
+        cluster_api_version: 1.8.4
         cluster_api_infrastructure_provider: openstack
         cluster_api_infrastructure_version: 0.9.0
