@@ -24,6 +24,7 @@ clusterctl_checksums:
     1.6.0: 1f9d967b0a8fa8cf50fd86203658a8ddacbc7b4d5aafafccb1653aa0b38169ce
     1.8.4: a7f40cde4e4a4f7119a52713386238ebcfa8691e7683b5afb823439ea81a8729
     1.9.6: e6a8843b3464eea3c5f98432128a914c5d8e44c2be1f308cf40a72aa98155d8c
+    1.10.5: 8da468c3482b2f45c872e87f5fefdc7d4cb583ac3a689234ecc1590f852b09df
   arm64:
     1.3.2: 1c409918fdbe693f0c2a4558ea1a35a0bacb9dcee258177f11ecded1e669191c
     1.3.3: f34abc7047f17d522757eb341cf64f05761b85fa9e1a4390a96adbb2482de784
@@ -32,6 +33,7 @@ clusterctl_checksums:
     1.6.0: 0fd6ef67b82a8e570d9701458ef33933f6fbacde094895b66b8fb6b36a0a85d1
     1.8.4: 8fbaa26320fcdd11aa40e1e2ae4889f9743c33744e1d191eec2afca54d34bdbc
     1.9.6: 49e80b6d6ac8ec4cf916ad434b12e703cd87b3edd3ee853b80da2510e6839d34
+    1.10.5: 8831f604a2571947ef19bfa9fd9dcc50b67e42deb6651bb09382e4bca212d795
 
 clusterctl_download_url: "https://github.com/kubernetes-sigs/cluster-api/releases/download/v{{ clusterctl_version }}/clusterctl-linux-{{ download_artifact_goarch }}" # noqa: yaml[line-length]
 clusterctl_download_dest: /usr/local/bin/clusterctl
