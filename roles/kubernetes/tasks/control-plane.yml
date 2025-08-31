@@ -43,9 +43,23 @@
       - python3-pip
       - python3-cryptography
 
-- name: Install Kubernetes python package
+- name: Install Kubernetes Python package using pip on supported systems
   ansible.builtin.pip:
     name: kubernetes
+  when: >
+    (ansible_facts['distribution'] == 'Ubuntu' and ansible_facts['distribution_major_version'] | int <= 22) or
+    (ansible_facts['distribution'] == 'Debian' and ansible_facts['distribution_major_version'] | int <= 12) or
+    (ansible_facts['distribution'] == 'RedHat' and ansible_facts['distribution_major_version'] | int <= 9) or
+    (ansible_facts['distribution'] == 'Rocky' and ansible_facts['distribution_major_version'] | int <= 9)
+
+- name: Install Kubernetes Python package using package manager on other systems
+  ansible.builtin.package:
+    name: python3-kubernetes
+  when: >
+    (ansible_facts['distribution'] == 'Ubuntu' and ansible_facts['distribution_major_version'] | int > 22) or
+    (ansible_facts['distribution'] == 'Debian' and ansible_facts['distribution_major_version'] | int > 12) or
+    (ansible_facts['distribution'] == 'RedHat' and ansible_facts['distribution_major_version'] | int > 9) or
+    (ansible_facts['distribution'] == 'Rocky' and ansible_facts['distribution_major_version'] | int > 9)
 
 - name: Allow workload on control plane node
   kubernetes.core.k8s_taint:
