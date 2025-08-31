@@ -75,7 +75,6 @@
     name: ansible-collection-kubernetes-molecule-aio-debian-13
     parent: ansible-collection-kubernetes-molecule-aio
     nodeset: debian-13-single-node
-    voting: false
 
 - job:
     name: ansible-collection-kubernetes-molecule-aio-rockylinux-9

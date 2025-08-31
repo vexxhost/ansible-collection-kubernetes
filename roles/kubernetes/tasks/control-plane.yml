@@ -42,10 +42,21 @@
     name:
       - python3-pip
       - python3-cryptography
+  when:
+    - ansible_facts['distribution'] != "Debian"
 
 - name: Install Kubernetes python package
   ansible.builtin.pip:
     name: kubernetes
+  when:
+    - ansible_facts['distribution'] != "Debian"
+
+- name: Install Kubernetes python package
+  ansible.builtin.package:
+    name: python3-kubernetes
+    state: present
+  when:
+    - ansible_facts['distribution'] == "Debian"
 
 - name: Allow workload on control plane node
   kubernetes.core.k8s_taint:
