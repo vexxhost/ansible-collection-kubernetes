@@ -13,6 +13,7 @@
 # under the License.
 
 - name: Uninstall legacy HA stack
+  when: kube_vip_enabled
   ansible.builtin.file:
     path: "{{ item }}"
     state: absent
@@ -26,6 +27,7 @@
     - Restart "kubelet" service
 
 - name: Switch API server to run on port 6443
+  when: kube_vip_enabled
   ignore_errors: true
   ansible.builtin.replace:
     path: "{{ item }}"
@@ -41,6 +43,7 @@
     - Restart "kubelet" service
 
 - name: Check if super-admin.conf exists
+  when: kube_vip_enabled
   ansible.builtin.stat:
     path: /etc/kubernetes/super-admin.conf
   failed_when: false
@@ -48,6 +51,7 @@
   register: kube_vip_stat_super_admin
 
 - name: Check if kubeadm has already run
+  when: kube_vip_enabled
   ansible.builtin.stat:
     path: /var/lib/kubelet/config.yaml
     get_attributes: false
@@ -56,6 +60,7 @@
   register: kube_vip_stat_kubelet_config
 
 - name: Set fact with KUBECONFIG path
+  when: kube_vip_enabled
   ansible.builtin.set_fact:
     kube_vip_kubeconfig_path: /etc/kubernetes/admin.conf
 
@@ -63,6 +68,7 @@
   ansible.builtin.set_fact:
     kube_vip_kubeconfig_path: /etc/kubernetes/super-admin.conf
   when:
+    - kube_vip_enabled
     - inventory_hostname == groups[kube_vip_control_plane_group] | first
     - (kube_vip_stat_super_admin.stat.exists and kube_vip_stat_super_admin.stat.isreg) or (not kube_vip_stat_kubelet_config.stat.exists)
 
@@ -77,6 +83,7 @@
   changed_when: false
 
 - name: Ensure kube-vip configuration file
+  when: kube_vip_enabled
   ansible.builtin.file:
     path: /etc/kubernetes/manifests/kube-vip.yaml
     state: "{{ kube_vip_enabled | ternary('file', 'absent') }}"

@@ -36,16 +36,30 @@
     line: "source <(kubectl completion bash)"
     insertbefore: EOF
 
-# TODO(fitbeard): Move common system packages from all roles to dedicated role.
-- name: Install PIP
-  ansible.builtin.package:
-    name:
-      - python3-pip
-      - python3-cryptography
+- name: Install Kubernetes python package using PIP
+  when: >
+    (ansible_facts['distribution'] == 'Ubuntu' and ansible_facts['distribution_major_version'] is version('22', '<=')) or
+    (ansible_facts['distribution'] == 'Debian' and ansible_facts['distribution_major_version'] is version('12', '<=')) or
+    (ansible_facts['distribution'] in ['RedHat', 'Rocky'] and ansible_facts['distribution_major_version'] is version('9', '<='))
+  block:
+    # TODO(fitbeard): Move common system packages from all roles to dedicated role.
+    - name: Install PIP
+      ansible.builtin.package:
+        name:
+          - python3-pip
+          - python3-cryptography
 
-- name: Install Kubernetes python package
-  ansible.builtin.pip:
-    name: kubernetes
+    - name: Install Kubernetes Python package using pip on supported systems
+      ansible.builtin.pip:
+        name: kubernetes
+
+- name: Install Kubernetes Python package using package manager
+  ansible.builtin.package:
+    name: python3-kubernetes
+  when: >
+    (ansible_facts['distribution'] == 'Ubuntu' and ansible_facts['distribution_major_version'] is version('22', '>')) or
+    (ansible_facts['distribution'] == 'Debian' and ansible_facts['distribution_major_version'] is version('12', '>')) or
+    (ansible_facts['distribution'] in ['RedHat', 'Rocky'] and ansible_facts['distribution_major_version'] is version('9', '>'))
 
 - name: Allow workload on control plane node
   kubernetes.core.k8s_taint:
@@ -56,6 +70,19 @@
         key: node-role.kubernetes.io/control-plane
       - effect: NoSchedule
         key: node-role.kubernetes.io/master
+
+- name: Remove kube-proxy resources
+  run_once: true
+  kubernetes.core.k8s:
+    state: absent
+    api_version: v1
+    kind: "{{ item }}"
+    namespace: kube-system
+    name: kube-proxy
+  with_items:
+    - DaemonSet
+    - ConfigMap
+  when: kubernetes_remove_kube_proxy | bool
 
 - name: Upgrade if necessary
   when:
