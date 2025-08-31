@@ -18,23 +18,21 @@
   hosts: all
   become: true
   tasks:
-    - ansible.posix.sysctl:
+    - name: Enable IP forwarding
+      ansible.posix.sysctl:
         name: net.ipv4.ip_forward
         value: '1'
         sysctl_set: true
         state: present
         reload: true
 
-    - name: Add FRR Apt signing key
-      ansible.builtin.apt_key:
-        url: https://deb.frrouting.org/frr/keys.asc
-        state: present
-      when: ansible_facts['os_family'] in ['Debian']
-
     - name: Add FRR repository
-      ansible.builtin.apt_repository:
-        repo: "deb https://deb.frrouting.org/frr jammy frr-stable"
-        state: present
+      ansible.builtin.deb822_repository:
+        name: frr
+        uris: https://deb.frrouting.org/frr
+        suites: "{{ ansible_distribution_release }}"
+        components: frr-stable
+        signed_by: https://deb.frrouting.org/frr/keys.asc
       when: ansible_facts['os_family'] in ['Debian']
 
     - name: Install frr packages
