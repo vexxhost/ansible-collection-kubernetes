@@ -17,3 +17,9 @@ galaxy_info:
         - focal
         - jammy
         - noble
+
+dependencies:
+  - role: vexxhost.kubernetes.upload_helm_chart
+    vars:
+      upload_helm_chart_src: kustomize/
+      upload_helm_chart_dest: "{{ openstack_resource_controller_kustomize_directory }}"
