@@ -1,0 +1,58 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: manager-role
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - secrets
+  verbs:
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - openstack.k-orc.cloud
+  resources:
+  - flavors
+  - floatingips
+  - images
+  - networks
+  - ports
+  - projects
+  - routerinterfaces
+  - routers
+  - securitygroups
+  - servergroups
+  - servers
+  - subnets
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - openstack.k-orc.cloud
+  resources:
+  - flavors/status
+  - floatingips/status
+  - images/status
+  - networks/status
+  - ports/status
+  - projects/status
+  - routerinterfaces/status
+  - routers/status
+  - securitygroups/status
+  - servergroups/status
+  - servers/status
+  - subnets/status
+  verbs:
+  - get
+  - patch
+  - update
