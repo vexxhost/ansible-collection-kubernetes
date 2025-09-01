@@ -24,20 +24,6 @@
     - namespace: capo-system
       name: capo-controller-manager
 
-- name: Install required controllers
-  kubernetes.core.k8s:
-    state: present
-    template:
-      - path: "controllers/{{ cluster_api_infrastructure_provider }}-resource-controller/install.yaml.j2"
-    apply: true
-    server_side_apply:
-      field_manager: ansible
-      force_conflicts: true
-  run_once: true
-  when:
-    - cluster_api_infrastructure_provider == "openstack"
-    - cluster_api_infrastructure_version is ansible.builtin.version('0.12.0', 'ge')
-
 # Note(okozachenko1203): Until https://github.com/kubernetes-sigs/cluster-api/issues/9132 is fixed,
 #                        set the default value of imagePullPolicy in CRDs.
 # yamllint disable rule:line-length

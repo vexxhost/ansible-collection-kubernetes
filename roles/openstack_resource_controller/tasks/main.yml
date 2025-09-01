@@ -1,0 +1,26 @@
+# Copyright (c) 2025 VEXXHOST, Inc.
+# SPDX-License-Identifier: Apache-2.0
+
+- name: Create folder for Kustomization
+  ansible.builtin.file:
+    path: "{{ openstack_resource_controller_kustomize_directory }}"
+    state: directory
+
+- name: Upload Kustomization
+  ansible.builtin.template:
+    src: kustomization.yaml.j2
+    dest: "{{ openstack_resource_controller_kustomize_directory }}/kustomization.yaml"
+
+- name: Generate Kustomization file
+  ansible.builtin.shell:
+    cmd: "kubectl kustomize {{ openstack_resource_controller_kustomize_directory }} > {{ openstack_resource_controller_kustomize_filename }}"
+    chdir: "{{ openstack_resource_controller_kustomize_directory }}"
+    creates: "{{ openstack_resource_controller_kustomize_directory }}/{{ openstack_resource_controller_kustomize_filename }}"
+
+- name: Apply manifest to cluster
+  kubernetes.core.k8s:
+    src: "{{ openstack_resource_controller_kustomize_directory }}/{{ openstack_resource_controller_kustomize_filename }}"
+    apply: true
+    server_side_apply:
+      field_manager: ansible
+      force_conflicts: true
