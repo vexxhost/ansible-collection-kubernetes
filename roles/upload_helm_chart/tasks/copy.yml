@@ -43,7 +43,7 @@
 
     - name: Delete any destination files not in the sources
       vars:
-        s: "{{ multi_copy.files | map('regex_replace', '\\./',  '/') }}"
+        s: "{{ multi_copy.files | map('regex_replace', '\\./', '/') }}"
         d: "{{ destination_files.files | map(attribute='path') | map('regex_replace', upload_helm_chart_dest | realpath, '') }}"
       ansible.builtin.file:
         path: "{{ upload_helm_chart_dest ~ item }}"
