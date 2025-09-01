@@ -1,5 +1,6 @@
 - name: Download all binaries required at runtime for ansible-collection-kubernetes
   hosts: "{{ target | default('all') }}"
+  become: true
   gather_facts: false
   vars:
    # some role defaults use vars only defined in the download_artifact role
@@ -20,11 +21,13 @@
     role_location: "{{ playbook_dir }}/../roles"
   tasks:
     - name: Gather minimal facts
+      become: false
       ansible.builtin.setup:
         gather_subset: min
       delegate_to: localhost
 
     - name: Find all subdirectories in the role location
+      become: false
       ansible.builtin.find:
         file_type: directory
         paths: "{{ role_location }}"
@@ -33,7 +36,8 @@
       delegate_to: localhost
 
     - name: Select only defaults/ directories and load vars
-    # also load vars from download_artifact to get architecture mappings
+      # also load vars from download_artifact to get architecture mappings
+      become: false
       ansible.builtin.include_vars:
         dir: "{{ item }}"
       with_items:
@@ -41,6 +45,7 @@
       delegate_to: localhost
 
     - name: Generate list of all binaries for all roles
+      become: false
       vexxhost.containers.binary_downloads:
         prefixes: "{{ query('varnames', '_download_url$') | map('replace', '_download_url', '') }}"
       register: binaries
