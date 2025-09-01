@@ -19,7 +19,8 @@ kube_vip_enabled: true
 kube_vip_control_plane_group: "{{ kubernetes_control_plane_group | default('controllers') }}"
 
 # Image to use for kube-vip
-kube_vip_image: ghcr.io/kube-vip/kube-vip:v0.6.4
+kube_vip_image_tag: "v0.6.4"
+kube_vip_image: "ghcr.io/kube-vip/kube-vip:{{ kube_vip_image_tag }}"
 
 # Interface to use for kube-vip
 kube_vip_interface: "{{ keepalived_interface | default(kubernetes_keepalived_interface) }}"
