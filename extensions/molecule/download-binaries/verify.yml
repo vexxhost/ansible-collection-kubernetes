@@ -1,0 +1,29 @@
+# Copyright (c) 2023 BBC R&D, Inc.
+# SPDX-License-Identifier: Apache-2.0
+
+- name: Verify
+  hosts: all
+  become: true
+  vars:
+    dir: /var/lib/downloads
+  tasks:
+    - name: Stat target dir
+      ansible.builtin.stat:
+        path: "{{ dir }}"
+      register: _dir_stat
+
+    - name: Assert that target dir is created
+      ansible.builtin.assert:
+        that:
+          - _dir_stat.stat.exists
+          - _dir_stat.stat.isdir
+
+    - name: Find target files
+      ansible.builtin.find:
+        paths: "{{ dir }}"
+      register: _dir_find
+
+    - name: Assert that some files were downloaded
+      ansible.builtin.assert:
+        that:
+          - _dir_find.matched > 0
