@@ -7,4 +7,6 @@ openstack_resource_controller_image: quay.io/orc/openstack-resource-controller
 openstack_resource_controller_image_tag: "v{{ openstack_resource_controller_version }}"
 
 openstack_resource_controller_kustomize_directory: /usr/local/src/openstack-resource-controller
-openstack_resource_controller_kustomize_filename: /usr/local/src/openstack-resource-controller-{{ openstack_resource_controller_version }}.yaml
+
+openstack_resource_controller_build_directory: "/usr/local/src/openstack-resource-controller-{{ openstack_resource_controller_version }}"
+openstack_resource_controller_build_file: "{{ openstack_resource_controller_build_directory }}/manifests.yaml"
