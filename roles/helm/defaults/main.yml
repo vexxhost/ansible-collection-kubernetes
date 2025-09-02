@@ -38,6 +38,6 @@ helm_diff_checksums:
   arm64:
     v3.8.1: d451e4772a3987710f485de4caed760583c88f8f15864a623b3fbd73be7077ec
 
-helm_diff_download_url: "https://github.com/databus23/helm-diff/releases/download/{{ helm_diff_version }}/helm-diff-{{ ansible_facts['system'] | lower }}-{{ download_artifact_goarch }}.tgz" # noqa: yaml[line-length]
-helm_diff_download_dest: "{{ download_artifact_work_directory }}/helm-diff-{{ helm_diff_version }}-{{ ansible_facts['system'] | lower }}-{{ download_artifact_goarch }}.tgz" # noqa: yaml[line-length]
+helm_diff_download_url: "https://github.com/databus23/helm-diff/releases/download/{{ helm_diff_version }}/helm-diff-{{ ansible_facts['system'] | lower }}-{{ download_artifact_goarch }}.tgz" # yamllint disable-line rule:line-length
+helm_diff_download_dest: "{{ download_artifact_work_directory }}/helm-diff-{{ helm_diff_version }}-{{ ansible_facts['system'] | lower }}-{{ download_artifact_goarch }}.tgz" # yamllint disable-line rule:line-length
 helm_diff_checksum: "{{ helm_diff_checksums[download_artifact_goarch][helm_diff_version] }}"

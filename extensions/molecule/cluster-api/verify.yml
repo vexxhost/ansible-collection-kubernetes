@@ -41,7 +41,7 @@
         name: "{{ item.name }}"
         namespace: "{{ item.namespace }}"
       register: _resource_info
-      until: _resource_info.resources | json_query('[*].status.conditions[?reason==`NewReplicaSetAvailable`][].status') | select ('match','True') | list | length == 1
+      until: _resource_info.resources | json_query('[*].status.conditions[?reason==`NewReplicaSetAvailable`][].status') | select ('match','True') | list | length == 1 # yamllint disable-line rule:line-length
       delay: 2
       retries: 5
       loop:
@@ -77,10 +77,10 @@
     - name: Parse provider resources into version mapping
       run_once: true
       ansible.builtin.set_fact:
-        _cluster_api_core_version: "{{ _cluster_api_providers.resources | selectattr('type', 'equalto', 'CoreProvider') | map(attribute='version') | first | regex_replace('^v', '') }}"
-        _cluster_api_bootstrap_version: "{{ _cluster_api_providers.resources | selectattr('type', 'equalto', 'BootstrapProvider') | map(attribute='version') | first | regex_replace('^v', '') }}"
-        _cluster_api_control_plane_version: "{{ _cluster_api_providers.resources | selectattr('type', 'equalto', 'ControlPlaneProvider') | map(attribute='version') | first | regex_replace('^v', '') }}"
-        _cluster_api_infrastructure_version: "{{ _cluster_api_providers.resources | selectattr('type', 'equalto', 'InfrastructureProvider') | map(attribute='version') | first | regex_replace('^v', '') }}"
+        _cluster_api_core_version: "{{ _cluster_api_providers.resources | selectattr('type', 'equalto', 'CoreProvider') | map(attribute='version') | first | regex_replace('^v', '') }}" # yamllint disable-line rule:line-length
+        _cluster_api_bootstrap_version: "{{ _cluster_api_providers.resources | selectattr('type', 'equalto', 'BootstrapProvider') | map(attribute='version') | first | regex_replace('^v', '') }}" # yamllint disable-line rule:line-length
+        _cluster_api_control_plane_version: "{{ _cluster_api_providers.resources | selectattr('type', 'equalto', 'ControlPlaneProvider') | map(attribute='version') | first | regex_replace('^v', '') }}" # yamllint disable-line rule:line-length
+        _cluster_api_infrastructure_version: "{{ _cluster_api_providers.resources | selectattr('type', 'equalto', 'InfrastructureProvider') | map(attribute='version') | first | regex_replace('^v', '') }}" # yamllint disable-line rule:line-length
 
     - name: Assert that the versions are the correct ones
       ansible.builtin.assert:

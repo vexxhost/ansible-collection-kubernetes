@@ -33,7 +33,7 @@ clusterctl_checksums:
     1.8.4: 8fbaa26320fcdd11aa40e1e2ae4889f9743c33744e1d191eec2afca54d34bdbc
     1.10.5: 8831f604a2571947ef19bfa9fd9dcc50b67e42deb6651bb09382e4bca212d795
 
-clusterctl_download_url: "https://github.com/kubernetes-sigs/cluster-api/releases/download/v{{ clusterctl_version }}/clusterctl-linux-{{ download_artifact_goarch }}" # noqa: yaml[line-length]
+clusterctl_download_url: "https://github.com/kubernetes-sigs/cluster-api/releases/download/v{{ clusterctl_version }}/clusterctl-linux-{{ download_artifact_goarch }}" # yamllint disable-line rule:line-length
 clusterctl_download_dest: /usr/local/bin/clusterctl
 clusterctl_binary_checksum: "{{ clusterctl_checksums[download_artifact_goarch][clusterctl_version] }}"
 

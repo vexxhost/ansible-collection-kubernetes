@@ -20,7 +20,7 @@ flux_checksums:
   arm64:
     0.32.0: 6834c6fde64df9883b76c6b3a3111a6d00f88553373b892f363491b0896c0654
 
-flux_download_url: "https://github.com/fluxcd/flux2/releases/download/v{{ flux_version }}/flux_{{ flux_version }}_linux_{{ download_artifact_goarch }}.tar.gz" # noqa: yaml[line-length]
+flux_download_url: "https://github.com/fluxcd/flux2/releases/download/v{{ flux_version }}/flux_{{ flux_version }}_linux_{{ download_artifact_goarch }}.tar.gz" # yamllint disable-line rule:line-length
 flux_download_dest: "{{ download_artifact_work_directory }}/flux-{{ flux_version }}-linux-{{ download_artifact_goarch }}.tar.gz"
 flux_download_unarchive_dest: /usr/bin
 flux_binary_checksum: "{{ flux_checksums[download_artifact_goarch][flux_version] }}"

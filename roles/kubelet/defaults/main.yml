@@ -57,7 +57,7 @@ kubelet_checksums:
     1.32.8: d5527714fac08eac4c1ddcbd8a3c6db35f3acd335d43360219d733273b672cce
     1.33.4: 623329b1a5f4858e3a5406d3947807b75144f4e71dde11ef1a71362c3a8619cc
 
-kubelet_download_url: "https://cdn.dl.k8s.io/release/v{{ kubelet_version }}/bin/{{ ansible_facts['system'] | lower }}/{{ download_artifact_goarch }}/kubelet" # noqa: yaml[line-length]
+kubelet_download_url: "https://cdn.dl.k8s.io/release/v{{ kubelet_version }}/bin/{{ ansible_facts['system'] | lower }}/{{ download_artifact_goarch }}/kubelet" # yamllint disable-line rule:line-length
 kubelet_download_dest: /usr/bin/kubelet
 kubelet_binary_checksum: "{{ kubelet_checksums[download_artifact_goarch][kubelet_version] }}"
 

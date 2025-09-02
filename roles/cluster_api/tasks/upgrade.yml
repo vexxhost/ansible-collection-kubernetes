@@ -5,10 +5,10 @@
 - name: Parse provider resources into version mapping
   run_once: true
   ansible.builtin.set_fact:
-    cluster_api_installed_core_version: "{{ cluster_api_providers.resources | selectattr('type', 'equalto', 'CoreProvider') | map(attribute='version') | first | regex_replace('^v', '') }}" # noqa: yaml[line-length]
-    cluster_api_installed_bootstrap_version: "{{ cluster_api_providers.resources | selectattr('type', 'equalto', 'BootstrapProvider') | map(attribute='version') | first | regex_replace('^v', '') }}" # noqa: yaml[line-length]
-    cluster_api_installed_control_plane_version: "{{ cluster_api_providers.resources | selectattr('type', 'equalto', 'ControlPlaneProvider') | map(attribute='version') | first | regex_replace('^v', '') }}" # noqa: yaml[line-length]
-    cluster_api_installed_infrastructure_version: "{{ cluster_api_providers.resources | selectattr('type', 'equalto', 'InfrastructureProvider') | map(attribute='version') | first | regex_replace('^v', '') }}" # noqa: yaml[line-length]
+    cluster_api_installed_core_version: "{{ cluster_api_providers.resources | selectattr('type', 'equalto', 'CoreProvider') | map(attribute='version') | first | regex_replace('^v', '') }}" # yamllint disable-line rule:line-length
+    cluster_api_installed_bootstrap_version: "{{ cluster_api_providers.resources | selectattr('type', 'equalto', 'BootstrapProvider') | map(attribute='version') | first | regex_replace('^v', '') }}" # yamllint disable-line rule:line-length
+    cluster_api_installed_control_plane_version: "{{ cluster_api_providers.resources | selectattr('type', 'equalto', 'ControlPlaneProvider') | map(attribute='version') | first | regex_replace('^v', '') }}" # yamllint disable-line rule:line-length
+    cluster_api_installed_infrastructure_version: "{{ cluster_api_providers.resources | selectattr('type', 'equalto', 'InfrastructureProvider') | map(attribute='version') | first | regex_replace('^v', '') }}" # yamllint disable-line rule:line-length
 
 - name: Run upgrade if required
   run_once: true
