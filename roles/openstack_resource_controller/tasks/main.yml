@@ -5,11 +5,17 @@
   ansible.builtin.file:
     path: "{{ openstack_resource_controller_build_directory }}"
     state: directory
+    mode: "0755"
+    owner: root
+    group: root
 
 - name: Upload Kustomization
   ansible.builtin.template:
     src: kustomization.yaml.j2
     dest: "{{ openstack_resource_controller_build_directory }}/kustomization.yaml"
+    mode: "0644"
+    owner: root
+    group: root
 
 - name: Generate manifests
   ansible.builtin.shell:
