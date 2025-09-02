@@ -12,6 +12,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+---
 - name: Retrieve the "kubeadm-config" ConfigMap
   run_once: true
   ignore_errors: true
@@ -30,12 +31,12 @@
     - name: Parse the ClusterConfiguration
       run_once: true
       ansible.builtin.set_fact:
-        kubernetes_upgrade_check_cluster_configuration: "{{ kubernetes_upgrade_check_kubeadm_config.resources[0].data.ClusterConfiguration | from_yaml }}" # noqa: yaml[line-length]
+        kubernetes_upgrade_check_cluster_configuration: "{{ kubernetes_upgrade_check_kubeadm_config.resources[0].data.ClusterConfiguration | from_yaml }}" # yamllint disable-line rule:line-length
 
     - name: Retrieve the current Kubernetes version
       run_once: true
       ansible.builtin.set_fact:
-        kubernetes_upgrade_check_cluster_version: "{{ kubernetes_upgrade_check_cluster_configuration.kubernetesVersion | regex_replace('^v', '') }}" # noqa: yaml[line-length]
+        kubernetes_upgrade_check_cluster_version: "{{ kubernetes_upgrade_check_cluster_configuration.kubernetesVersion | regex_replace('^v', '') }}" # yamllint disable-line rule:line-length
 
     - name: Extract major, minor, and patch versions
       run_once: true
@@ -54,7 +55,7 @@
           version. Please upgrade to the next minor version first.
       when:
         - kubernetes_upgrade_check_desired_major == kubernetes_upgrade_check_current_major
-        - ((kubernetes_upgrade_check_desired_minor | int) > (kubernetes_upgrade_check_current_minor | int + 1)) or (kubernetes_upgrade_check_desired_minor < kubernetes_upgrade_check_current_minor)  # noqa: yaml[line-length]
+        - ((kubernetes_upgrade_check_desired_minor | int) > (kubernetes_upgrade_check_current_minor | int + 1)) or (kubernetes_upgrade_check_desired_minor < kubernetes_upgrade_check_current_minor) # yamllint disable-line rule:line-length
 
     - name: Set fact if we need to upgrade
       ansible.builtin.set_fact:

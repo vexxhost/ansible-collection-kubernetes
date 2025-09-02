@@ -1,0 +1,66 @@
+---
+- name: Download all binaries required at runtime for ansible-collection-kubernetes
+  hosts: "{{ target | default('all') }}"
+  become: true
+  gather_facts: false
+  vars:
+   # some role defaults use vars only defined in the download_artifact role
+    _download_artifact_goarch_groups:
+      x86_64: amd64
+      aarch64: arm64
+      armv7l: arm
+
+    download_artifact_goarch: >-
+      {%- if ansible_facts['architecture'] in _download_artifact_goarch_groups -%}
+      {{ _download_artifact_goarch_groups[ansible_facts['architecture']] }}
+      {%- else -%}
+      {{ ansible_facts['architecture'] }}
+      {%- endif -%}
+
+    download_artifact_work_directory: /var/lib/downloads
+
+    role_location: "{{ playbook_dir }}/../roles"
+  tasks:
+    - name: Gather minimal facts
+      become: false
+      ansible.builtin.setup:
+        gather_subset: min
+      delegate_to: localhost
+
+    - name: Find all subdirectories in the role location
+      become: false
+      ansible.builtin.find:
+        file_type: directory
+        paths: "{{ role_location }}"
+        recurse: true
+      register: role_paths
+      delegate_to: localhost
+
+    - name: Select only defaults/ directories and load vars
+      # also load vars from download_artifact to get architecture mappings
+      become: false
+      ansible.builtin.include_vars:
+        dir: "{{ item }}"
+      with_items:
+        - "{{ role_paths.files | selectattr('path', 'search', 'defaults') | map(attribute='path') }}"
+      delegate_to: localhost
+
+    - name: Generate list of all binaries for all roles
+      become: false
+      vexxhost.containers.binary_downloads:
+        prefixes: "{{ query('varnames', '_download_url$') | map('replace', '_download_url', '') }}"
+      register: binaries
+      delegate_to: localhost
+
+    - name: Include download_artifact role
+      ansible.builtin.include_role:
+        name: vexxhost.containers.download_artifact
+      vars:
+        download_artifact_url: "{{ item.url }}"
+        download_artifact_dest: "{{ item.dest }}"
+        download_artifact_checksum: "sha256:{{ item.checksum }}"
+        download_artifact_owner: "{{ ansible_user }}"
+        download_artifact_mode: "0755"
+        download_artifact_unarchive: false
+        download_artifact_no_log: false
+      with_items: "{{ binaries.downloads }}"

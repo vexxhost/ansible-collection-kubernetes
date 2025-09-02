@@ -12,6 +12,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+---
 kubectl_checksums:
   amd64:
     1.19.16: 6b9d9315877c624097630ac3c9a13f1f7603be39764001da7a080162f85cbc7e
@@ -56,7 +57,7 @@ kubectl_checksums:
     1.32.8: 8a7371e54187249389a9aa222b150d61a4a745c121ab24dbcbb56d1ac2d0b912
     1.33.4: 76cd7a2aa59571519b68c3943521404cbce55dafb7d8866f8d0ea2995b396eef
 
-kubectl_download_url: "https://cdn.dl.k8s.io/release/v{{ kubectl_version }}/bin/{{ ansible_facts['system'] | lower }}/{{ download_artifact_goarch }}/kubectl" # noqa: yaml[line-length]
+kubectl_download_url: "https://cdn.dl.k8s.io/release/v{{ kubectl_version }}/bin/{{ ansible_facts['system'] | lower }}/{{ download_artifact_goarch }}/kubectl" # yamllint disable-line rule:line-length
 kubectl_download_dest: /usr/bin/kubectl
 kubectl_binary_checksum: "{{ kubectl_checksums[download_artifact_goarch][kubectl_version] }}"
 

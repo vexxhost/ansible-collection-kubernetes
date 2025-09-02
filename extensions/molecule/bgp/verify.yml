@@ -1,6 +1,7 @@
 # Copyright (c) 2024 VEXXHOST, Inc.
 # SPDX-License-Identifier: Apache-2.0
 
+---
 - ansible.builtin.import_playbook: ../kubernetes/verify.yml
 
 - name: verify BGP

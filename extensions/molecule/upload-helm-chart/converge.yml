@@ -12,10 +12,11 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+---
 - name: Converge
   hosts: all
   become: true
   roles:
     - role: test-role
       vars:
-        test_relative_path : "chart-v1/"
+        test_relative_path: "chart-v1/"

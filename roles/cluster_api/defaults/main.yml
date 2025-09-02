@@ -1,6 +1,7 @@
 # Copyright (c) 2025 VEXXHOST, Inc.
 # SPDX-License-Identifier: Apache-2.0
 
+---
 # See: https://github.com/kubernetes-sigs/cluster-api/issues/3982
 cluster_api_github_token: ""
 

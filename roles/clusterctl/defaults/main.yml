@@ -12,7 +12,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-
+---
 # clusterctl_version:
 
 clusterctl_checksums:
@@ -35,7 +35,7 @@ clusterctl_checksums:
     1.9.6: 49e80b6d6ac8ec4cf916ad434b12e703cd87b3edd3ee853b80da2510e6839d34
     1.10.5: 8831f604a2571947ef19bfa9fd9dcc50b67e42deb6651bb09382e4bca212d795
 
-clusterctl_download_url: "https://github.com/kubernetes-sigs/cluster-api/releases/download/v{{ clusterctl_version }}/clusterctl-linux-{{ download_artifact_goarch }}" # noqa: yaml[line-length]
+clusterctl_download_url: "https://github.com/kubernetes-sigs/cluster-api/releases/download/v{{ clusterctl_version }}/clusterctl-linux-{{ download_artifact_goarch }}" # yamllint disable-line rule:line-length
 clusterctl_download_dest: /usr/local/bin/clusterctl
 clusterctl_binary_checksum: "{{ clusterctl_checksums[download_artifact_goarch][clusterctl_version] }}"
 

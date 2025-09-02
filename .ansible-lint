@@ -3,8 +3,7 @@ exclude_paths:
   - .ansible
   - .github
   - molecule
-  - roles/cluster_api/files/providers
-  - roles/cert_manager/files/chart
-  - roles/cilium/files/chart
+
 skip_list:
   - role-name
+  - yaml

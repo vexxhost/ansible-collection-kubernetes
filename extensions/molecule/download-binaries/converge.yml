@@ -1,0 +1,8 @@
+# Copyright (c) 2024 BBC R&D, Inc.
+# SPDX-License-Identifier: Apache-2.0
+
+---
+- name: include playbook
+  ansible.builtin.import_playbook: vexxhost.kubernetes.download_binaries
+  vars:
+    target: all

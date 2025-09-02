@@ -1,3 +1,4 @@
+---
 - nodeset:
     name: debian-13-single-node
     nodes:
@@ -135,6 +136,12 @@
     voting: false
 
 - job:
+    name: ansible-collection-kubernetes-molecule-download-binaries
+    parent: ansible-collection-kubernetes-molecule
+    vars:
+      molecule_scenario: download-binaries
+
+- job:
     name: ansible-collection-kubernetes-molecule-ha
     parent: ansible-collection-kubernetes-molecule
     nodeset: debian-13-triple-node
@@ -169,6 +176,7 @@
         - ansible-collection-kubernetes-molecule-bgp
         - ansible-collection-kubernetes-molecule-cluster-api
         - ansible-collection-kubernetes-molecule-cluster-upgrade
+        - ansible-collection-kubernetes-molecule-download-binaries
         - ansible-collection-kubernetes-molecule-ha
         - ansible-collection-kubernetes-molecule-helm
         - ansible-collection-kubernetes-molecule-upload-helm-chart
@@ -183,6 +191,7 @@
         - ansible-collection-kubernetes-molecule-bgp
         - ansible-collection-kubernetes-molecule-cluster-api
         - ansible-collection-kubernetes-molecule-cluster-upgrade
+        - ansible-collection-kubernetes-molecule-download-binaries
         - ansible-collection-kubernetes-molecule-ha
         - ansible-collection-kubernetes-molecule-helm
         - ansible-collection-kubernetes-molecule-upload-helm-chart

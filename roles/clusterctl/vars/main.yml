@@ -12,6 +12,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+---
 _clusterctl_merged_config: "{{ clusterctl_config | combine(_clusterctl_config, recursive=True) }}"
 _clusterctl_config_content: "{{ _clusterctl_merged_config | ansible.builtin.to_nice_yaml }}"
 

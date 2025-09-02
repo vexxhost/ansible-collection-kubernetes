@@ -12,6 +12,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+---
 - name: Get current Kubernetes version
   run_once: true
   kubernetes.core.k8s_cluster_info:
