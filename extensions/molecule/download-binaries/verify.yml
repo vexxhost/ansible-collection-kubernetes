@@ -1,6 +1,7 @@
 # Copyright (c) 2023 BBC R&D, Inc.
 # SPDX-License-Identifier: Apache-2.0
 
+---
 - name: Verify
   hosts: all
   become: true

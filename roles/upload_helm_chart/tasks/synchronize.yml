@@ -12,6 +12,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+---
 - name: Upload Helm chart
   run_once: true
   # NOTE(mnaser): https://github.com/ansible-collections/ansible.posix/issues/381

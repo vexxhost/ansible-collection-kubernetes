@@ -1,3 +1,4 @@
+---
 namespace: vexxhost
 name: kubernetes
 version: 2.3.1

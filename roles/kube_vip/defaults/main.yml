@@ -12,6 +12,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+---
 # Enable kube-vip
 kube_vip_enabled: true
 

@@ -12,6 +12,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+---
 - name: Gather variables for each operating system
   ansible.builtin.include_vars: "{{ item }}"
   with_first_found:

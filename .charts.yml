@@ -1,3 +1,4 @@
+---
 charts:
   - name: cert-manager
     directory: chart

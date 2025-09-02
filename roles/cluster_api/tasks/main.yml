@@ -1,6 +1,7 @@
 # Copyright (c) 2025 VEXXHOST, Inc.
 # SPDX-License-Identifier: Apache-2.0
 
+---
 - name: Create a folder for the Cluster API providers
   ansible.builtin.file:
     path: "{{ cluster_api_provider_path }}"

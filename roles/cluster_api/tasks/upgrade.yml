@@ -1,6 +1,7 @@
 # Copyright (c) 2025 VEXXHOST, Inc.
 # SPDX-License-Identifier: Apache-2.0
 
+---
 - name: Parse provider resources into version mapping
   run_once: true
   ansible.builtin.set_fact:

@@ -12,6 +12,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+---
 keepalived_image_tag: "2.0.19"
 keepalived_image: "us-docker.pkg.dev/vexxhost-infra/openstack/keepalived:{{ keepalived_image_tag }}"
 

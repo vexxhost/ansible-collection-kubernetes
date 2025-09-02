@@ -1,3 +1,4 @@
+---
 - name: Download all binaries required at runtime for ansible-collection-kubernetes
   hosts: "{{ target | default('all') }}"
   become: true

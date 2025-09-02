@@ -12,6 +12,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+---
 - name: Configure Kubernetes VIP
   hosts: "{{ kubernetes_control_plane_group | default('controllers') }}"
   become: true

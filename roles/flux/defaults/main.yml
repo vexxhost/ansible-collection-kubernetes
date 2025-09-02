@@ -12,6 +12,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+---
 flux_version: 0.32.0
 flux_checksums:
   amd64:

@@ -1,3 +1,4 @@
+---
 site_name: Ansible collection for Kubernetes
 theme:
   name: material

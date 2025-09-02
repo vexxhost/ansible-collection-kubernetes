@@ -1,3 +1,4 @@
+---
 - name: Install Flux to cluster
   run_once: true
   changed_when: false

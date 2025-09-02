@@ -1,6 +1,7 @@
 # Copyright (c) 2025 VEXXHOST, Inc.
 # SPDX-License-Identifier: Apache-2.0
 
+---
 _cluster_api_environment: |
   {% set res = {'CLUSTER_TOPOLOGY': 'true', 'EXP_CLUSTER_RESOURCE_SET': 'true'} -%}
   {% if cluster_api_github_token %}

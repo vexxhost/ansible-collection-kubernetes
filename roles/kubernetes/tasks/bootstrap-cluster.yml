@@ -12,6 +12,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+---
 - name: Determine node to use for bootstrapping cluster
   block:
     - name: Check if any control plane is bootstrapped

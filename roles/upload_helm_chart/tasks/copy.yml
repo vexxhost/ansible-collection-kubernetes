@@ -12,6 +12,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+---
 - name: Copy without using synchronize module
   run_once: true
   block:

@@ -12,6 +12,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+---
 - name: Upload configuration
   ansible.builtin.template:
     src: keepalived.conf.j2

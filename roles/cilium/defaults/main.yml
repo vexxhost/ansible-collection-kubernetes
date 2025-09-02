@@ -1,3 +1,4 @@
+---
 cilium_helm_release_name: cilium
 cilium_helm_chart_path: "chart/"
 cilium_helm_chart_ref: /usr/local/src/cilium

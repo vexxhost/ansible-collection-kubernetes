@@ -12,6 +12,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+---
 - name: Check if Kubernetes is already deployed
   ansible.builtin.stat:
     path: /etc/kubernetes/kubelet.conf

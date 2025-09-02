@@ -1,6 +1,7 @@
 # Copyright (c) 2025 VEXXHOST, Inc.
 # SPDX-License-Identifier: Apache-2.0
 
+---
 - name: Deploy Helm chart
   run_once: true
   kubernetes.core.helm:

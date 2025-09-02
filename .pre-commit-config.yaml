@@ -1,4 +1,5 @@
-exclude: '^(roles/cluster_api/files/providers|roles/(cilium|cert_manager)/files/chart|.ansible)'
+---
+exclude: '^(roles/cluster_api/files/providers|roles/(cilium|cert_manager)/files/chart)'
 
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
@@ -22,6 +23,11 @@ repos:
     hooks:
       - id: isort
         args: ["--profile", "black", "--filter-files"]
+
+  - repo: https://github.com/adrienverge/yamllint.git
+    rev: v1.37.1
+    hooks:
+      - id: yamllint
 
   - repo: https://github.com/ansible/ansible-lint.git
     rev: v25.6.1

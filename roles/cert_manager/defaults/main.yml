@@ -1,6 +1,7 @@
 # Copyright (c) 2025 VEXXHOST, Inc.
 # SPDX-License-Identifier: Apache-2.0
 
+---
 cert_manager_helm_chart_path: "chart/"
 cert_manager_helm_chart_ref: /usr/local/src/cert-manager
 
