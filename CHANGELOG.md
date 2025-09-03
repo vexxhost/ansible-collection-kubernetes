@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.3.2](https://github.com/vexxhost/ansible-collection-kubernetes/compare/v2.3.1...v2.3.2) (2025-09-03)
+
+
+### Dependencies
+
+* upgrade the min k8s collection requirement ([#194](https://github.com/vexxhost/ansible-collection-kubernetes/issues/194)) ([95fa775](https://github.com/vexxhost/ansible-collection-kubernetes/commit/95fa775674c8bc0793436f3631deac61ec392487))
+
 ## [2.3.1](https://github.com/vexxhost/ansible-collection-kubernetes/compare/v2.3.0...v2.3.1) (2025-07-30)
 
 
