@@ -34,3 +34,7 @@ dependencies:
         - name: openstack
           type: InfrastructureProvider
           url: "{{ cluster_api_provider_path }}/infrastructure-{{ cluster_api_infrastructure_provider }}/v{{ cluster_api_infrastructure_version }}/infrastructure-components.yaml" # yamllint disable-line rule:line-length
+  - role: vexxhost.kubernetes.openstack_resource_controller
+    when:
+      - cluster_api_infrastructure_provider == "openstack"
+      - cluster_api_infrastructure_version is version('0.12.0', '>=')

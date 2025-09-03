@@ -1,0 +1,7 @@
+resources:
+- ../openstack-resource-controller/default
+
+images:
+- name: controller
+  newName: {{ openstack_resource_controller_image }}
+  newTag: {{ openstack_resource_controller_image_tag }}

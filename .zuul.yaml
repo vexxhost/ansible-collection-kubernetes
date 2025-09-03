@@ -114,7 +114,7 @@
         clusterctl_version: 1.10.5
         cluster_api_version: 1.10.5
         cluster_api_infrastructure_provider: openstack
-        cluster_api_infrastructure_version: 0.11.6
+        cluster_api_infrastructure_version: 0.12.4
         cluster_api_node_selector:
           kubernetes.io/os: linux
 

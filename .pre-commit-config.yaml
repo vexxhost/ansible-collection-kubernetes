@@ -1,5 +1,4 @@
----
-exclude: '^(roles/cluster_api/files/providers|roles/(cilium|cert_manager)/files/chart)'
+exclude: '^(roles/cluster_api/files/providers|roles/(cilium|cert_manager)/files/chart|roles/openstack_resource_controller/files/kustomize/.*|vendir.lock.yml)'
 
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
