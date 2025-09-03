@@ -11411,7 +11411,7 @@ spec:
         - --insecure-diagnostics=true
         command:
         - /manager
-        image: registry.k8s.io/capi-openstack/capi-openstack-controller:v0.12.2
+        image: registry.k8s.io/capi-openstack/capi-openstack-controller:v0.12.4
         imagePullPolicy: IfNotPresent
         livenessProbe:
           httpGet:
