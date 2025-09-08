@@ -41,7 +41,7 @@ extract_existing_checksums() {
 		$0 ~ component { in_checksums=1; next }
 		in_checksums && /^[a-zA-Z_]+_/ && !/^  / { in_checksums=0 }
 		in_checksums && /^  [a-z0-9]+:/ { arch=$1; gsub(/:/, "", arch); current_arch=arch; next }
-		in_checksums && /^    [0-9.]+:/ { 
+		in_checksums && /^    [0-9.]+:/ {
 			version=$1; gsub(/:/, "", version);
 			checksum=$2;
 			print current_arch ":" version ":" checksum
@@ -63,7 +63,7 @@ for component_pair in $COMPONENTS; do
 	echo "${component}_checksums:" > "${yaml_file}.new"
 	for arch in "${ARCHES[@]}"; do
 		echo "  $arch:" >> "${yaml_file}.new"
-		
+
 		# Get all versions (existing + new maintained ones) and sort them properly
 		all_versions=$(
 			{
@@ -71,14 +71,14 @@ for component_pair in $COMPONENTS; do
 				awk -F: -v arch="$arch" '$1 == arch {print $2}' "$existing_checksums_file"
 			} | sort -V | uniq
 		)
-		
+
 		for version in $all_versions; do
 			# Check if we have an existing checksum
 			existing_checksum=$(awk -F: -v arch="$arch" -v ver="$version" '$1 == arch && $2 == ver {print $3}' "$existing_checksums_file")
-			
+
 			# Always fetch the online checksum to verify
 			online_checksum=$(fetch_checksum "$component" "$version" "$arch")
-			
+
 			if [[ -n "$online_checksum" ]]; then
 				if [[ -n "$existing_checksum" ]]; then
 					if [[ "$existing_checksum" != "$online_checksum" ]]; then
@@ -101,21 +101,21 @@ for component_pair in $COMPONENTS; do
 	# Replace old checksums block in YAML file
 	# First, extract everything before checksums (including comments and headers)
 	awk '/^[a-zA-Z_]+_checksums:/ {exit} {print}' "$yaml_file" > "${yaml_file}.tmp"
-	
+
 	# Add new checksums
 	cat "${yaml_file}.new" >> "${yaml_file}.tmp"
-	
+
 	# Add blank line after checksums
 	echo "" >> "${yaml_file}.tmp"
-	
+
 	# Add everything after checksums block
 	awk '
 		BEGIN { after_checksums = 0 }
-		/^[a-zA-Z_]+_checksums:/ { 
+		/^[a-zA-Z_]+_checksums:/ {
 			in_checksums = 1
-			next 
+			next
 		}
-		in_checksums && /^[a-zA-Z_]+/ && !/^  / { 
+		in_checksums && /^[a-zA-Z_]+/ && !/^  / {
 			after_checksums = 1
 			in_checksums = 0
 		}

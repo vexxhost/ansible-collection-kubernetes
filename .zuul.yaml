@@ -52,7 +52,7 @@
     abstract: true
     nodeset: debian-13-single-node
     vars:
-      kubernetes_version: 1.33.4
+      kubernetes_version: 1.34.0
     group-vars:
       all:
         cilium_helm_values:
@@ -124,8 +124,8 @@
     nodeset: debian-13-triple-node
     vars:
       molecule_scenario: cluster-upgrade
-      old_kubernetes_version: 1.32.8
-      kubernetes_version: 1.33.4
+      old_kubernetes_version: 1.33.4
+      kubernetes_version: 1.34.0
     group-vars:
       controllers:
         # NOTE(mnaser): Since we're running in clouds, we use the first controller IP
