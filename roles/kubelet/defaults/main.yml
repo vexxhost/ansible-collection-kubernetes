@@ -1,16 +1,5 @@
-# Copyright (c) 2023 VEXXHOST, Inc.
-#
-# Licensed under the Apache License, Version 2.0 (the "License"); you may
-# not use this file except in compliance with the License. You may obtain
-# a copy of the License at
-#
-#      http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
-# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
-# License for the specific language governing permissions and limitations
-# under the License.
+# Copyright (c) 2025 VEXXHOST, Inc.
+# SPDX-License-Identifier: Apache-2.0
 
 ---
 kubelet_checksums:
@@ -31,10 +20,12 @@ kubelet_checksums:
     1.27.16: 1b390641b47c6f9265ed8d19b48a8aa334ac28c825ad7ee8201717a5d9e8b759
     1.28.4: db2a473b73c3754d4011590f2f0aa877657608499590c6b0f8b40bec96a3e9ba
     1.28.13: 9b9cc3a19551ade6f3d98ad3acf0a2b65a27ef575bd089f115f8bb80791f3900
+    1.29.15: cd0228a5820f98bbb6371344e5d6645f6486d767c30f927a1d0ec8d17eca4da5
     1.30.14: 46baa60748b179164e80f5565d99dad642d554fb431925d211ffa921b917d5c7
     1.31.12: 43f4a2ff9d5f40419f74977ed6e1939c4f8db51b0f2e63a98546e146d683c299
     1.32.8: 7dfca4da9cdf592c0f70800e09fb42553765bc0951cade3d6e0c571daf3f23ee
     1.33.4: 109bd2607b054a477ede31c55ae814eae8e75543126dc4cea40b04424d843489
+    1.34.0: 5c0d28cea2a3a5c91861dda088a29d56c1b027e184dae1d792686f0710750076
   arm64:
     1.19.16: 6e51cc1f16259b1016858f32bd48f44929b8330a26eb4da26929907872ab116f
     1.20.15: 8e3f08018fb66ee8b01d468779dc88608ce86f7a8bada85b5c5ddaae0280aeca
@@ -52,10 +43,12 @@ kubelet_checksums:
     1.27.16: 2d3cfefc64e1ff5f1e1b8bcba0589a4a9b247f7bcd43cb78645f346687cbbef3
     1.28.4: bf203989dd9b3987b8a0d2331dcce6319f834b57df810fafba5a4805d54823ac
     1.28.13: e1c222cfe7ba457e0b3dc54bbe6149231586e2031e4e0ffddd6e34836e80acea
+    1.29.15: 6bba172d4712fd3d01c6df319db7752a57b47aeea1856b23b3d65a0122a346ce
     1.30.14: b70b2dbd8ab4e64deb8522eaf7eb01f038abba3cfad3b7dd20a9e354bbc1b9a5
     1.31.12: 3dab6925a2beb59fbfa7df2897e001af95886145f556cafdbde8c4facd7ca516
     1.32.8: d5527714fac08eac4c1ddcbd8a3c6db35f3acd335d43360219d733273b672cce
     1.33.4: 623329b1a5f4858e3a5406d3947807b75144f4e71dde11ef1a71362c3a8619cc
+    1.34.0: e45a7795391cd62ee226666039153832d3096c0f892266cd968936e18b2b40b0
 
 kubelet_download_url: "https://cdn.dl.k8s.io/release/v{{ kubelet_version }}/bin/{{ ansible_facts['system'] | lower }}/{{ download_artifact_goarch }}/kubelet" # yamllint disable-line rule:line-length
 kubelet_download_dest: /usr/bin/kubelet

@@ -1,16 +1,5 @@
-# Copyright (c) 2023 VEXXHOST, Inc.
-#
-# Licensed under the Apache License, Version 2.0 (the "License"); you may
-# not use this file except in compliance with the License. You may obtain
-# a copy of the License at
-#
-#      http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
-# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
-# License for the specific language governing permissions and limitations
-# under the License.
+# Copyright (c) 2025 VEXXHOST, Inc.
+# SPDX-License-Identifier: Apache-2.0
 
 ---
 kubectl_checksums:
@@ -31,10 +20,12 @@ kubectl_checksums:
     1.27.16: 97ea7cd771d0c6e3332614668a40d2c5996f0053ff11b44b198ea84dba0818cb
     1.28.4: 893c92053adea6edbbd4e959c871f5c21edce416988f968bec565d115383f7b8
     1.28.13: d7d363dd5a4c95444329bc5239b8718ebe84a043052958b2f15ee2feef9a28c6
+    1.29.15: 3473e14c7b024a6e5403c6401b273b3faff8e5b1fed022d633815eb3168e4516
     1.30.14: 7ccac981ece0098284d8961973295f5124d78eab7b89ba5023f35591baa16271
     1.31.12: cf609add577be9c898c52027e800a008331d6b2a202ecc61413e847f7a12ccd0
     1.32.8: 0fc709a8262be523293a18965771fedfba7466eda7ab4337feaa5c028aa46b1b
     1.33.4: c2ba72c115d524b72aaee9aab8df8b876e1596889d2f3f27d68405262ce86ca1
+    1.34.0: cfda68cba5848bc3b6c6135ae2f20ba2c78de20059f68789c090166d6abc3e2c
   arm64:
     1.19.16: 6ad55694db34b9ffbc3cb41761a50160eea0a962eb86899410593931b4e602d0
     1.20.15: d479febfb2e967bd86240b5c0b841e40e39e1ef610afd6f224281a23318c13dc
@@ -52,10 +43,12 @@ kubectl_checksums:
     1.27.16: 2f50cb29d73f696ffb57437d3e2c95b22c54f019de1dba19e2b834e0b4501eb9
     1.28.4: edf1e17b41891ec15d59dd3cc62bcd2cdce4b0fd9c2ee058b0967b17534457d7
     1.28.13: a22d234724b82101e1f17e95ab60e0e13c91a0fe17ad0890b3d92681cd551bfa
+    1.29.15: a41984dc0ff34ee05f1283ebd9b3121c003b3469b97214738246faa5b6788f7c
     1.30.14: a32e46ae15fe41292dc6a7cd76beba7104282a5a3fa9e3686319000a537f4f5d
     1.31.12: 1c2cc071a6522682f645c5987c0601be92c14848c5123473904e5ede0721039b
     1.32.8: 8a7371e54187249389a9aa222b150d61a4a745c121ab24dbcbb56d1ac2d0b912
     1.33.4: 76cd7a2aa59571519b68c3943521404cbce55dafb7d8866f8d0ea2995b396eef
+    1.34.0: 00b182d103a8a73da7a4d11e7526d0543dcf352f06cc63a1fde25ce9243f49a0
 
 kubectl_download_url: "https://cdn.dl.k8s.io/release/v{{ kubectl_version }}/bin/{{ ansible_facts['system'] | lower }}/{{ download_artifact_goarch }}/kubectl" # yamllint disable-line rule:line-length
 kubectl_download_dest: /usr/bin/kubectl
