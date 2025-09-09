@@ -6,14 +6,42 @@
 set -eo pipefail
 
 # This script bumps Kubernetes component versions and checksums in defaults/main.yml files
-# for kubeadm, kubectl, and kubelet roles. It uses maintained versions from endoflife.date
+# for kubeadm, kubectl, and kubelet roles. It uses versions from endoflife.date
 # and fetches checksums from the official Kubernetes release site.
 
-# Maintained versions
-VERSIONS=$(curl -s https://endoflife.date/api/v1/products/kubernetes | jq -r '.result.releases[] | select(.isMaintained == true).latest.name' | sort -V)
+# Advanced version selection starting from 1.19.16
+# For 1.19: only include 1.19.16
+# For 1.20+: include all patch versions from .0 to latest
+get_kubernetes_versions() {
+	local releases_json=$(curl -s https://endoflife.date/api/v1/products/kubernetes)
 
-# Display the maintained Kubernetes versions
-echo "Maintained Kubernetes versions:"
+	# Get all release cycles starting from 1.19 onwards
+	local cycles=$(echo "$releases_json" | jq -r '.result.releases[] | select(.name | test("^1\\.(1[9]|[2-9][0-9])$")) | "\(.name):\(.latest.name)"')
+
+	local versions=()
+
+	while IFS=: read -r minor_version latest_version; do
+		local latest_patch=$(echo "$latest_version" | cut -d. -f3)
+
+		if [[ "$minor_version" == "1.19" ]]; then
+			# For 1.19, only include 1.19.16
+			versions+=("1.19.16")
+		else
+			# For 1.20+, include all patches from .0 to latest
+			for ((patch=0; patch<=latest_patch; patch++)); do
+				versions+=("$minor_version.$patch")
+			done
+		fi
+	done <<< "$cycles"
+
+	# Remove duplicates and sort
+	printf '%s\n' "${versions[@]}" | sort -V | uniq
+}
+
+VERSIONS=$(get_kubernetes_versions)
+
+# Display available Kubernetes versions
+echo "Available Kubernetes versions:"
 for version in $VERSIONS; do
 	echo "  - $version"
 done
@@ -64,7 +92,7 @@ for component_pair in $COMPONENTS; do
 	for arch in "${ARCHES[@]}"; do
 		echo "  $arch:" >> "${yaml_file}.new"
 
-		# Get all versions (existing + new maintained ones) and sort them properly
+		# Get all versions (existing + new ones) and sort them properly
 		all_versions=$(
 			{
 				echo "$VERSIONS"
