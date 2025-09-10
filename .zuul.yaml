@@ -139,6 +139,7 @@
     name: ansible-collection-kubernetes-molecule-download-binaries
     parent: ansible-collection-kubernetes-molecule
     vars:
+      ci: true
       molecule_scenario: download-binaries
 
 - job:

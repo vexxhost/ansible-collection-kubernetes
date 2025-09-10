@@ -45,6 +45,36 @@
         - "{{ role_paths.files | selectattr('path', 'search', 'defaults') | map(attribute='path') }}"
       delegate_to: localhost
 
+    - name: Find all components with checksums and get latest versions (CI)
+      become: false
+      ansible.builtin.set_fact:
+        "{{ item | regex_replace('_checksums$', '_version') }}": >-
+          {{
+            vars[item][download_artifact_goarch].keys() |
+            list |
+            community.general.version_sort |
+            last
+          }}
+      loop: "{{ query('varnames', '_checksums$') }}"
+      delegate_to: localhost
+      when: ci | default(false) | bool
+
+    - name: Filter checksums to keep only latest versions (CI)
+      become: false
+      ansible.builtin.set_fact:
+        "{{ item }}": >-
+          {%- set component_name = item | regex_replace('_checksums$', '') -%}
+          {%- set latest_version = vars[component_name + '_version'] -%}
+          {%- set original_checksums = vars[item] -%}
+          {%- set filtered_checksums = {} -%}
+          {%- for arch in original_checksums.keys() -%}
+            {%- set _ = filtered_checksums.update({arch: {latest_version: original_checksums[arch][latest_version]}}) -%}
+          {%- endfor -%}
+          {{ filtered_checksums }}
+      loop: "{{ query('varnames', '_checksums$') }}"
+      delegate_to: localhost
+      when: ci | default(false) | bool
+
     - name: Generate list of all binaries for all roles
       become: false
       vexxhost.containers.binary_downloads:
