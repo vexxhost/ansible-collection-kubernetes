@@ -1,5 +1,17 @@
 # Changelog
 
+## [2.4.0](https://github.com/vexxhost/ansible-collection-kubernetes/compare/v2.3.2...v2.4.0) (2025-09-19)
+
+
+### Features
+
+* add script for k8s version bump ([#197](https://github.com/vexxhost/ansible-collection-kubernetes/issues/197)) ([2ab2179](https://github.com/vexxhost/ansible-collection-kubernetes/commit/2ab21793a421b6a478c4cf2c3aa5b4ca78750977))
+
+
+### Bug Fixes
+
+* enable kube_vip_skip_ha_cleanup ([b9e3c45](https://github.com/vexxhost/ansible-collection-kubernetes/commit/b9e3c45216f3ecd45598d5c198eac89ffd2ff5a2))
+
 ## [2.3.2](https://github.com/vexxhost/ansible-collection-kubernetes/compare/v2.3.1...v2.3.2) (2025-09-03)
 
 
