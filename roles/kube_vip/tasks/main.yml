@@ -31,6 +31,7 @@
 
 - name: Switch API server to run on port 6443
   when: kube_vip_enabled
+  ignore_errors: true
   ansible.builtin.replace:
     path: "{{ item }}"
     regexp: "16443"
