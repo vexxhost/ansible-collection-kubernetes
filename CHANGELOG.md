@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.4.1](https://github.com/vexxhost/ansible-collection-kubernetes/compare/v2.4.0...v2.4.1) (2025-09-19)
+
+
+### Bug Fixes
+
+* ignore_errors on replacement ([2f35c5e](https://github.com/vexxhost/ansible-collection-kubernetes/commit/2f35c5e054d8a6004e1bfc995ed987391b2767fc))
+* remove unused register ([da3da50](https://github.com/vexxhost/ansible-collection-kubernetes/commit/da3da506c416c17cb340bcc61e3848295ef53054))
+
 ## [2.4.0](https://github.com/vexxhost/ansible-collection-kubernetes/compare/v2.3.2...v2.4.0) (2025-09-19)
 
 
