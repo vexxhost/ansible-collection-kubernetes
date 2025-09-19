@@ -31,7 +31,6 @@
 
 - name: Switch API server to run on port 6443
   when: kube_vip_enabled
-  ignore_errors: true
   ansible.builtin.replace:
     path: "{{ item }}"
     regexp: "16443"
@@ -40,8 +39,6 @@
     - /etc/kubernetes/manifests/kube-apiserver.yaml
     - /etc/kubernetes/controller-manager.conf
     - /etc/kubernetes/scheduler.conf
-  register: kube_vip_port_change
-  failed_when: kube_vip_port_change.rc != 0 and kube_vip_port_change.rc != 257
   notify:
     - Restart "kubelet" service
 
