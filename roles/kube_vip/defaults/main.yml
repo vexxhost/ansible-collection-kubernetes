@@ -54,3 +54,6 @@ kube_vip_mode: arp
 
 # Determines which IP address BGP should peer from
 # kube_vip_bgp_sourceip: 192.168.0.2
+
+# Skip clean-up of old HA stack
+kube_vip_skip_ha_cleanup: false

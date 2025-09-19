@@ -28,7 +28,3 @@ galaxy_info:
       versions:
         - focal
         - jammy
-
-dependencies:
-  - role: vexxhost.containers.package
-    package_name: rsync

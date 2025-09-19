@@ -14,7 +14,9 @@
 
 ---
 - name: Uninstall legacy HA stack
-  when: kube_vip_enabled
+  when:
+    - kube_vip_enabled | bool
+    - kube_vip_skip_ha_cleanup | bool == false
   ansible.builtin.file:
     path: "{{ item }}"
     state: absent
