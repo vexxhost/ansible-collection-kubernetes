@@ -41,7 +41,6 @@
     - role: kubelet
       vars:
         kubelet_version: "{{ kubernetes_version }}"
-        kubelet_allow_unsafe_swap: "{{ kubernetes_allow_unsafe_swap }}"
 
 - name: Install Kubernetes (original)
   hosts: "{{ kubernetes_group | default('all') }}"
