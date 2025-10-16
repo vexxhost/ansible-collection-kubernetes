@@ -57,6 +57,7 @@
 
 - name: Install control-plane components
   hosts: "{{ kubernetes_control_plane_group | default('controllers') }}"
+  strategy: ansible.builtin.linear
   become: true
   roles:
     - role: helm
