@@ -23,7 +23,7 @@
 
 - name: Install Kubernetes
   hosts: "{{ kubernetes_group | default('all') }}"
-  strategy: linear
+  strategy: ansible.builtin.linear
   become: true
   roles:
     - role: vexxhost.containers.containerd
