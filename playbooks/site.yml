@@ -48,6 +48,9 @@
   become: true
   roles:
     - role: kubernetes
+      vars:
+        kubelet_cri_socket: /run/containerd/containerd.sock
+        kubelet_node_ip: "{{ ansible_facts['default_ipv4'].address }}"
       tags:
         - kubernetes
 
