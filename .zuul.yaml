@@ -55,7 +55,6 @@
       kubernetes_version: 1.34.0
     group-vars:
       all:
-        ansible_python_interpreter: /usr/bin/python3
         cilium_helm_values:
           operator:
             replicas: 1
