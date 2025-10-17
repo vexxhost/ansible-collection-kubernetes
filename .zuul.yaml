@@ -58,6 +58,7 @@
         cilium_helm_values:
           operator:
             replicas: 1
+        kubernetes_custom_ansible_strategy: serverscom.mitogen.mitogen_linear
       controllers:
         kube_vip_interface: "{{ ansible_facts['default_ipv4'].interface }}"
         kube_vip_address: 172.17.0.100
@@ -149,6 +150,8 @@
     vars:
       molecule_scenario: ha
     group-vars:
+      all:
+        kubernetes_custom_ansible_strategy: serverscom.mitogen.mitogen_linear
       controllers:
         # NOTE(mnaser): Since we're running in clouds, we use the first controller IP
         #               address as the hostname.
