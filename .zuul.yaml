@@ -59,7 +59,6 @@
           operator:
             replicas: 1
         kubernetes_custom_ansible_strategy: ansible.builtin.linear
-        ansible_python_interpreter: /usr/bin/python3
       controllers:
         kube_vip_interface: "{{ ansible_facts['default_ipv4'].interface }}"
         kube_vip_address: 172.17.0.100
