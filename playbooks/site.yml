@@ -15,7 +15,6 @@
 ---
 - name: Configure Kubernetes VIP
   hosts: "{{ kubernetes_control_plane_group | default('controllers') }}"
-  # strategy: "{{ kubernetes_custom_ansible_strategy | default('serverscom.mitogen.mitogen_linear') }}"
   become: true
   roles:
     - role: kube_vip
@@ -24,7 +23,6 @@
 
 - name: Install Kubernetes (poc)
   hosts: "{{ kubernetes_group | default('all') }}"
-  # strategy: "{{ kubernetes_custom_ansible_strategy | default('serverscom.mitogen.mitogen_linear') }}"
   become: true
   roles:
     - role: vexxhost.containers.containerd
