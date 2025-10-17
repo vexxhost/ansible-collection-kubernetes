@@ -7,11 +7,10 @@ ansible:
     defaults:
       callbacks_enabled: ansible.posix.profile_tasks
       deprecation_warnings: false
+      interpreter_python: /usr/bin/python3
       strategy: serverscom.mitogen.mitogen_linear
-      interpreter_python: auto_silent
     connection:
       pipelining: true
-      #
   executor:
     backend: ansible-playbook
     args:
