@@ -46,7 +46,7 @@
 
 - name: Install Kubernetes (original)
   hosts: "{{ kubernetes_group | default('all') }}"
-  # strategy: ansible.builtin.linear
+  strategy: ansible.builtin.linear
   become: true
   roles:
     - role: kubernetes

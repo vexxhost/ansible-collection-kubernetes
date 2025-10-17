@@ -7,9 +7,7 @@ ansible:
     defaults:
       callbacks_enabled: ansible.posix.profile_tasks
       deprecation_warnings: false
-    ssh_connection:
-      ssh_args: "-o ControlMaster=auto -o ControlPersist=60"
-      # control_path: "/tmp/ansible-ssh-%%r@%%h:%%p"
+    connection:
       pipelining: true
   executor:
     backend: ansible-playbook
