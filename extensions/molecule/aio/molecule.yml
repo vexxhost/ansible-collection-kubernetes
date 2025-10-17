@@ -8,6 +8,7 @@ ansible:
       callbacks_enabled: ansible.posix.profile_tasks
       deprecation_warnings: false
       strategy: serverscom.mitogen.mitogen_linear
+      interpreter_python: auto_silent
     connection:
       pipelining: true
   executor:
