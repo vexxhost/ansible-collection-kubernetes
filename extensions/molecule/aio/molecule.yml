@@ -11,6 +11,7 @@ ansible:
       interpreter_python: auto_silent
     connection:
       pipelining: true
+      #
   executor:
     backend: ansible-playbook
     args:
