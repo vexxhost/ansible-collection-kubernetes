@@ -98,6 +98,8 @@
     vars:
       molecule_scenario: bgp
     group-vars:
+      all:
+        kubernetes_custom_ansible_strategy: serverscom.mitogen.mitogen_linear
       controllers:
         kube_vip_mode: bgp
         kube_vip_bgp_routerid: 172.17.0.100
@@ -111,6 +113,8 @@
     vars:
       molecule_scenario: cluster-api
     group-vars:
+      all:
+        kubernetes_custom_ansible_strategy: serverscom.mitogen.mitogen_linear
       controllers:
         clusterctl_version: 1.10.5
         cluster_api_version: 1.10.5
@@ -128,6 +132,8 @@
       old_kubernetes_version: 1.33.4
       kubernetes_version: 1.34.0
     group-vars:
+      all:
+        kubernetes_custom_ansible_strategy: serverscom.mitogen.mitogen_linear
       controllers:
         # NOTE(mnaser): Since we're running in clouds, we use the first controller IP
         #               address as the hostname.
