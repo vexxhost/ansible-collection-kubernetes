@@ -9,7 +9,6 @@ ansible:
       deprecation_warnings: false
       # strategy: serverscom.mitogen.mitogen_linear
       strategy: ansible.builtin.linear
-      interpreter_python: /usr/bin/python3
     connection:
       pipelining: true
   executor:
