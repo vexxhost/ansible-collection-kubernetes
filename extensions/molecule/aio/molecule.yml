@@ -7,9 +7,6 @@ ansible:
     defaults:
       callbacks_enabled: ansible.posix.profile_tasks
       deprecation_warnings: false
-      fact_caching: yaml
-      fact_caching_timeout: 86400
-      fact_caching_connection: "./ansible-cache"
       strategy: serverscom.mitogen.mitogen_linear
       # strategy: ansible.builtin.linear
     connection:
