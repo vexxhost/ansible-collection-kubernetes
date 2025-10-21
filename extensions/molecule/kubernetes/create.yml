@@ -13,12 +13,10 @@
 # under the License.
 
 ---
-- name: Prepare
-  hosts: all
+- name: Install development dependencies
+  hosts: localhost
   tasks:
-    - name: Install Debian packages
-      become: true
-      ansible.builtin.apt:
-        name: ["gnupg"]
-        update_cache: true
-      when: ansible_facts['os_family'] == "Debian"
+    - name: Install development collection dependencies
+      ansible.builtin.command:
+        cmd: ansible-galaxy collection install -r dev-requirements.yml
+      run_once: true
