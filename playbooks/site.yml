@@ -21,7 +21,7 @@
       tags:
         - kube-vip
 
-- name: Install Kubernetes (poc)
+- name: Install Kubernetes components
   hosts: "{{ kubernetes_group | default('all') }}"
   become: true
   roles:
@@ -42,16 +42,12 @@
       vars:
         kubelet_version: "{{ kubernetes_version }}"
 
-- name: Install Kubernetes (original)
+- name: Install Kubernetes
   hosts: "{{ kubernetes_group | default('all') }}"
   strategy: ansible.builtin.linear
   become: true
   roles:
     - role: kubernetes
-      vars:
-        kubelet_cri_socket: /run/containerd/containerd.sock
-        kubelet_node_ip: "{{ ansible_facts['default_ipv4'].address }}"
-        kubelet_hostname: "{{ inventory_hostname_short }}"
       tags:
         - kubernetes
 
