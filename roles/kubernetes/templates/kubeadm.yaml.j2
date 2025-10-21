@@ -18,7 +18,7 @@ nodeRegistration:
 {% if kubernetes_version is ansible.builtin.version('1.24.0', '<') %}
     container-runtime: "remote"
 {% endif %}
-    container-runtime-endpoint: "{{ kubelet_cri_socket }}"
+    container-runtime-endpoint: "{{ kubernetes_cri_socket }}"
 ---
 {% if kubernetes_version is ansible.builtin.version('1.22.0', '<') %}
 apiVersion: kubeadm.k8s.io/v1beta2
@@ -37,7 +37,7 @@ nodeRegistration:
 {% if kubernetes_version is ansible.builtin.version('1.24.0', '<') %}
     container-runtime: "remote"
 {% endif %}
-    container-runtime-endpoint: "{{ kubelet_cri_socket }}"
+    container-runtime-endpoint: "{{ kubernetes_cri_socket }}"
 {% if (kubernetes_bootstrap_node is not defined) or (kubernetes_bootstrap_node is defined and inventory_hostname != kubernetes_bootstrap_node) %}
 discovery:
   bootstrapToken:
