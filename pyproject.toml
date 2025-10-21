@@ -27,6 +27,7 @@ dependencies = [
 
 [dependency-groups]
 dev = [
+  "mitogen==0.3.29",
   "molecule>=25.9.0.rc1",
   "pytest>=8.4.1",
   "pytest-forked>=1.6.0",
