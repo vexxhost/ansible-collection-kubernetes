@@ -16,6 +16,12 @@
 - name: Prepare
   hosts: all
   tasks:
+    - name: Install development collection dependencies
+      ansible.builtin.command:
+        cmd: ansible-galaxy collection install -r dev-requirements.yml
+      delegate_to: localhost
+      run_once: true
+
     - name: Install Debian packages
       become: true
       ansible.builtin.apt:
