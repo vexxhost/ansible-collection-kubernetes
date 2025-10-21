@@ -26,7 +26,7 @@
     - name: Upgrade packages (RedHat)
       become: true
       ansible.builtin.dnf:
-        name: '*'
-        state: latest # noqa: package-latest
+        name: epel-release
+        state: latest
         update_cache: true
       when: ansible_facts['os_family'] == "RedHat"
