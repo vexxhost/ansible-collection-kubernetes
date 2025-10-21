@@ -30,7 +30,7 @@
   when: >
     (ansible_facts['distribution'] == 'Ubuntu' and ansible_facts['distribution_major_version'] is version('22', '<=')) or
     (ansible_facts['distribution'] == 'Debian' and ansible_facts['distribution_major_version'] is version('12', '<=')) or
-    (ansible_facts['distribution'] in ['RedHat', 'Rocky'] and ansible_facts['distribution_major_version'] is version('9', '<'))
+    (ansible_facts['distribution'] in ['RedHat', 'Rocky'] and ansible_facts['distribution_major_version'] is version('8', '<='))
   block:
     # TODO(fitbeard): Move common system packages from all roles to dedicated role.
     - name: Install PIP
@@ -49,7 +49,7 @@
   when: >
     (ansible_facts['distribution'] == 'Ubuntu' and ansible_facts['distribution_major_version'] is version('22', '>')) or
     (ansible_facts['distribution'] == 'Debian' and ansible_facts['distribution_major_version'] is version('12', '>')) or
-    (ansible_facts['distribution'] in ['RedHat', 'Rocky'] and ansible_facts['distribution_major_version'] is version('9', '=>'))
+    (ansible_facts['distribution'] in ['RedHat', 'Rocky'] and ansible_facts['distribution_major_version'] is version('8', '>'))
 
 - name: Allow workload on control plane node
   kubernetes.core.k8s_taint:
