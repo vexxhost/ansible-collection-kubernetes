@@ -30,3 +30,6 @@
     server_side_apply:
       field_manager: ansible
       force_conflicts: true
+
+- name: Patch openstack-resource-controller
+  ansible.builtin.import_tasks: patch.yml
