@@ -5,3 +5,11 @@ images:
 - name: controller
   newName: {{ openstack_resource_controller_image }}
   newTag: {{ openstack_resource_controller_image_tag }}
+
+patches:
+  - target:
+      kind: Deployment
+    patch: |-
+      - op: add
+        path: /spec/template/spec/nodeSelector
+        value: {{ openstack_resource_controller_node_selector }}
