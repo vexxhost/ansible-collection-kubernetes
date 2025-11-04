@@ -6,10 +6,18 @@ images:
   newName: {{ openstack_resource_controller_image }}
   newTag: {{ openstack_resource_controller_image_tag }}
 
+{% if openstack_resource_controller_node_selector %}
 patches:
   - target:
       kind: Deployment
     patch: |-
-      - op: add
-        path: /spec/template/spec/nodeSelector
-        value: {{ openstack_resource_controller_node_selector }}
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: not-important
+      spec:
+        template:
+          spec:
+            nodeSelector:
+{{ openstack_resource_controller_node_selector | to_nice_yaml | indent(14, first=True) }}
+{% endif %}
