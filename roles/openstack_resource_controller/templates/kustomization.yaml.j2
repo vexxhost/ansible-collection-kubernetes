@@ -13,3 +13,6 @@ patches:
       - op: add
         path: /spec/template/spec/nodeSelector
         value: {{ openstack_resource_controller_node_selector }}
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/limits/memory
+        value: 256Mi
