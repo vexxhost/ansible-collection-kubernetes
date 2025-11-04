@@ -18,10 +18,9 @@
     group: root
 
 - name: Generate manifests
-  ansible.builtin.shell:
-    cmd: "kubectl kustomize {{ openstack_resource_controller_build_directory }} > {{ openstack_resource_controller_build_file }}"
-    chdir: "{{ openstack_resource_controller_build_directory }}"
-    creates: "{{ openstack_resource_controller_build_file }}"
+  vexxhost.kubernetes.kustomize:
+    src: "{{ openstack_resource_controller_build_directory }}"
+    dest: "{{ openstack_resource_controller_build_file }}"
 
 - name: Apply manifest to cluster
   kubernetes.core.k8s:
