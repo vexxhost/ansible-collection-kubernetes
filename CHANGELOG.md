@@ -1,5 +1,15 @@
 # Changelog
 
+## [2.4.1](https://github.com/vexxhost/ansible-collection-kubernetes/compare/v2.4.0...v2.4.1) (2025-11-04)
+
+
+### Bug Fixes
+
+* ci and lint ([#208](https://github.com/vexxhost/ansible-collection-kubernetes/issues/208)) ([29df9b5](https://github.com/vexxhost/ansible-collection-kubernetes/commit/29df9b5b355afa4422555ce45ed16f0159118c2a))
+* ignore_errors on replacement ([2f35c5e](https://github.com/vexxhost/ansible-collection-kubernetes/commit/2f35c5e054d8a6004e1bfc995ed987391b2767fc))
+* remove unused register ([da3da50](https://github.com/vexxhost/ansible-collection-kubernetes/commit/da3da506c416c17cb340bcc61e3848295ef53054))
+* use pem format for ca bundle ([#201](https://github.com/vexxhost/ansible-collection-kubernetes/issues/201)) ([1c27827](https://github.com/vexxhost/ansible-collection-kubernetes/commit/1c27827faaa29a8a3e01cfc1a8445331a28846c4))
+
 ## [2.4.0](https://github.com/vexxhost/ansible-collection-kubernetes/compare/v2.3.2...v2.4.0) (2025-09-19)
 
 
