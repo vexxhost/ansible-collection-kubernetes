@@ -6,8 +6,8 @@ images:
   newName: {{ openstack_resource_controller_image }}
   newTag: {{ openstack_resource_controller_image_tag }}
 
-{% if openstack_resource_controller_node_selector %}
 patches:
+{% if openstack_resource_controller_node_selector %}
   - target:
       kind: Deployment
     patch: |-
