@@ -1,3 +1,4 @@
 .ansible
+.direnv
 __pycache__
 tests/output

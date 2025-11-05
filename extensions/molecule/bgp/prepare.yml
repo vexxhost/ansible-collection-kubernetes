@@ -34,6 +34,7 @@
         suites: "{{ ansible_distribution_release }}"
         components: frr-stable
         signed_by: https://deb.frrouting.org/frr/keys.asc
+        install_python_debian: true
       when: ansible_facts['os_family'] in ['Debian']
 
     - name: Install frr packages

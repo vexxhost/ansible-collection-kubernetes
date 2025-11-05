@@ -1,9 +1,9 @@
 ---
 - nodeset:
-    name: debian-13-single-node
+    name: debian-trixie-single-node
     nodes:
       - name: controller
-        label: debian-13
+        label: debian-trixie
     groups: &single_node_groups
       - name: controllers
         nodes:
@@ -31,15 +31,15 @@
     groups: *single_node_groups
 
 - nodeset:
-    name: debian-13-triple-node
+    name: debian-trixie-triple-node
     nodes:
       - name: controller-1
-        label: debian-13
+        label: debian-trixie
       - name: controller-2
-        label: debian-13
+        label: debian-trixie
       - name: controller-3
-        label: debian-13
-    groups: &triple_node_groups
+        label: debian-trixie
+    groups:
       - name: controllers
         nodes:
           - controller-1
@@ -50,7 +50,7 @@
     name: ansible-collection-kubernetes-molecule
     parent: molecule
     abstract: true
-    nodeset: debian-13-single-node
+    nodeset: debian-trixie-single-node
     vars:
       kubernetes_version: 1.34.0
     group-vars:
@@ -72,9 +72,9 @@
       molecule_scenario: aio
 
 - job:
-    name: ansible-collection-kubernetes-molecule-aio-debian-13
+    name: ansible-collection-kubernetes-molecule-aio-debian-trixie
     parent: ansible-collection-kubernetes-molecule-aio
-    nodeset: debian-13-single-node
+    nodeset: debian-trixie-single-node
 
 - job:
     name: ansible-collection-kubernetes-molecule-aio-rockylinux-9
@@ -121,7 +121,7 @@
 - job:
     name: ansible-collection-kubernetes-molecule-cluster-upgrade
     parent: ansible-collection-kubernetes-molecule
-    nodeset: debian-13-triple-node
+    nodeset: debian-trixie-triple-node
     vars:
       molecule_scenario: cluster-upgrade
       old_kubernetes_version: 1.33.4
@@ -145,7 +145,7 @@
 - job:
     name: ansible-collection-kubernetes-molecule-ha
     parent: ansible-collection-kubernetes-molecule
-    nodeset: debian-13-triple-node
+    nodeset: debian-trixie-triple-node
     vars:
       molecule_scenario: ha
     group-vars:
@@ -170,7 +170,7 @@
     merge-mode: squash-merge
     check:
       jobs:
-        - ansible-collection-kubernetes-molecule-aio-debian-13
+        - ansible-collection-kubernetes-molecule-aio-debian-trixie
         - ansible-collection-kubernetes-molecule-aio-rockylinux-9
         - ansible-collection-kubernetes-molecule-aio-ubuntu-jammy
         - ansible-collection-kubernetes-molecule-aio-ubuntu-noble
@@ -185,7 +185,7 @@
         - pre-commit
     gate:
       jobs:
-        - ansible-collection-kubernetes-molecule-aio-debian-13
+        - ansible-collection-kubernetes-molecule-aio-debian-trixie
         - ansible-collection-kubernetes-molecule-aio-rockylinux-9
         - ansible-collection-kubernetes-molecule-aio-ubuntu-jammy
         - ansible-collection-kubernetes-molecule-aio-ubuntu-noble
