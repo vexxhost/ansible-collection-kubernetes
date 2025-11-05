@@ -7,6 +7,12 @@ images:
   newTag: {{ openstack_resource_controller_image_tag }}
 
 patches:
+  - target:
+      kind: Deployment
+    patch: |-
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/limits/memory
+        value: 256Mi
 {% if openstack_resource_controller_node_selector %}
   - target:
       kind: Deployment
