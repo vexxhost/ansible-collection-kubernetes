@@ -1,5 +1,19 @@
 # Changelog
 
+## [2.5.0](https://github.com/vexxhost/ansible-collection-kubernetes/compare/v2.4.1...v2.5.0) (2025-11-05)
+
+
+### Features
+
+* Add kustomize module for kubectl kustomize operations ([#209](https://github.com/vexxhost/ansible-collection-kubernetes/issues/209)) ([09e0a30](https://github.com/vexxhost/ansible-collection-kubernetes/commit/09e0a300de3d266c0f747e88cb6d41b8e3d5d740))
+* Set node selector for ORC components ([#206](https://github.com/vexxhost/ansible-collection-kubernetes/issues/206)) ([cab1d3d](https://github.com/vexxhost/ansible-collection-kubernetes/commit/cab1d3ddae323f075eb43269689643d52ef1e1e4))
+
+
+### Bug Fixes
+
+* update debian nodeset names and labels to debian-trixie ([#211](https://github.com/vexxhost/ansible-collection-kubernetes/issues/211)) ([26eaa1e](https://github.com/vexxhost/ansible-collection-kubernetes/commit/26eaa1ebe3d1a69a2350620495bdeee6f4ee5c43))
+* Update orc manager memory limits ([#207](https://github.com/vexxhost/ansible-collection-kubernetes/issues/207)) ([6e067b6](https://github.com/vexxhost/ansible-collection-kubernetes/commit/6e067b691432a6e70652f670898dc0549ea98c82))
+
 ## [2.4.1](https://github.com/vexxhost/ansible-collection-kubernetes/compare/v2.4.0...v2.4.1) (2025-11-04)
 
 
