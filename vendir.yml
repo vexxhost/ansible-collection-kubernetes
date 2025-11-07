@@ -6,7 +6,7 @@ directories:
       - path: .
         git:
           url: https://github.com/k-orc/openstack-resource-controller.git
-          ref: v2.2.0
+          ref: v2.3.0
         includePaths:
           - "config/**"
         newRootPath: config

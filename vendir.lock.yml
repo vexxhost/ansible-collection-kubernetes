@@ -2,10 +2,10 @@ apiVersion: vendir.k14s.io/v1alpha1
 directories:
 - contents:
   - git:
-      commitTitle: Release v2.2.0
-      sha: 2bb85623416a3144fad864c88b5f7dbb992b2291
+      commitTitle: Release v2.3.0
+      sha: 1ac0f82b9a52f0e1adbf6d22a2a423b80333c9dd
       tags:
-      - v2.2.0
+      - v2.3.0
     path: .
   path: roles/openstack_resource_controller/files/kustomize
 kind: LockConfig
