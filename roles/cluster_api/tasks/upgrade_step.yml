@@ -1,0 +1,40 @@
+# Copyright (c) 2025 VEXXHOST, Inc.
+# SPDX-License-Identifier: Apache-2.0
+
+---
+- name: "Upgrade step: core={{ _cluster_api_upgrade_core_version }} infra={{ _cluster_api_upgrade_infra_version }}"
+  run_once: true
+  changed_when: true
+  ansible.builtin.command: |
+    {{ clusterctl_download_dest }} upgrade apply \
+      --config {{ clusterctl_config_file }} \
+      --core capi-system/{{ cluster_api_core_provider }}:v{{ _cluster_api_upgrade_core_version }} \
+      --bootstrap capi-kubeadm-bootstrap-system/{{ cluster_api_bootstrap_provider }}:v{{ _cluster_api_upgrade_core_version }} \
+      --control-plane capi-kubeadm-control-plane-system/{{ cluster_api_control_plane_provider }}:v{{ _cluster_api_upgrade_core_version }} \
+      --infrastructure capo-system/{{ cluster_api_infrastructure_provider }}:v{{ _cluster_api_upgrade_infra_version }}
+  environment: "{{ _cluster_api_environment }}"
+
+- name: Wait for CAPI controllers to be ready after upgrade step
+  run_once: true
+  kubernetes.core.k8s_info:
+    api_version: apps/v1
+    kind: Deployment
+    namespace: "{{ item.namespace }}"
+    name: "{{ item.name }}"
+    wait: true
+    wait_condition:
+      type: Available
+      status: "True"
+    wait_timeout: 300
+  loop:
+    - namespace: capi-system
+      name: capi-controller-manager
+    - namespace: capi-kubeadm-bootstrap-system
+      name: capi-kubeadm-bootstrap-controller-manager
+    - namespace: capi-kubeadm-control-plane-system
+      name: capi-kubeadm-control-plane-controller-manager
+    - namespace: capo-system
+      name: capo-controller-manager
+  loop_control:
+    label: "{{ item.namespace }}/{{ item.name }}"
+  when: not (_cluster_api_is_final_step | default(false) | bool)
