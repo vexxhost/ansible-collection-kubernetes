@@ -1,0 +1,4 @@
+---
+collections:
+  - name: serverscom.mitogen
+    version: 1.4.1
