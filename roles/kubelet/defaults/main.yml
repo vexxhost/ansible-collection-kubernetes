@@ -452,6 +452,8 @@ kubelet_allow_unsafe_swap: false
 kubelet_sysctls:
   - name: net.ipv4.ip_forward
     value: 1
+  - name: net.ipv6.conf.default.forwarding
+    value: 1
   - name: net.bridge.bridge-nf-call-iptables
     value: 1
   - name: net.bridge.bridge-nf-call-ip6tables
