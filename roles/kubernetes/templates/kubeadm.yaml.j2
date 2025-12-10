@@ -72,7 +72,7 @@ etcd:
       tls-min-version: TLS1.3
 {% endif %}
 networking:
-  podSubnet: ["fd40:10::/96"]
+  podSubnet: ["fd40:10::/64"]
   serviceSubnet: ["fd40:10:100::/112"]
 apiServer:
   extraArgs:
