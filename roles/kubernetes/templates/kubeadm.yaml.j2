@@ -72,8 +72,8 @@ etcd:
       tls-min-version: TLS1.3
 {% endif %}
 networking:
-  serviceSubnet: "fdac:bb5e:e415::/112"
-  podSubnet: "fdac:bb5e:e415::/112"
+  podSubnets: ["fd40:10::/96"]
+  serviceSubnets: ["fd40:10:100::/112"]
 apiServer:
   extraArgs:
 {% if kubernetes_version is ansible.builtin.version('1.28.0', '>=') %}
