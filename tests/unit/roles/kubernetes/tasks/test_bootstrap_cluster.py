@@ -18,32 +18,40 @@ class TestKubeadmInitCommand:
             (
                 False,
                 False,
-                textwrap.dedent("""\
+                textwrap.dedent(
+                    """\
                     kubeadm init --config /etc/kubernetes/kubeadm.yaml --upload-certs \\
-                      --ignore-preflight-errors=DirAvailable--etc-kubernetes-manifests"""),
+                      --ignore-preflight-errors=DirAvailable--etc-kubernetes-manifests"""
+                ),
             ),
             (
                 False,
                 True,
-                textwrap.dedent("""\
+                textwrap.dedent(
+                    """\
                     kubeadm init --config /etc/kubernetes/kubeadm.yaml --upload-certs \\
-                      --ignore-preflight-errors=DirAvailable--etc-kubernetes-manifests,Swap"""),
+                      --ignore-preflight-errors=DirAvailable--etc-kubernetes-manifests,Swap"""
+                ),
             ),
             (
                 True,
                 False,
-                textwrap.dedent("""\
+                textwrap.dedent(
+                    """\
                     kubeadm init --config /etc/kubernetes/kubeadm.yaml --upload-certs \\
                       --skip-phases=addon/kube-proxy \\
-                      --ignore-preflight-errors=DirAvailable--etc-kubernetes-manifests"""),
+                      --ignore-preflight-errors=DirAvailable--etc-kubernetes-manifests"""
+                ),
             ),
             (
                 True,
                 True,
-                textwrap.dedent("""\
+                textwrap.dedent(
+                    """\
                     kubeadm init --config /etc/kubernetes/kubeadm.yaml --upload-certs \\
                       --skip-phases=addon/kube-proxy \\
-                      --ignore-preflight-errors=DirAvailable--etc-kubernetes-manifests,Swap"""),
+                      --ignore-preflight-errors=DirAvailable--etc-kubernetes-manifests,Swap"""
+                ),
             ),
         ],
     )
@@ -51,8 +59,15 @@ class TestKubeadmInitCommand:
         """Verify the exact command rendered for each variable combination."""
         task_path = os.path.join(
             os.path.dirname(__file__),
-            "..", "..", "..", "..", "..",
-            "roles", "kubernetes", "tasks", "bootstrap-cluster.yml",
+            "..",
+            "..",
+            "..",
+            "..",
+            "..",
+            "roles",
+            "kubernetes",
+            "tasks",
+            "bootstrap-cluster.yml",
         )
         with open(task_path, "r") as f:
             tasks = yaml.safe_load(f)
