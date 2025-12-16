@@ -49,7 +49,9 @@
             packages =
               with pkgs;
               [
+                python3
                 python3Packages.flake8
+                uv
               ]
               ++ (builtins.attrValues config.treefmt.build.programs);
           };
