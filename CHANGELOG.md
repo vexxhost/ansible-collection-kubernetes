@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.5.1](https://github.com/vexxhost/ansible-collection-kubernetes/compare/v2.5.0...v2.5.1) (2025-12-16)
+
+
+### Bug Fixes
+
+* prevent empty argument in kubeadm init command ([#220](https://github.com/vexxhost/ansible-collection-kubernetes/issues/220)) ([b5a8cdb](https://github.com/vexxhost/ansible-collection-kubernetes/commit/b5a8cdb965edc437a1bc10871bd42533132b8409))
+
 ## [2.5.0](https://github.com/vexxhost/ansible-collection-kubernetes/compare/v2.4.1...v2.5.0) (2025-11-05)
 
 
