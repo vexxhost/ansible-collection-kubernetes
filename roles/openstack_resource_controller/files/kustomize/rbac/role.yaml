@@ -17,17 +17,22 @@ rules:
 - apiGroups:
   - openstack.k-orc.cloud
   resources:
+  - domains
   - flavors
   - floatingips
+  - groups
   - images
+  - keypairs
   - networks
   - ports
   - projects
+  - roles
   - routerinterfaces
   - routers
   - securitygroups
   - servergroups
   - servers
+  - services
   - subnets
   - volumes
   - volumetypes
@@ -42,17 +47,22 @@ rules:
 - apiGroups:
   - openstack.k-orc.cloud
   resources:
+  - domains/status
   - flavors/status
   - floatingips/status
+  - groups/status
   - images/status
+  - keypairs/status
   - networks/status
   - ports/status
   - projects/status
+  - roles/status
   - routerinterfaces/status
   - routers/status
   - securitygroups/status
   - servergroups/status
   - servers/status
+  - services/status
   - subnets/status
   - volumes/status
   - volumetypes/status

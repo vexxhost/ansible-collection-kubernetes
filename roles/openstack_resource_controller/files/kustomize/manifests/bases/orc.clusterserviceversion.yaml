@@ -19,6 +19,11 @@ spec:
   apiservicedefinitions: {}
   customresourcedefinitions:
     owned:
+    - description: Domain is the Schema for an ORC resource.
+      displayName: Domain
+      kind: Domain
+      name: domains.openstack.k-orc.cloud
+      version: v1alpha1
     - description: Flavor is the Schema for an ORC resource.
       displayName: Flavor
       kind: Flavor
@@ -29,10 +34,20 @@ spec:
       kind: FloatingIP
       name: floatingips.openstack.k-orc.cloud
       version: v1alpha1
+    - description: Group is the Schema for an ORC resource.
+      displayName: Group
+      kind: Group
+      name: groups.openstack.k-orc.cloud
+      version: v1alpha1
     - description: Image is the Schema for an ORC resource.
       displayName: Image
       kind: Image
       name: images.openstack.k-orc.cloud
+      version: v1alpha1
+    - description: KeyPair is the Schema for an ORC resource.
+      displayName: Key Pair
+      kind: KeyPair
+      name: keypairs.openstack.k-orc.cloud
       version: v1alpha1
     - description: Network is the Schema for an ORC resource.
       displayName: Network
@@ -48,6 +63,11 @@ spec:
       displayName: Project
       kind: Project
       name: projects.openstack.k-orc.cloud
+      version: v1alpha1
+    - description: Role is the Schema for an ORC resource.
+      displayName: Role
+      kind: Role
+      name: roles.openstack.k-orc.cloud
       version: v1alpha1
     - description: RouterInterface is the Schema for an ORC resource.
       displayName: Router Interface
@@ -73,6 +93,11 @@ spec:
       displayName: Server
       kind: Server
       name: servers.openstack.k-orc.cloud
+      version: v1alpha1
+    - description: Service is the Schema for an ORC resource.
+      displayName: Service
+      kind: Service
+      name: services.openstack.k-orc.cloud
       version: v1alpha1
     - description: Subnet is the Schema for an ORC resource.
       displayName: Subnet
