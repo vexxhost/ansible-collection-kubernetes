@@ -4,6 +4,10 @@ image:
   useDigest: false
 hubble:
   enabled: false
+ipv4:
+  enabled: false
+ipv6:
+  enabled: true
 tunnel: geneve
 tunnelPort: 6082
 operator:
@@ -17,10 +21,13 @@ operator:
 {% else %}
     node-role.kubernetes.io/master: ""
 {% endif %}
+underlayProtocol: ipv6
 ipam:
   operator:
     clusterPoolIPv4PodCIDRList:
       - "{{ cilium_ipv4_cidr | default('10.0.0.0/8') }}"
+    clusterPoolIPv6PodCIDRList:
+      - "{{ cilium_ipv6_cidr | default('fdac:bb5e:e415::/112')}}"
 {% if cilium_replace_kube_proxy %}
 k8sServiceHost: "{{ kubernetes_hostname }}"
 k8sServicePort: 6443
