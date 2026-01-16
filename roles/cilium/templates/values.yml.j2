@@ -3,7 +3,25 @@ image:
   tag: "{{ cilium_node_image | vexxhost.kubernetes.docker_image('tag') }}"
   useDigest: false
 hubble:
-  enabled: false
+  enabled: {{ cilium_hubble_ui_enabled | lower }}
+  relay:
+    enabled: {{ cilium_hubble_ui_enabled | lower }}
+    image:
+      repository: "{{ cilium_hubble_relay_image | vexxhost.kubernetes.docker_image('name') }}"
+      tag: "{{ cilium_hubble_relay_image | vexxhost.kubernetes.docker_image('tag') }}"
+      useDigest: false
+  ui:
+    enabled: {{ cilium_hubble_ui_enabled | lower }}
+    backend:
+      image:
+        repository: "{{ cilium_hubble_ui_backend_image | vexxhost.kubernetes.docker_image('name') }}"
+        tag: "{{ cilium_hubble_ui_backend_image | vexxhost.kubernetes.docker_image('tag') }}"
+        useDigest: false
+    frontend:
+      image:
+        repository: "{{ cilium_hubble_ui_image | vexxhost.kubernetes.docker_image('name') }}"
+        tag: "{{ cilium_hubble_ui_image | vexxhost.kubernetes.docker_image('tag') }}"
+        useDigest: false
 tunnel: geneve
 tunnelPort: 6082
 operator:

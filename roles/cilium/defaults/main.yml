@@ -10,6 +10,15 @@ cilium_image_tag: "v1.14.8"
 cilium_node_image: quay.io/cilium/cilium:{{ cilium_image_tag }}
 cilium_operator_image: quay.io/cilium/operator-generic:{{ cilium_image_tag }}
 
+cilium_hubble_image_tag: "v0.13.0"
+cilium_hubble_relay_image: quay.io/cilium/hubble-relay:{{ cilium_image_tag }}
+cilium_hubble_ui_image: quay.io/cilium/hubble-ui:{{ cilium_hubble_image_tag }}
+cilium_hubble_ui_backend_image: quay.io/cilium/hubble-ui-backend:{{ cilium_hubble_image_tag }}
+
 # With kubernetes_remove_kube_proxy set to 'true' configure Cilium to replace kube-proxy.
 # If set to 'false', Cilium will not replace kube-proxy.
 cilium_replace_kube_proxy: "{{ kubernetes_remove_kube_proxy | default(false) }}"
+
+# Enable Hubble UI for network observability visualization.
+# When enabled, this also enables Hubble and Hubble Relay which are required for the UI.
+cilium_hubble_ui_enabled: false
