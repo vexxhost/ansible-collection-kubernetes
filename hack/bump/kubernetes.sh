@@ -58,7 +58,7 @@ fetch_checksum() {
 	local component="$1"
 	local version="$2"
 	local arch="$3"
-	curl -sSL "https://cdn.dl.k8s.io/release/v${version}/bin/linux/${arch}/${component}.sha256" || echo ""
+	curl -sSL "https://dl.k8s.io/release/v${version}/bin/linux/${arch}/${component}.sha256" || echo ""
 }
 
 # Function to extract existing checksums from YAML file

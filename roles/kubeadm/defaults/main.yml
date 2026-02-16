@@ -452,7 +452,7 @@ kubeadm_checksums:
     1.34.3: 697cf3aa54f1a5740b883a3b18a5d051b4032fd68ba89af626781a43ec9bccc3
     1.35.0: 1dac7dc2c6a56548bbc6bf8a7ecf4734f2e733fb336d7293d84541ebe52d0e50
 
-kubeadm_download_url: "https://cdn.dl.k8s.io/release/v{{ kubeadm_version }}/bin/{{ ansible_facts['system'] | lower }}/{{ download_artifact_goarch }}/kubeadm" # yamllint disable-line rule:line-length
+kubeadm_download_url: "https://dl.k8s.io/release/v{{ kubeadm_version }}/bin/{{ ansible_facts['system'] | lower }}/{{ download_artifact_goarch }}/kubeadm" # yamllint disable-line rule:line-length
 kubeadm_download_dest: /usr/bin/kubeadm
 kubeadm_binary_checksum: "{{ kubeadm_checksums[download_artifact_goarch][kubeadm_version] }}"
 
