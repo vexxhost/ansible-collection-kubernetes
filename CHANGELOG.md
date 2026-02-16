@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.5.1](https://github.com/vexxhost/ansible-collection-kubernetes/compare/v2.5.0...v2.5.1) (2026-02-16)
+
+
+### Bug Fixes
+
+* prevent empty argument in kubeadm init command ([#220](https://github.com/vexxhost/ansible-collection-kubernetes/issues/220)) ([b5a8cdb](https://github.com/vexxhost/ansible-collection-kubernetes/commit/b5a8cdb965edc437a1bc10871bd42533132b8409))
+* Replace deprecated cdn.dl.k8s.io with dl.k8s.io ([#231](https://github.com/vexxhost/ansible-collection-kubernetes/issues/231)) ([2a2746f](https://github.com/vexxhost/ansible-collection-kubernetes/commit/2a2746fd4d1c8e8fdc7e34038f1b2e00c85bd78e))
+
 ## [2.5.0](https://github.com/vexxhost/ansible-collection-kubernetes/compare/v2.4.1...v2.5.0) (2025-11-05)
 
 
