@@ -12,7 +12,8 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-- ansible.builtin.import_playbook: ../cluster-api/prepare.yml
+- name: Import cluster-api preparation playbook
+  ansible.builtin.import_playbook: ../cluster-api/prepare.yml
 
 - name: Install older version of Cluster API
   hosts: all
@@ -21,7 +22,7 @@
     - role: adriacloud.kubernetes.cert_manager
     - role: adriacloud.kubernetes.cluster_api
       vars:
-        clusterctl_version: 1.6.0
-        cluster_api_version: 1.6.0
+        clusterctl_version: 1.9.6
+        cluster_api_version: 1.9.6
         cluster_api_infrastructure_provider: openstack
-        cluster_api_infrastructure_version: 0.11.2
+        cluster_api_infrastructure_version: 0.12.2

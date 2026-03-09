@@ -12,14 +12,18 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-helm_version: v3.11.2
+helm_version: v3.20.0
 helm_checksums:
   amd64:
     v3.8.0: 8408c91e846c5b9ba15eb6b1a5a79fc22dd4d33ac6ea63388e5698d1b2320c8b
     v3.11.2: 781d826daec584f9d50a01f0f7dadfd25a3312217a14aa2fbb85107b014ac8ca
+    v3.19.5: a0a5e8c592ed3f376ac110715eff214730c7422f9a44d96cf98117d2b8b0e6c0
+    v3.20.0: dbb4c8fc8e19d159d1a63dda8db655f9ffa4aac1b9a6b188b34a40957119b286
   arm64:
     v3.8.0: 23e08035dc0106fe4e0bd85800fd795b2b9ecd9f32187aa16c49b0a917105161
     v3.11.2: 0a60baac83c3106017666864e664f52a4e16fbd578ac009f9a85456a9241c5db
+    v3.19.5: ce02147ffee6d993bf8ae97a44a22e9e1daf0b69d2d5b69a0c8cf6706445ccf5
+    v3.20.0: bfb14953295d5324d47ab55f3dfba6da28d46c848978c8fbf412d4271bdc29f1
 
 helm_download_url: "https://get.helm.sh/helm-{{ helm_version }}-{{ ansible_facts['system'] | lower }}-{{ download_artifact_goarch }}.tar.gz"
 helm_download_dest: "{{ download_artifact_work_directory }}/helm-{{ helm_version }}-{{ ansible_facts['system'] | lower }}-{{ download_artifact_goarch }}.tar.gz"
@@ -30,12 +34,14 @@ helm_binary_checksum: "{{ helm_checksums[download_artifact_goarch][helm_version]
 helm_package_name: helm
 helm_repository_apt: "deb https://baltocdn.com/helm/stable/debian/ all main"
 
-helm_diff_version: v3.8.1
+helm_diff_version: v3.15.2
 helm_diff_checksums:
   amd64:
     v3.8.1: f78867edfde60e2506e3228f706beaf96d1ae3ee5f169f42315acbd513794078
+    v3.15.2: e7b5cdea15df6365f74be37dcb2a3c4a7537a71dc4c3f9b5b871b7c4b07309f5
   arm64:
     v3.8.1: d451e4772a3987710f485de4caed760583c88f8f15864a623b3fbd73be7077ec
+    v3.15.2: 077477871be96a866fb2ef777fd1cb2c66e6b3768bd5139672c567e2d0038b04
 
 helm_diff_download_url: "https://github.com/databus23/helm-diff/releases/download/{{ helm_diff_version }}/helm-diff-{{ ansible_facts['system'] | lower }}-{{ download_artifact_goarch }}.tgz" # noqa: yaml[line-length]
 helm_diff_download_dest: "{{ download_artifact_work_directory }}/helm-diff-{{ ansible_facts['system'] | lower }}-{{ download_artifact_goarch }}.tgz"

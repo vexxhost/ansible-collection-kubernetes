@@ -24,16 +24,16 @@ provisioner:
   inventory:
     group_vars:
       all:
-        kubernetes_version: ${KUBERNETES_VERSION-1.28.13}
+        kubernetes_version: ${KUBERNETES_VERSION-1.35.2}
         cilium_helm_values:
           operator:
             replicas: 1
       controllers:
-        clusterctl_version: 1.9.6
-        cluster_api_version: 1.9.6
+        clusterctl_version: 1.12.3
+        cluster_api_version: 1.12.3
         cluster_api_infrastructure_provider: openstack
-        cluster_api_infrastructure_version: 0.12.2
-        cluster_api_openstack_controller_version: 2.0.3
+        cluster_api_infrastructure_version: 0.14.1
+        cluster_api_openstack_controller_version: 2.4.0
         cluster_api_node_selector:
           kubernetes.io/os: linux
         keepalived_interface: "{{ ansible_facts['default_ipv4'].interface }}"
