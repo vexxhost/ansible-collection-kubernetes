@@ -45,6 +45,10 @@
       tags:
         - cilium
 
+    - role: envoy_gateway
+      tags:
+        - envoy-gateway
+
     # - role: csi
     #   tags:
     #     - csi
