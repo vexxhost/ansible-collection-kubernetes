@@ -11,3 +11,16 @@
     create_namespace: true
     kubeconfig: /etc/kubernetes/admin.conf
     values: "{{ _envoy_gateway_helm_values | combine(envoy_gateway_helm_values, recursive=True) }}"
+
+- name: Create GatewayClass
+  run_once: true
+  kubernetes.core.k8s:
+    state: present
+    kubeconfig: /etc/kubernetes/admin.conf
+    definition:
+      apiVersion: gateway.networking.k8s.io/v1
+      kind: GatewayClass
+      metadata:
+        name: "{{ envoy_gateway_gateway_class_name }}"
+      spec:
+        controllerName: gateway.envoyproxy.io/gatewayclass-controller
