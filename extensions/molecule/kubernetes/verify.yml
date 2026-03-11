@@ -47,3 +47,23 @@
       ansible.builtin.assert:
         that:
           - nodes.stdout.find('NotReady') == -1
+
+    - name: Get Envoy Gateway pods
+      ansible.builtin.command: kubectl get pods -n envoy-gateway-system -o jsonpath='{.items[*].status.phase}'
+      register: envoy_gateway_pods
+
+    - name: Assert Envoy Gateway pods are running
+      ansible.builtin.assert:
+        that:
+          - "'Running' in envoy_gateway_pods.stdout"
+        msg: "Envoy Gateway pods are not running"
+
+    - name: Get GatewayClass
+      ansible.builtin.command: kubectl get gatewayclass eg -o jsonpath='{.status.conditions[?(@.type=="Accepted")].status}'
+      register: envoy_gateway_gatewayclass
+
+    - name: Assert GatewayClass is accepted
+      ansible.builtin.assert:
+        that:
+          - envoy_gateway_gatewayclass.stdout == 'True'
+        msg: "GatewayClass 'eg' is not accepted"
