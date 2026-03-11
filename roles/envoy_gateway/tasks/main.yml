@@ -11,6 +11,8 @@
     create_namespace: true
     kubeconfig: /etc/kubernetes/admin.conf
     values: "{{ _envoy_gateway_helm_values | combine(envoy_gateway_helm_values, recursive=True) }}"
+    wait: true
+    timeout: 10m0s
 
 - name: Create GatewayClass
   run_once: true
