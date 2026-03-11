@@ -10,6 +10,8 @@ envoy_gateway_helm_release_namespace: envoy-gateway-system
 
 envoy_gateway_helm_values: {}
 
+envoy_gateway_gateway_class_name: eg
+
 envoy_gateway_node_selector: {}
 
 envoy_gateway_image: "docker.io/envoyproxy/gateway:v1.7.0"
