@@ -48,22 +48,16 @@
         that:
           - nodes.stdout.find('NotReady') == -1
 
-    - name: Get Envoy Gateway pods
+    - name: Wait for Envoy Gateway pods to be running
       ansible.builtin.command: kubectl get pods -n envoy-gateway-system -o jsonpath='{.items[*].status.phase}'
       register: envoy_gateway_pods
+      retries: 30
+      delay: 10
+      until: "'Running' in envoy_gateway_pods.stdout"
 
-    - name: Assert Envoy Gateway pods are running
-      ansible.builtin.assert:
-        that:
-          - "'Running' in envoy_gateway_pods.stdout"
-        msg: "Envoy Gateway pods are not running"
-
-    - name: Get GatewayClass
+    - name: Wait for GatewayClass to be accepted
       ansible.builtin.command: kubectl get gatewayclass eg -o jsonpath='{.status.conditions[?(@.type=="Accepted")].status}'
       register: envoy_gateway_gatewayclass
-
-    - name: Assert GatewayClass is accepted
-      ansible.builtin.assert:
-        that:
-          - envoy_gateway_gatewayclass.stdout == 'True'
-        msg: "GatewayClass 'eg' is not accepted"
+      retries: 30
+      delay: 10
+      until: envoy_gateway_gatewayclass.stdout == 'True'

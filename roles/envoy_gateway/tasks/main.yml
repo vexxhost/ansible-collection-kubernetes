@@ -24,3 +24,7 @@
         name: "{{ envoy_gateway_gateway_class_name }}"
       spec:
         controllerName: gateway.envoyproxy.io/gatewayclass-controller
+  retries: 10
+  delay: 5
+  register: _envoy_gateway_gatewayclass
+  until: _envoy_gateway_gatewayclass is not failed
