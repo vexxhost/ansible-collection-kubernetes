@@ -51,8 +51,8 @@
     parent: molecule
     abstract: true
     nodeset: debian-trixie-single-node
-    pre-run: playbooks/zuul/pre.yml
-    post-run: playbooks/zuul/post.yml
+    pre-run: test-playbooks/molecule/pre.yml
+    post-run: test-playbooks/molecule/post.yml
     roles:
       - zuul: opendev.org/openstack/openstack-helm
     vars:
