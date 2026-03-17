@@ -1,0 +1,11 @@
+# Copyright (c) 2025 VEXXHOST, Inc.
+# SPDX-License-Identifier: Apache-2.0
+
+- hosts: all
+  become: true
+  vars:
+    logs_dir: "/tmp/logs"
+  roles:
+    - describe-kubernetes-objects
+    - gather-pod-logs
+    - helm-release-status
