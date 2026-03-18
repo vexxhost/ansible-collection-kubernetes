@@ -84,6 +84,9 @@
     name: ansible-collection-kubernetes-molecule-aio-rockylinux-9
     parent: ansible-collection-kubernetes-molecule-aio
     nodeset: rockylinux-9-single-node
+    group-vars:
+      controllers:
+        kubernetes_remove_kube_proxy: true
 
 - job:
     name: ansible-collection-kubernetes-molecule-aio-ubuntu-jammy
