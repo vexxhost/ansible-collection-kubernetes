@@ -9,6 +9,14 @@
         update_cache: true
       when: ansible_os_family == "Debian"
 
+    - name: Disable firewalld
+      ansible.builtin.service:
+        name: firewalld
+        state: stopped
+        enabled: false
+      when: ansible_os_family == "RedHat"
+      failed_when: false
+
     - name: Install "jq" for log collection
       ansible.builtin.package:
         name: jq
