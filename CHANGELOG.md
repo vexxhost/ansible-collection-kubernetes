@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.6.0](https://github.com/vexxhost/ansible-collection-kubernetes/compare/v2.5.1...v2.6.0) (2026-03-18)
+
+
+### Features
+
+* add Envoy Gateway role as ingress-nginx replacement ([#238](https://github.com/vexxhost/ansible-collection-kubernetes/issues/238)) ([e7adf9e](https://github.com/vexxhost/ansible-collection-kubernetes/commit/e7adf9e13ffb2af8bf9dd27c7508f4044f30ecd2))
+* add Kubernetes log collection to molecule CI post-run ([#240](https://github.com/vexxhost/ansible-collection-kubernetes/issues/240)) ([5d0bf8e](https://github.com/vexxhost/ansible-collection-kubernetes/commit/5d0bf8efe2384b41b6787a257a92f586d2b937e9))
+
 ## [2.5.1](https://github.com/vexxhost/ansible-collection-kubernetes/compare/v2.5.0...v2.5.1) (2026-02-16)
 
 
