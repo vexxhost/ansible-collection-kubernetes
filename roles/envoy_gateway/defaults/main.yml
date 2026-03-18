@@ -1,0 +1,18 @@
+# Copyright (c) 2025 VEXXHOST, Inc.
+# SPDX-License-Identifier: Apache-2.0
+
+---
+envoy_gateway_helm_chart_path: "chart/"
+envoy_gateway_helm_chart_ref: /usr/local/src/envoy-gateway
+
+envoy_gateway_helm_release_name: envoy-gateway
+envoy_gateway_helm_release_namespace: envoy-gateway-system
+
+envoy_gateway_helm_values: {}
+
+envoy_gateway_gateway_class_name: eg
+
+envoy_gateway_node_selector: {}
+
+envoy_gateway_image: "docker.io/envoyproxy/gateway:v1.7.0"
+envoy_gateway_ratelimit_image: "docker.io/envoyproxy/ratelimit:3fb70258"

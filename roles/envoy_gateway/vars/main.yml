@@ -1,0 +1,24 @@
+# Copyright (c) 2025 VEXXHOST, Inc.
+# SPDX-License-Identifier: Apache-2.0
+
+---
+_envoy_gateway_helm_values:
+  global:
+    images:
+      envoyGateway:
+        image: "{{ envoy_gateway_image }}"
+      ratelimit:
+        image: "{{ envoy_gateway_ratelimit_image }}"
+  deployment:
+    envoyGateway:
+      image:
+        repository: "{{ envoy_gateway_image | vexxhost.kubernetes.docker_image('name') }}"
+        tag: "{{ envoy_gateway_image | vexxhost.kubernetes.docker_image('tag') }}"
+      resources:
+        limits:
+          memory: 1024Mi
+        requests:
+          cpu: 100m
+          memory: 256Mi
+    pod:
+      nodeSelector: "{{ envoy_gateway_node_selector }}"

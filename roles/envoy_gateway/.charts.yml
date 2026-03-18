@@ -1,0 +1,7 @@
+---
+charts:
+  - name: gateway-helm
+    directory: chart
+    version: v1.7.0
+    repository:
+      url: oci://docker.io/envoyproxy

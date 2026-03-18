@@ -1,0 +1,26 @@
+# Copyright (c) 2025 VEXXHOST, Inc.
+# SPDX-License-Identifier: Apache-2.0
+
+---
+- name: Deploy Helm chart
+  run_once: true
+  kubernetes.core.helm:
+    name: "{{ envoy_gateway_helm_release_name }}"
+    chart_ref: "{{ envoy_gateway_helm_chart_ref }}"
+    release_namespace: "{{ envoy_gateway_helm_release_namespace }}"
+    create_namespace: true
+    kubeconfig: /etc/kubernetes/admin.conf
+    values: "{{ _envoy_gateway_helm_values | combine(envoy_gateway_helm_values, recursive=True) }}"
+
+- name: Create GatewayClass
+  run_once: true
+  kubernetes.core.k8s:
+    state: present
+    kubeconfig: /etc/kubernetes/admin.conf
+    definition:
+      apiVersion: gateway.networking.k8s.io/v1
+      kind: GatewayClass
+      metadata:
+        name: "{{ envoy_gateway_gateway_class_name }}"
+      spec:
+        controllerName: gateway.envoyproxy.io/gatewayclass-controller
