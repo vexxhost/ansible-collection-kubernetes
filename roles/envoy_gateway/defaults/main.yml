@@ -16,3 +16,9 @@ envoy_gateway_node_selector: {}
 
 envoy_gateway_image: "docker.io/envoyproxy/gateway:v1.7.0"
 envoy_gateway_ratelimit_image: "docker.io/envoyproxy/ratelimit:3fb70258"
+
+# envoy_gateway_gateway_class_parameters_ref:
+#   group: gateway.envoyproxy.io
+#   kind: EnvoyProxy
+#   name: "{{ envoy_gateway_gateway_class_name }}-proxy"
+#   namespace: "{{ envoy_gateway_helm_release_namespace }}"

@@ -24,3 +24,4 @@
         name: "{{ envoy_gateway_gateway_class_name }}"
       spec:
         controllerName: gateway.envoyproxy.io/gatewayclass-controller
+        parametersRef: "{{ envoy_gateway_gateway_class_parameters_ref | default(omit) }}"
