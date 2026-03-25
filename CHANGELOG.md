@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.7.0](https://github.com/vexxhost/ansible-collection-kubernetes/compare/v2.6.0...v2.7.0) (2026-03-25)
+
+
+### Features
+
+* envoy_gateway_gateway_class_parameters_ref option ([#243](https://github.com/vexxhost/ansible-collection-kubernetes/issues/243)) ([09dba18](https://github.com/vexxhost/ansible-collection-kubernetes/commit/09dba18bc4b6510c35e2c6e43374188239310ec5))
+
 ## [2.6.0](https://github.com/vexxhost/ansible-collection-kubernetes/compare/v2.5.1...v2.6.0) (2026-03-18)
 
 
