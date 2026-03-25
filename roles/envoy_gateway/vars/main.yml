@@ -22,3 +22,6 @@ _envoy_gateway_helm_values:
           memory: 256Mi
     pod:
       nodeSelector: "{{ envoy_gateway_node_selector }}"
+
+_envoy_gateway_gateway_class_spec:
+  controllerName: gateway.envoyproxy.io/gatewayclass-controller
