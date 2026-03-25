@@ -22,5 +22,4 @@
       kind: GatewayClass
       metadata:
         name: "{{ envoy_gateway_gateway_class_name }}"
-      spec:
-        controllerName: gateway.envoyproxy.io/gatewayclass-controller
+      spec: "{{ _envoy_gateway_gateway_class_spec | combine(envoy_gateway_gateway_class_spec, recursive=True) }}"
