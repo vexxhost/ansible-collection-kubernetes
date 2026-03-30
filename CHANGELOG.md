@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.8.1](https://github.com/vexxhost/ansible-collection-kubernetes/compare/v2.8.0...v2.8.1) (2026-03-30)
+
+
+### Reverts
+
+* upgrade cert-manager chart ([#247](https://github.com/vexxhost/ansible-collection-kubernetes/issues/247)) ([#251](https://github.com/vexxhost/ansible-collection-kubernetes/issues/251)) ([dbfa92a](https://github.com/vexxhost/ansible-collection-kubernetes/commit/dbfa92a838fde2f57f9457e3e109a91587768439))
+
 ## [2.8.0](https://github.com/vexxhost/ansible-collection-kubernetes/compare/v2.7.1...v2.8.0) (2026-03-30)
 
 
