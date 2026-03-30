@@ -1,6 +1,12 @@
 {{- if .Values.webhook.config -}}
-{{- $_ := .Values.webhook.config.apiVersion | required ".Values.webhook.config.apiVersion must be set !" -}}
-{{- $_ := .Values.webhook.config.kind | required ".Values.webhook.config.kind must be set !" -}}
+  {{- if not .Values.webhook.config.apiVersion -}}
+    {{- fail "webhook.config.apiVersion must be set" -}}
+  {{- end -}}
+
+  {{- if not .Values.webhook.config.kind -}}
+    {{- fail "webhook.config.kind must be set" -}}
+  {{- end -}}
+{{- end -}}
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -13,6 +19,7 @@ metadata:
     app.kubernetes.io/component: "webhook"
     {{- include "labels" . | nindent 4 }}
 data:
+  {{- if .Values.webhook.config }}
   config.yaml: |
-    {{- .Values.webhook.config | toYaml | nindent 4 }}
-{{- end -}}
+    {{ .Values.webhook.config | toYaml | nindent 4 }}
+  {{- end }}
