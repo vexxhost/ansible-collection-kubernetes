@@ -8,6 +8,7 @@ cert_manager_helm_chart_ref: /usr/local/src/cert-manager
 cert_manager_helm_release_name: cert-manager
 cert_manager_helm_release_namespace: cert-manager
 cert_manager_helm_values: {}
+cert_manager_extra_args: []
 
 cert_manager_node_selector: {}
 
