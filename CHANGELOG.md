@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.0.1](https://github.com/vexxhost/ansible-collection-kubernetes/compare/v3.0.0...v3.0.1) (2026-03-31)
+
+
+### Reverts
+
+* upgrade cert-manager chart to v1.15.5 ([#253](https://github.com/vexxhost/ansible-collection-kubernetes/issues/253)) ([#255](https://github.com/vexxhost/ansible-collection-kubernetes/issues/255)) ([cfc0cb3](https://github.com/vexxhost/ansible-collection-kubernetes/commit/cfc0cb301fa1d0f7ca213e9fe6f790f5d64b9d08))
+
 ## [3.0.0](https://github.com/vexxhost/ansible-collection-kubernetes/compare/v2.8.1...v3.0.0) (2026-03-30)
 
 
