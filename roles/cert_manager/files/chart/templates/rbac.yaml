@@ -70,6 +70,7 @@ rules:
   - apiGroups: [""]
     resources: ["events"]
     verbs: ["create", "patch"]
+
 ---
 
 # ClusterIssuer controller role
@@ -398,26 +399,6 @@ subjects:
     namespace: {{ include "cert-manager.namespace" . }}
     kind: ServiceAccount
 
-{{- if .Values.global.rbac.aggregateClusterRoles }}
----
-
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  name: {{ template "cert-manager.fullname" . }}-cluster-view
-  labels:
-    app: {{ include "cert-manager.name" . }}
-    app.kubernetes.io/name: {{ include "cert-manager.name" . }}
-    app.kubernetes.io/instance: {{ .Release.Name }}
-    app.kubernetes.io/component: "controller"
-    {{- include "labels" . | nindent 4 }}
-    rbac.authorization.k8s.io/aggregate-to-cluster-reader: "true"
-rules:
-  - apiGroups: ["cert-manager.io"]
-    resources: ["clusterissuers"]
-    verbs: ["get", "list", "watch"]
-
-{{- end }}
 ---
 
 apiVersion: rbac.authorization.k8s.io/v1
@@ -434,7 +415,6 @@ metadata:
     rbac.authorization.k8s.io/aggregate-to-view: "true"
     rbac.authorization.k8s.io/aggregate-to-edit: "true"
     rbac.authorization.k8s.io/aggregate-to-admin: "true"
-    rbac.authorization.k8s.io/aggregate-to-cluster-reader: "true"
     {{- end }}
 rules:
   - apiGroups: ["cert-manager.io"]
@@ -474,8 +454,6 @@ rules:
 
 ---
 
-{{- if not .Values.disableAutoApproval -}}
-
 # Permission to approve CertificateRequests referencing cert-manager.io Issuers and ClusterIssuers
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
@@ -491,12 +469,7 @@ rules:
   - apiGroups: ["cert-manager.io"]
     resources: ["signers"]
     verbs: ["approve"]
-    {{- with .Values.approveSignerNames }}
-    resourceNames:
-    {{- range . }}
-    - {{ . | quote }}
-    {{- end  }}
-    {{- end }}
+    resourceNames: ["issuers.cert-manager.io/*", "clusterissuers.cert-manager.io/*"]
 
 ---
 
@@ -520,8 +493,6 @@ subjects:
     kind: ServiceAccount
 
 ---
-
-{{- end -}}
 
 # Permission to:
 # - Update and sign CertificatSigningeRequests referencing cert-manager.io Issuers and ClusterIssuers
