@@ -28,7 +28,7 @@ dependencies = [
 [dependency-groups]
 dev = [
   "molecule>=25.9.0.rc1",
-  "pytest>=8.4.1",
+  "pytest>=9.0.3",
   "pytest-forked>=1.6.0",
   "pytest-xdist>=3.7.0",
 ]
