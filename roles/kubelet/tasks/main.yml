@@ -18,6 +18,10 @@
   ansible.builtin.dnf:
     name: coreutils
     allowerasing: true
+  register: _install_coreutils
+  retries: 5
+  delay: 10
+  until: _install_coreutils is not failed
   when:
     - ansible_facts['os_family'] == 'RedHat'
 
@@ -28,6 +32,10 @@
 - name: Install additional packages
   ansible.builtin.package:
     name: "{{ kubelet_package_dependencies }}"
+  register: _install_packages
+  retries: 5
+  delay: 10
+  until: _install_packages is not failed
 
 - name: Configure sysctl values
   ansible.posix.sysctl:
@@ -119,6 +127,10 @@
   ansible.builtin.package:
     name: dbus
     state: present
+  register: _install_dbus
+  retries: 5
+  delay: 10
+  until: _install_dbus is not failed
   when:
     - ansible_facts['os_family'] == 'Debian'
 
