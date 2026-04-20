@@ -17,7 +17,10 @@ rules:
 - apiGroups:
   - openstack.k-orc.cloud
   resources:
+  - addressscopes
+  - applicationcredentials
   - domains
+  - endpoints
   - flavors
   - floatingips
   - groups
@@ -34,6 +37,8 @@ rules:
   - servers
   - services
   - subnets
+  - trunks
+  - users
   - volumes
   - volumetypes
   verbs:
@@ -47,7 +52,10 @@ rules:
 - apiGroups:
   - openstack.k-orc.cloud
   resources:
+  - addressscopes/status
+  - applicationcredentials/status
   - domains/status
+  - endpoints/status
   - flavors/status
   - floatingips/status
   - groups/status
@@ -64,6 +72,8 @@ rules:
   - servers/status
   - services/status
   - subnets/status
+  - trunks/status
+  - users/status
   - volumes/status
   - volumetypes/status
   verbs:

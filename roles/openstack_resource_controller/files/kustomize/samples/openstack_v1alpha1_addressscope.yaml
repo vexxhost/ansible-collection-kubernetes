@@ -1,13 +1,12 @@
 ---
 apiVersion: openstack.k-orc.cloud/v1alpha1
-kind: Domain
+kind: AddressScope
 metadata:
-  name: domain-sample
+  name: addressscope-sample
 spec:
   cloudCredentialsRef:
-    cloudName: openstack-admin
+    cloudName: openstack
     secretName: openstack-clouds
   managementPolicy: managed
   resource:
-    description: Sample Domain
-    enabled: true
+    ipVersion: 4
