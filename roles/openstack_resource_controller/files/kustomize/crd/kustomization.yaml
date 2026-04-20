@@ -3,7 +3,10 @@
 # since it depends on service name and namespace that are out of this kustomize package.
 # It should be run by config/default
 resources:
+- bases/openstack.k-orc.cloud_addressscopes.yaml
+- bases/openstack.k-orc.cloud_applicationcredentials.yaml
 - bases/openstack.k-orc.cloud_domains.yaml
+- bases/openstack.k-orc.cloud_endpoints.yaml
 - bases/openstack.k-orc.cloud_flavors.yaml
 - bases/openstack.k-orc.cloud_floatingips.yaml
 - bases/openstack.k-orc.cloud_groups.yaml
@@ -20,6 +23,8 @@ resources:
 - bases/openstack.k-orc.cloud_servergroups.yaml
 - bases/openstack.k-orc.cloud_services.yaml
 - bases/openstack.k-orc.cloud_subnets.yaml
+- bases/openstack.k-orc.cloud_trunks.yaml
+- bases/openstack.k-orc.cloud_users.yaml
 - bases/openstack.k-orc.cloud_volumes.yaml
 - bases/openstack.k-orc.cloud_volumetypes.yaml
 # +kubebuilder:scaffold:crdkustomizeresource
