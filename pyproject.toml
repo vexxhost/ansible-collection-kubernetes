@@ -4,7 +4,7 @@ version = "3.0.1"
 authors = [{ name = "VEXXHOST, Inc.", email = "support@vexxhost.com" }]
 description = "Ansible collection for deploying Kubernetes clusters"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.12"
 license = "Apache-2.0"
 classifiers = [
   "Development Status :: 5 - Production/Stable",
@@ -14,13 +14,13 @@ classifiers = [
   "Operating System :: POSIX :: Linux",
   "Programming Language :: Python",
   "Programming Language :: Python :: 3",
-  "Programming Language :: Python :: 3.10",
-  "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
   "Programming Language :: Python :: Implementation :: CPython",
 ]
 dependencies = [
-  "ansible-core>=2.15.9",
+  "ansible-core>=2.20",
   "docker-image-py>=0.1.12",
   "jmespath>=1.0.1",
 ]
