@@ -30,6 +30,7 @@ repos:
       - id: yamllint
 
   - repo: https://github.com/ansible/ansible-lint.git
-    rev: v25.6.1
+    rev: v26.4.0
     hooks:
       - id: ansible-lint
+        language_version: python3
