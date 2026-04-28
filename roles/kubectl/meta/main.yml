@@ -17,6 +17,8 @@ galaxy_info:
       versions:
         - focal
         - jammy
+        - noble
+        - resolute
 
 dependencies:
   - role: vexxhost.containers.forget_package
