@@ -241,6 +241,7 @@ kubeadm_checksums:
     1.35.2: a51cb85c70c98ec6868fd3413ac786af5fab4ce51438963752ec5f58e68e5452
     1.35.3: a3fb4b3a214a807e2ef4c3fda3196c7f97dcf8152558de5a3c473c869bda0b07
     1.35.4: 0c0497da793f8897c14e45340da919534b615294a1aab69dc1998896c0f11145
+    1.36.0: f962dcee1f49a51368c3b383742144d99eacff77b2132cd0a540ed8c6b30fe81
   arm64:
     1.19.16: f72db475c7a52deaab3ac04ee66e2c99dc4dc50b4fa85faf34ff319de869e1d6
     1.20.0: 16faf8bf3c94cb21dcae131cbfbd0961fc5fef37cb7e37f872ff249e235e0f46
@@ -479,6 +480,7 @@ kubeadm_checksums:
     1.35.2: b540b734e9eaeb134e2cb7c7803dc62160589ac3b2615d717ce41acb22bbec98
     1.35.3: 647a9821c37a27bcaf6d679a191732b686c01cecd0219d5e579129f0cfd62cef
     1.35.4: e8f6b5bee3e2c8b5965f4ae65c2ae04e3f9f426d2458a1e2f159e824d419d92c
+    1.36.0: 43d4ca3a9f8f49c2c2f6db2c056de1a00fa110a3dd5aa68a74fbc52e42d96c01
 
 kubeadm_download_url: "https://dl.k8s.io/release/v{{ kubeadm_version }}/bin/{{ ansible_facts['system'] | lower }}/{{ download_artifact_goarch }}/kubeadm" # yamllint disable-line rule:line-length
 kubeadm_download_dest: /usr/bin/kubeadm

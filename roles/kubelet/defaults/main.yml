@@ -241,6 +241,7 @@ kubelet_checksums:
     1.35.2: 20887f461c0de96b0cb14c7af6b897f92d424ac078f8642f98e83ef52a0bf03e
     1.35.3: 28d570423eaad5f1f5658a646bd8c015c786c95d62ffaf14bf35fa0c4326fa05
     1.35.4: 983a6ba5a49823dcdd745c674e5e2416377dd27d6ad1b42d2befa0fb961a19f6
+    1.36.0: d857082946c28493e8fdc52227feabd962e0e0900b6c6e4f6510168043b79dd4
   arm64:
     1.19.16: 6e51cc1f16259b1016858f32bd48f44929b8330a26eb4da26929907872ab116f
     1.20.0: 47ab6c4273fc3bb0cb8ec9517271d915890c5a6b0e54b2991e7a8fbbe77b06e4
@@ -479,6 +480,7 @@ kubelet_checksums:
     1.35.2: eaf11f9c20c385624775671662e127b083c9b5d0b451fd613f9468e09ca5656c
     1.35.3: 58496a5d16d4316b18397735190d2d41e0c368169ecb458d91b09f4cd1e03c80
     1.35.4: d710eef03bb4ad164bb77af9be5b11b44f874e2fc08153c7d383420d685f73e8
+    1.36.0: 049d95107361583e64f3ac9b8c9bdaf73fc7e512a838972b13b423a33ece87e9
 
 kubelet_download_url: "https://dl.k8s.io/release/v{{ kubelet_version }}/bin/{{ ansible_facts['system'] | lower }}/{{ download_artifact_goarch }}/kubelet" # yamllint disable-line rule:line-length
 kubelet_download_dest: /usr/bin/kubelet
