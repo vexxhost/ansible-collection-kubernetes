@@ -1,13 +1,14 @@
 ---
 apiVersion: openstack.k-orc.cloud/v1alpha1
-kind: Domain
+kind: Endpoint
 metadata:
-  name: domain-sample
+  name: endpoint-sample
 spec:
   cloudCredentialsRef:
     cloudName: openstack-admin
     secretName: openstack-clouds
   managementPolicy: managed
   resource:
-    description: Sample Domain
-    enabled: true
+    interface: internal
+    url: "https://example.com"
+    serviceRef: service-sample
