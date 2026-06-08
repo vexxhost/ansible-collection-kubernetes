@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.2.0](https://github.com/vexxhost/ansible-collection-kubernetes/compare/v3.1.0...v3.2.0) (2026-06-08)
+
+
+### Features
+
+* **cluster_api:** add CAPI 1.13.2 support ([#279](https://github.com/vexxhost/ansible-collection-kubernetes/issues/279)) ([4ee7c85](https://github.com/vexxhost/ansible-collection-kubernetes/commit/4ee7c855859098d518937e1b34ad6dbef952df20))
+
 ## [3.1.0](https://github.com/vexxhost/ansible-collection-kubernetes/compare/v3.0.1...v3.1.0) (2026-04-22)
 
 
