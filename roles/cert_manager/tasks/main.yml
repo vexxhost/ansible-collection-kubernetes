@@ -2,6 +2,20 @@
 # SPDX-License-Identifier: Apache-2.0
 
 ---
+- name: "DEPRECATED: cert_manager_image_cli — warn and remap to cert_manager_image_startupapicheck"
+  ansible.builtin.debug:
+    msg: >-
+      [DEPRECATION WARNING] 'cert_manager_image_cli' is deprecated.
+      Please switch to 'cert_manager_image_startupapicheck'. Support will be removed in a future version.
+  when: cert_manager_image_cli is defined
+
+- name: Remap deprecated cert_manager_image_cli to cert_manager_image_startupapicheck
+  ansible.builtin.set_fact:
+    cert_manager_image_startupapicheck: "{{ cert_manager_image_cli }}"
+  when:
+    - cert_manager_image_cli is defined
+    - cert_manager_image_startupapicheck is not defined
+
 - name: Deploy Helm chart
   run_once: true
   kubernetes.core.helm:
