@@ -14,14 +14,13 @@ kubernetes_repository_apt: "deb https://apt.kubernetes.io/ kubernetes-xenial mai
 # Kubernetes image repository (leave undefined to use the `kubeadm` default)
 kubernetes_image_repository: registry.k8s.io
 
-# Deprecated: Please use "kubelet_node_ip" instead.
-kubernetes_node_ip: "{{ kubelet_node_ip }}"
+kubernetes_node_ip: "{{ kubelet_node_ip | default(ansible_facts['default_ipv4'].address) }}"
 
-# Deprecated: Please use "kubelet_cri_socket" instead.
-kubernetes_cri_socket: "{{ kubelet_cri_socket }}"
+kubernetes_cri_socket: "{{ kubelet_cri_socket | default('/run/containerd/containerd.sock') }}"
 
-# Deprecated: Please use "kubelet_allow_unsafe_swap" instead.
-kubernetes_allow_unsafe_swap: false
+kubernetes_node_hostname: "{{ kubelet_hostname | default(inventory_hostname_short) }}"
+
+kubernetes_allow_unsafe_swap: "{{ kubelet_allow_unsafe_swap | default(false) }}"
 
 # If the deployment is in a non-init namespace (docker/LXC/...)
 # then kube-proxy must be prevented from ajusting conntrack settings
