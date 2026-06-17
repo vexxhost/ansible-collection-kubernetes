@@ -18,4 +18,7 @@
     release_namespace: "{{ cert_manager_helm_release_namespace }}"
     create_namespace: true
     kubeconfig: /etc/kubernetes/admin.conf
-    values: "{{ _cert_manager_helm_values | combine(_cert_manager_version_values | default({}), recursive=true) | combine(cert_manager_helm_values, recursive=true) }}"
+    values: >-
+      {{ _cert_manager_helm_values
+      | combine(_cert_manager_version_values | default({}), recursive=true)
+      | combine(cert_manager_helm_values, recursive=true) }}
