@@ -5,6 +5,9 @@
 - name: Verify
   hosts: all
   become: true
+  vars:
+    cert_manager_helm_release_name: cert-manager
+    cert_manager_helm_release_namespace: cert-manager
   tasks:
     - name: Get Helm release info
       kubernetes.core.helm_info:
