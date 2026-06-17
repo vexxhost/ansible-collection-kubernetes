@@ -3,12 +3,10 @@
 
 ---
 - name: Load version-specific Helm values
-  when: lookup('ansible.builtin.first_found', params) | length > 0
-  ansible.builtin.include_vars: "{{ lookup('ansible.builtin.first_found', params) }}"
-  vars:
-    params:
-      - "{{ role_path }}/vars/{{ cert_manager_helm_chart_version }}.yml"
-      - "{{ role_path }}/vars/{{ cert_manager_helm_chart_version | regex_replace('^(v\\d+\\.\\d+).*', '\\1') }}.yml"
+  ansible.builtin.include_vars: "{{ item }}"
+  with_first_found:
+    - "{{ role_path }}/vars/{{ cert_manager_helm_chart_version }}.yml"
+    - "{{ role_path }}/vars/{{ cert_manager_helm_chart_version | regex_replace('^(v\\d+\\.\\d+).*', '\\1') }}.yml"
 
 - name: Deploy Helm chart
   run_once: true
