@@ -177,6 +177,8 @@
     name: ansible-collection-kubernetes-molecule-cert-manager
     parent: ansible-collection-kubernetes-molecule
     abstract: true
+    files:
+      - roles/cert_manager/.*
     vars:
       molecule_scenario: cert-manager
 
