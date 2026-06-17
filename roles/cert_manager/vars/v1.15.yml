@@ -2,6 +2,8 @@
 # SPDX-License-Identifier: Apache-2.0
 
 ---
+cert_manager_image_startupapicheck: "quay.io/jetstack/cert-manager-startupapicheck:{{ cert_manager_image_tag }}"
+
 _cert_manager_version_values:
   startupapicheck:
     image:
