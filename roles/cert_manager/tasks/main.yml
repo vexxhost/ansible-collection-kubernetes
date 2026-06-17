@@ -7,6 +7,7 @@
   with_first_found:
     - "{{ role_path }}/vars/{{ cert_manager_helm_chart_version }}.yml"
     - "{{ role_path }}/vars/{{ cert_manager_helm_chart_version.split('.')[:2] | join('.') }}.yml"
+    - "{{ role_path }}/vars/default.yml"
 
 - name: Deploy Helm chart
   run_once: true
