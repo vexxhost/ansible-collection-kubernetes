@@ -1,4 +1,4 @@
-# Copyright (c) 2025 VEXXHOST, Inc.
+# Copyright (c) 2026 VEXXHOST, Inc.
 # SPDX-License-Identifier: Apache-2.0
 
 ---
@@ -17,9 +17,3 @@ galaxy_info:
       versions:
         - focal
         - jammy
-
-dependencies:
-  - role: vexxhost.kubernetes.upload_helm_chart
-    vars:
-      upload_helm_chart_src: "{{ cert_manager_helm_chart_path }}"
-      upload_helm_chart_dest: "{{ cert_manager_helm_chart_ref }}"
