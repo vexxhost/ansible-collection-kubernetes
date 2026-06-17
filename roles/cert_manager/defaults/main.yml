@@ -22,6 +22,6 @@ cert_manager_image_acmesolver: "quay.io/jetstack/cert-manager-acmesolver:{{ cert
 cert_manager_image_startupapicheck: >-
   {{
     'quay.io/jetstack/cert-manager-startupapicheck:' ~ cert_manager_image_tag
-    if (cert_manager_helm_chart_version | regex_replace('^v', '')) is version('1.15.0', '>=')
+    if cert_manager_helm_chart_version is version('1.15.0', '>=', version_type='pep440')
     else cert_manager_image_cli
   }}
