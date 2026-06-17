@@ -6,7 +6,7 @@
   ansible.builtin.include_vars: "{{ item }}"
   with_first_found:
     - "{{ role_path }}/vars/{{ cert_manager_helm_chart_version }}.yml"
-    - "{{ role_path }}/vars/{{ cert_manager_helm_chart_version | regex_replace('^(v\\d+\\.\\d+).*', '\\1') }}.yml"
+    - "{{ role_path }}/vars/{{ cert_manager_helm_chart_version.split('.')[:2] | join('.') }}.yml"
 
 - name: Deploy Helm chart
   run_once: true
