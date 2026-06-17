@@ -3,7 +3,7 @@
 
 ---
 - name: Load version-specific Helm values
-  include_vars: "{{ lookup('ansible.builtin.first_found', params) }}"
+  ansible.builtin.include_vars: "{{ lookup('ansible.builtin.first_found', params) }}"
   vars:
     params:
       - "{{ role_path }}/vars/{{ cert_manager_helm_chart_version }}.yml"

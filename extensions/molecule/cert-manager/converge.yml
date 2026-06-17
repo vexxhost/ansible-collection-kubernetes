@@ -2,11 +2,12 @@
 # SPDX-License-Identifier: Apache-2.0
 
 ---
-- name: Converge
-  hosts: all
+- import_playbook: vexxhost.kubernetes.site
+
+- name: Install cert-manager
+  hosts: "{{ kubernetes_control_plane_group | default('controllers') }}"
   become: true
   vars_files:
     - "vars/{{ cert_manager_test_version | default('default') }}.yml"
   roles:
-    - vexxhost.kubernetes.helm
     - vexxhost.kubernetes.cert_manager
