@@ -2,12 +2,21 @@
 # SPDX-License-Identifier: Apache-2.0
 
 ---
+- name: Load version-specific Helm values
+  include_vars: "{{ lookup('ansible.builtin.first_found', params) }}"
+  vars:
+    params:
+      - "{{ role_path }}/vars/{{ cert_manager_helm_chart_version }}.yml"
+      - "{{ role_path }}/vars/{{ cert_manager_helm_chart_version | regex_replace('^(v\\d+\\.\\d+).*', '\\1') }}.yml"
+      - "{{ role_path }}/vars/default.yml"
+
 - name: Deploy Helm chart
   run_once: true
   kubernetes.core.helm:
     name: "{{ cert_manager_helm_release_name }}"
-    chart_ref: "{{ cert_manager_helm_chart_ref }}"
+    chart_ref: "{{ cert_manager_helm_chart_repository }}"
+    chart_version: "{{ cert_manager_helm_chart_version }}"
     release_namespace: "{{ cert_manager_helm_release_namespace }}"
     create_namespace: true
     kubeconfig: /etc/kubernetes/admin.conf
-    values: "{{ _cert_manager_helm_values | combine(cert_manager_helm_values, recursive=True) }}"
+    values: "{{ _cert_manager_helm_values | combine(_cert_manager_version_values | default({}), recursive=true) | combine(cert_manager_helm_values, recursive=true) }}"

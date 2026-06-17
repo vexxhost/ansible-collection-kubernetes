@@ -2,8 +2,8 @@
 # SPDX-License-Identifier: Apache-2.0
 
 ---
-cert_manager_helm_chart_path: "chart/"
-cert_manager_helm_chart_ref: /usr/local/src/cert-manager
+cert_manager_helm_chart_repository: oci://ghcr.io/vexxhost/charts/cert-manager
+cert_manager_helm_chart_version: "v1.11.5"
 
 cert_manager_helm_release_name: cert-manager
 cert_manager_helm_release_namespace: cert-manager
@@ -11,9 +11,18 @@ cert_manager_helm_values: {}
 
 cert_manager_node_selector: {}
 
-cert_manager_image_tag: "v1.11.5"
-cert_manager_image_cli: "quay.io/jetstack/cert-manager-ctl:{{ cert_manager_image_tag }}"
+# Images derived from chart version
+cert_manager_image_tag: "{{ cert_manager_helm_chart_version }}"
 cert_manager_image_controller: "quay.io/jetstack/cert-manager-controller:{{ cert_manager_image_tag }}"
 cert_manager_image_cainjector: "quay.io/jetstack/cert-manager-cainjector:{{ cert_manager_image_tag }}"
 cert_manager_image_webhook: "quay.io/jetstack/cert-manager-webhook:{{ cert_manager_image_tag }}"
 cert_manager_image_acmesolver: "quay.io/jetstack/cert-manager-acmesolver:{{ cert_manager_image_tag }}"
+cert_manager_image_cli: "quay.io/jetstack/cert-manager-ctl:{{ cert_manager_image_tag }}"
+
+# Auto-select correct startupapicheck image for v1.15+
+cert_manager_image_startupapicheck: >-
+  {{
+    'quay.io/jetstack/cert-manager-startupapicheck:' ~ cert_manager_image_tag
+    if (cert_manager_helm_chart_version | regex_replace('^v', '')) is version('1.15.0', '>=')
+    else cert_manager_image_cli
+  }}

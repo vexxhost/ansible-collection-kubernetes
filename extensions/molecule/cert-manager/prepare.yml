@@ -1,0 +1,13 @@
+# Copyright (c) 2025 VEXXHOST, Inc.
+# SPDX-License-Identifier: Apache-2.0
+
+---
+- name: Prepare
+  hosts: all
+  tasks:
+    - name: Install Debian packages
+      become: true
+      ansible.builtin.apt:
+        name: ["gnupg"]
+        update_cache: true
+      when: ansible_facts['os_family'] == "Debian"
