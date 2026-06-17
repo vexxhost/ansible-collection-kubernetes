@@ -174,17 +174,18 @@
       molecule_scenario: upload-helm-chart
 
 - job:
-    name: ansible-collection-kubernetes-molecule-cert-manager
+    name: ansible-collection-kubernetes-molecule-cert-manager-v1.11.5
     parent: ansible-collection-kubernetes-molecule
     vars:
       molecule_scenario: cert-manager
+      cert_manager_helm_chart_version: v1.11.5
 
 - job:
     name: ansible-collection-kubernetes-molecule-cert-manager-v1.15.5
     parent: ansible-collection-kubernetes-molecule
     vars:
       molecule_scenario: cert-manager
-      cert_manager_test_version: v1.15.5
+      cert_manager_helm_chart_version: v1.15.5
 
 - project:
     merge-mode: squash-merge
@@ -201,7 +202,7 @@
         - ansible-collection-kubernetes-molecule-ha
         - ansible-collection-kubernetes-molecule-helm
         - ansible-collection-kubernetes-molecule-upload-helm-chart
-        - ansible-collection-kubernetes-molecule-cert-manager
+        - ansible-collection-kubernetes-molecule-cert-manager-v1.11.5
         - ansible-collection-kubernetes-molecule-cert-manager-v1.15.5
         - ansible-test
         - pre-commit
@@ -218,7 +219,7 @@
         - ansible-collection-kubernetes-molecule-ha
         - ansible-collection-kubernetes-molecule-helm
         - ansible-collection-kubernetes-molecule-upload-helm-chart
-        - ansible-collection-kubernetes-molecule-cert-manager
+        - ansible-collection-kubernetes-molecule-cert-manager-v1.11.5
         - ansible-collection-kubernetes-molecule-cert-manager-v1.15.5
         - ansible-test
         - pre-commit
