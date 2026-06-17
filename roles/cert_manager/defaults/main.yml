@@ -11,13 +11,12 @@ cert_manager_helm_values: {}
 
 cert_manager_node_selector: {}
 
-# Images derived from chart version
 cert_manager_image_tag: "{{ cert_manager_helm_chart_version }}"
+cert_manager_image_cli: "quay.io/jetstack/cert-manager-ctl:{{ cert_manager_image_tag }}"
 cert_manager_image_controller: "quay.io/jetstack/cert-manager-controller:{{ cert_manager_image_tag }}"
 cert_manager_image_cainjector: "quay.io/jetstack/cert-manager-cainjector:{{ cert_manager_image_tag }}"
 cert_manager_image_webhook: "quay.io/jetstack/cert-manager-webhook:{{ cert_manager_image_tag }}"
 cert_manager_image_acmesolver: "quay.io/jetstack/cert-manager-acmesolver:{{ cert_manager_image_tag }}"
-cert_manager_image_cli: "quay.io/jetstack/cert-manager-ctl:{{ cert_manager_image_tag }}"
 
 # Auto-select correct startupapicheck image for v1.15+
 cert_manager_image_startupapicheck: >-
