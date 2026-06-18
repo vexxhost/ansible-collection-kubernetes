@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.3.0](https://github.com/vexxhost/ansible-collection-kubernetes/compare/v3.2.0...v3.3.0) (2026-06-18)
+
+
+### Features
+
+* **cert_manager:** switch from vendored chart to OCI ([#284](https://github.com/vexxhost/ansible-collection-kubernetes/issues/284)) ([a789556](https://github.com/vexxhost/ansible-collection-kubernetes/commit/a7895567d7a7cac653e096bc18c8089bc7c20490))
+
 ## [3.2.0](https://github.com/vexxhost/ansible-collection-kubernetes/compare/v3.1.0...v3.2.0) (2026-06-08)
 
 
