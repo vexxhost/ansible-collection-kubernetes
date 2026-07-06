@@ -11,6 +11,7 @@ permissions:
 
 jobs:
   kubernetes:
+    if: ${{ github.repository == 'vexxhost/ansible-collection-kubernetes' }}
     runs-on: ubuntu-latest
     steps:
       - name: Harden the runner (Audit all outbound calls)
