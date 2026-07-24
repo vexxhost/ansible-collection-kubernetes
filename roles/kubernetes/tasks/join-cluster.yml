@@ -5,7 +5,7 @@
 - name: Generate control-plane certificates for joining cluster
   run_once: true
   delegate_to: "{{ kubernetes_bootstrap_node | default(groups[kubernetes_control_plane_group][0]) }}"
-  ansible.builtin.command: kubeadm init phase upload-certs --upload-certs
+  ansible.builtin.command: kubeadm init phase upload-certs --upload-certs --config /etc/kubernetes/kubeadm.yaml
   changed_when: false
   register: kubernetes_kubeadm_init_upload_certs
   when:

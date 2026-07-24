@@ -528,7 +528,7 @@ kubelet_sysctls:
     value: 1048576
 
 # CRI socket path
-kubelet_cri_socket: /run/containerd/containerd.sock
+kubelet_cri_socket: unix:///run/containerd/containerd.sock
 
 # Node IP address
 kubelet_node_ip: "{{ ansible_facts['default_ipv4'].address }}"
