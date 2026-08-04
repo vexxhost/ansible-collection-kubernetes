@@ -61,7 +61,7 @@
 - name: Allow workload on control plane node
   kubernetes.core.k8s_taint:
     state: absent
-    name: "{{ kubelet_hostname }}"
+    name: "{{ kubernetes_node_hostname }}"
     taints:
       - effect: NoSchedule
         key: node-role.kubernetes.io/control-plane
