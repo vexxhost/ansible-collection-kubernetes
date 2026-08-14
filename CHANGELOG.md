@@ -1,5 +1,31 @@
 # Changelog
 
+## [3.3.0](https://github.com/vexxhost/ansible-collection-kubernetes/compare/v3.2.0...v3.3.0) (2026-06-18)
+
+
+### Features
+
+* **cert_manager:** switch from vendored chart to OCI ([#284](https://github.com/vexxhost/ansible-collection-kubernetes/issues/284)) ([a789556](https://github.com/vexxhost/ansible-collection-kubernetes/commit/a7895567d7a7cac653e096bc18c8089bc7c20490))
+
+## [3.2.0](https://github.com/vexxhost/ansible-collection-kubernetes/compare/v3.1.0...v3.2.0) (2026-06-08)
+
+
+### Features
+
+* **cluster_api:** add CAPI 1.13.2 support ([#279](https://github.com/vexxhost/ansible-collection-kubernetes/issues/279)) ([4ee7c85](https://github.com/vexxhost/ansible-collection-kubernetes/commit/4ee7c855859098d518937e1b34ad6dbef952df20))
+
+## [3.1.0](https://github.com/vexxhost/ansible-collection-kubernetes/compare/v3.0.1...v3.1.0) (2026-04-22)
+
+
+### Features
+
+* add capo 0.12.7 ([#267](https://github.com/vexxhost/ansible-collection-kubernetes/issues/267)) ([411eb6a](https://github.com/vexxhost/ansible-collection-kubernetes/commit/411eb6ae07e1198a51711496a25242fd93cbbda4))
+
+
+### Bug Fixes
+
+* **kubelet:** add retry logic to package installation tasks ([#262](https://github.com/vexxhost/ansible-collection-kubernetes/issues/262)) ([d9225a6](https://github.com/vexxhost/ansible-collection-kubernetes/commit/d9225a6fbc56fd91d8f476d90b87b374be3eb23c))
+
 ## [3.0.1](https://github.com/vexxhost/ansible-collection-kubernetes/compare/v3.0.0...v3.0.1) (2026-03-31)
 
 

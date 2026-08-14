@@ -1,0 +1,9 @@
+# Copyright (c) 2026 VEXXHOST, Inc.
+# SPDX-License-Identifier: Apache-2.0
+
+---
+- name: Converge
+  hosts: all
+  become: true
+  roles:
+    - vexxhost.kubernetes.cert_manager

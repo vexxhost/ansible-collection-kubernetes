@@ -88,7 +88,7 @@
       changed_when: true
       ignore_errors: "{{ ansible_check_mode }}"
       when:
-        - kubelet_swapon.stdout
+        - kubelet_swapon.stdout | length > 0
 
     - name: Remove swapfile from /etc/fstab
       ansible.posix.mount:
