@@ -2,7 +2,6 @@ from pathlib import Path
 
 import yaml
 
-
 ROOT = Path(__file__).resolve().parents[4]
 ROLE = ROOT / "roles" / "cluster_api"
 
@@ -22,14 +21,20 @@ def test_addon_provider_is_disabled_by_default() -> None:
 
 def test_addon_patch_is_guarded_by_explicit_enablement() -> None:
     tasks = read_yaml(ROLE / "tasks" / "main.yml")
-    addon = next(task for task in tasks if task["name"] == "Patch Cluster API add-on provider")
+    addon = next(
+        task for task in tasks if task["name"] == "Patch Cluster API add-on provider"
+    )
 
     assert addon["when"] == "cluster_api_addon_provider_enabled"
 
 
 def test_vendored_provider_uses_digest_pinned_controller() -> None:
-    manifest = ROLE / "files" / "providers" / "addon-helm" / "v0.6.4" / "addon-components.yaml"
-    documents = [document for document in yaml.safe_load_all(manifest.read_text()) if document]
+    manifest = (
+        ROLE / "files" / "providers" / "addon-helm" / "v0.6.4" / "addon-components.yaml"
+    )
+    documents = [
+        document for document in yaml.safe_load_all(manifest.read_text()) if document
+    ]
     deployment = next(
         document
         for document in documents
@@ -51,9 +56,7 @@ def test_generic_provider_files_contain_no_gpu_or_os_policy() -> None:
         ROLE / "vars" / "main.yml",
         *sorted((ROLE / "tasks").glob("*.yml")),
     ]
-    public_role = "\n".join(
-        path.read_text() for path in policy_paths
-    ).lower()
+    public_role = "\n".join(path.read_text() for path in policy_paths).lower()
 
     assert "nvidia" not in public_role
     assert "h200" not in public_role
