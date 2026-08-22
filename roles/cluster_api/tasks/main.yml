@@ -25,9 +25,27 @@
     kind: Provider
   register: cluster_api_providers
 
+- name: Detect the configured Cluster API add-on provider
+  run_once: true
+  ansible.builtin.set_fact:
+    cluster_api_addon_provider_installed: >-
+      {{
+        cluster_api_providers.resources
+        | selectattr('type', 'equalto', 'AddonProvider')
+        | selectattr('providerName', 'equalto', cluster_api_addon_provider)
+        | list | length > 0
+      }}
+
 - name: Initialize Cluster API
   ansible.builtin.import_tasks: init.yml
   when: cluster_api_providers.resources | length == 0
+
+- name: Initialize missing Cluster API add-on provider
+  ansible.builtin.import_tasks: init_addon.yml
+  when:
+    - cluster_api_providers.resources | length != 0
+    - cluster_api_addon_provider_enabled
+    - not cluster_api_addon_provider_installed
 
 - name: Upgrade Cluster API
   ansible.builtin.import_tasks: upgrade.yml
@@ -35,3 +53,11 @@
 
 - name: Patch Cluster API
   ansible.builtin.import_tasks: patch.yml
+
+- name: Patch Cluster API add-on provider
+  ansible.builtin.import_tasks: patch_addon.yml
+  when:
+    - cluster_api_addon_provider_enabled
+    - >-
+      not ansible_check_mode or
+      cluster_api_addon_provider_installed

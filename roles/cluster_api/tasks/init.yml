@@ -11,5 +11,5 @@
       --core {{ cluster_api_core_provider }}:v{{ cluster_api_core_version }} \
       --bootstrap {{ cluster_api_bootstrap_provider }}:v{{ cluster_api_bootstrap_version }} \
       --control-plane {{ cluster_api_control_plane_provider }}:v{{ cluster_api_control_plane_version }} \
-      --infrastructure {{ cluster_api_infrastructure_provider }}:v{{ cluster_api_infrastructure_version }}
+      --infrastructure {{ cluster_api_infrastructure_provider }}:v{{ cluster_api_infrastructure_version }} {{ _cluster_api_addon_init_argument }}
   environment: "{{ _cluster_api_environment }}"

@@ -1,0 +1,12 @@
+# Copyright (c) 2026 VEXXHOST, Inc.
+# SPDX-License-Identifier: Apache-2.0
+
+---
+- name: Initialize the Cluster API add-on provider
+  run_once: true
+  changed_when: true
+  ansible.builtin.command: >-
+    {{ clusterctl_download_dest }} init
+    --config {{ clusterctl_config_file }}
+    --addon {{ cluster_api_addon_provider }}:v{{ cluster_api_addon_provider_version }}
+  environment: "{{ _cluster_api_environment }}"
