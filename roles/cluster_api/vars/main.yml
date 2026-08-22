@@ -13,4 +13,5 @@ _cluster_api_addon_init_argument: >-
      if cluster_api_addon_provider_enabled else '' }}
 _cluster_api_addon_upgrade_argument: >-
   {{ ('--addon caaph-system/' ~ cluster_api_addon_provider ~ ':v' ~ cluster_api_addon_provider_version)
-     if cluster_api_addon_provider_enabled else '' }}
+     if (cluster_api_addon_provider_enabled
+         and cluster_api_addon_provider_installed | default(false)) else '' }}

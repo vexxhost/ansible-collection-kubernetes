@@ -21,14 +21,35 @@ def test_addon_provider_is_disabled_by_default() -> None:
 
 def test_addon_patch_is_guarded_by_explicit_enablement() -> None:
     tasks = read_yaml(ROLE / "tasks" / "main.yml")
+    init = next(
+        task
+        for task in tasks
+        if task["name"] == "Initialize missing Cluster API add-on provider"
+    )
     addon = next(
         task for task in tasks if task["name"] == "Patch Cluster API add-on provider"
     )
 
+    assert init["when"] == [
+        "cluster_api_providers.resources | length != 0",
+        "cluster_api_addon_provider_enabled",
+        "not cluster_api_addon_provider_installed",
+    ]
     assert addon["when"][0] == "cluster_api_addon_provider_enabled"
     assert "not ansible_check_mode" in addon["when"][1]
-    assert "AddonProvider" in addon["when"][1]
-    assert "providerName" in addon["when"][1]
+    assert "cluster_api_addon_provider_installed" in addon["when"][1]
+
+
+def test_addon_provider_has_separate_init_and_upgrade_paths() -> None:
+    init = read_yaml(ROLE / "tasks" / "init_addon.yml")
+    upgrade = (ROLE / "tasks" / "upgrade.yml").read_text()
+    role_vars = (ROLE / "vars" / "main.yml").read_text()
+
+    command = init[0]["ansible.builtin.command"]
+    assert "clusterctl_download_dest }} init" in command
+    assert "--addon {{ cluster_api_addon_provider }}" in command
+    assert "cluster_api_addon_provider_installed" in upgrade
+    assert "cluster_api_addon_provider_installed | default(false)" in role_vars
 
 
 def test_vendored_provider_uses_digest_pinned_controller() -> None:

@@ -27,5 +27,6 @@
     cluster_api_installed_control_plane_version != cluster_api_control_plane_version or
     cluster_api_installed_infrastructure_version != cluster_api_infrastructure_version or
     (cluster_api_addon_provider_enabled and
+     cluster_api_addon_provider_installed and
      cluster_api_installed_addon_version != cluster_api_addon_provider_version)
   environment: "{{ _cluster_api_environment }}"
