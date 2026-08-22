@@ -35,3 +35,7 @@
 
 - name: Patch Cluster API
   ansible.builtin.import_tasks: patch.yml
+
+- name: Patch Cluster API add-on provider
+  ansible.builtin.import_tasks: patch_addon.yml
+  when: cluster_api_addon_provider_enabled

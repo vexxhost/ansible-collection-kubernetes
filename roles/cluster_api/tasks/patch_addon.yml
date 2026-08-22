@@ -1,0 +1,49 @@
+# Copyright (c) 2026 VEXXHOST, Inc.
+# SPDX-License-Identifier: Apache-2.0
+
+---
+- name: Configure Cluster API add-on provider deployment
+  run_once: true
+  kubernetes.core.k8s:
+    definition:
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: caaph-controller-manager
+        namespace: caaph-system
+      spec:
+        replicas: "{{ cluster_api_addon_provider_replicas }}"
+        template:
+          spec:
+            nodeSelector: "{{ cluster_api_addon_provider_node_selector }}"
+            topologySpreadConstraints:
+              - maxSkew: 1
+                topologyKey: kubernetes.io/hostname
+                whenUnsatisfiable: ScheduleAnyway
+                labelSelector:
+                  matchLabels:
+                    cluster.x-k8s.io/provider: helm
+                    control-plane: controller-manager
+            containers:
+              - name: manager
+                image: "{{ cluster_api_addon_provider_image }}"
+                imagePullPolicy: "{{ cluster_api_addon_provider_image_pull_policy }}"
+                resources: "{{ cluster_api_addon_provider_resources }}"
+    wait: true
+
+- name: Configure Cluster API add-on provider disruption budget
+  run_once: true
+  when: cluster_api_addon_provider_pdb_enabled
+  kubernetes.core.k8s:
+    definition:
+      apiVersion: policy/v1
+      kind: PodDisruptionBudget
+      metadata:
+        name: caaph-controller-manager
+        namespace: caaph-system
+      spec:
+        maxUnavailable: "{{ cluster_api_addon_provider_pdb_max_unavailable }}"
+        selector:
+          matchLabels:
+            cluster.x-k8s.io/provider: helm
+            control-plane: controller-manager

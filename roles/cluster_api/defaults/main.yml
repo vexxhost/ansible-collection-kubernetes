@@ -23,5 +23,26 @@ cluster_api_control_plane_version: "{{ cluster_api_version }}"
 
 cluster_api_node_selector: {}
 
+# Optional Cluster API Add-on Provider for Helm (CAAPH). Disabled by default so
+# existing clusters and operating-system/Kubernetes combinations keep the
+# current provider lifecycle unless an operator explicitly enables it.
+cluster_api_addon_provider_enabled: false
+cluster_api_addon_provider: helm
+cluster_api_addon_provider_version: 0.6.4
+cluster_api_addon_provider_image: >-
+  registry.k8s.io/cluster-api-helm/cluster-api-helm-controller@sha256:97d2a86f8e35d23bb4656b26f4564b35f109e47a0dc4860b71089e52eb6e6a24
+cluster_api_addon_provider_image_pull_policy: IfNotPresent
+cluster_api_addon_provider_replicas: 2
+cluster_api_addon_provider_node_selector: "{{ cluster_api_node_selector }}"
+cluster_api_addon_provider_resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+cluster_api_addon_provider_pdb_enabled: true
+cluster_api_addon_provider_pdb_max_unavailable: 1
+
 # https://cluster-api-openstack.sigs.k8s.io/clusteropenstack/configuration.html#timeout-settings
 cluster_api_capo_instance_create_timeout: 10

@@ -9,6 +9,7 @@
     cluster_api_installed_bootstrap_version: "{{ cluster_api_providers.resources | selectattr('type', 'equalto', 'BootstrapProvider') | map(attribute='version') | first | regex_replace('^v', '') }}" # yamllint disable-line rule:line-length
     cluster_api_installed_control_plane_version: "{{ cluster_api_providers.resources | selectattr('type', 'equalto', 'ControlPlaneProvider') | map(attribute='version') | first | regex_replace('^v', '') }}" # yamllint disable-line rule:line-length
     cluster_api_installed_infrastructure_version: "{{ cluster_api_providers.resources | selectattr('type', 'equalto', 'InfrastructureProvider') | map(attribute='version') | first | regex_replace('^v', '') }}" # yamllint disable-line rule:line-length
+    cluster_api_installed_addon_version: "{{ cluster_api_providers.resources | selectattr('type', 'equalto', 'AddonProvider') | selectattr('providerName', 'equalto', cluster_api_addon_provider) | map(attribute='version') | first | default('') | regex_replace('^v', '') }}" # yamllint disable-line rule:line-length
 
 - name: Run upgrade if required
   run_once: true
@@ -19,10 +20,12 @@
       --core capi-system/{{ cluster_api_core_provider }}:v{{ cluster_api_core_version }} \
       --bootstrap capi-kubeadm-bootstrap-system/{{ cluster_api_bootstrap_provider }}:v{{ cluster_api_bootstrap_version }} \
       --control-plane capi-kubeadm-control-plane-system/{{ cluster_api_control_plane_provider }}:v{{ cluster_api_control_plane_version }} \
-      --infrastructure capo-system/{{ cluster_api_infrastructure_provider }}:v{{ cluster_api_infrastructure_version }}
+      --infrastructure capo-system/{{ cluster_api_infrastructure_provider }}:v{{ cluster_api_infrastructure_version }} {{ _cluster_api_addon_upgrade_argument }}
   when:
     cluster_api_installed_core_version != cluster_api_core_version or
     cluster_api_installed_bootstrap_version != cluster_api_bootstrap_version or
     cluster_api_installed_control_plane_version != cluster_api_control_plane_version or
-    cluster_api_installed_infrastructure_version != cluster_api_infrastructure_version
+    cluster_api_installed_infrastructure_version != cluster_api_infrastructure_version or
+    (cluster_api_addon_provider_enabled and
+     cluster_api_installed_addon_version != cluster_api_addon_provider_version)
   environment: "{{ _cluster_api_environment }}"

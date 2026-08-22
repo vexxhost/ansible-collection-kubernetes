@@ -8,3 +8,9 @@ _cluster_api_environment: |
   {%   set _ = res.update({'GITHUB_TOKEN': cluster_api_github_token}) %}
   {% endif %}
   {{ res }}
+_cluster_api_addon_init_argument: >-
+  {{ ('--addon ' ~ cluster_api_addon_provider ~ ':v' ~ cluster_api_addon_provider_version)
+     if cluster_api_addon_provider_enabled else '' }}
+_cluster_api_addon_upgrade_argument: >-
+  {{ ('--addon caaph-system/' ~ cluster_api_addon_provider ~ ':v' ~ cluster_api_addon_provider_version)
+     if cluster_api_addon_provider_enabled else '' }}

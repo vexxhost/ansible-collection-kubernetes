@@ -1,0 +1,7 @@
+---
+features:
+  - |
+    Add an opt-in Cluster API Add-on Provider for Helm lifecycle. The provider
+    is disabled by default, uses a digest-pinned controller image, and can be
+    configured for multiple replicas, topology spread, resource bounds, and a
+    disruption budget.
