@@ -38,4 +38,11 @@
 
 - name: Patch Cluster API add-on provider
   ansible.builtin.import_tasks: patch_addon.yml
-  when: cluster_api_addon_provider_enabled
+  when:
+    - cluster_api_addon_provider_enabled
+    - >-
+      not ansible_check_mode or
+      cluster_api_providers.resources
+      | selectattr('type', 'equalto', 'AddonProvider')
+      | selectattr('providerName', 'equalto', cluster_api_addon_provider)
+      | list | length > 0

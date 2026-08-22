@@ -25,7 +25,10 @@ def test_addon_patch_is_guarded_by_explicit_enablement() -> None:
         task for task in tasks if task["name"] == "Patch Cluster API add-on provider"
     )
 
-    assert addon["when"] == "cluster_api_addon_provider_enabled"
+    assert addon["when"][0] == "cluster_api_addon_provider_enabled"
+    assert "not ansible_check_mode" in addon["when"][1]
+    assert "AddonProvider" in addon["when"][1]
+    assert "providerName" in addon["when"][1]
 
 
 def test_vendored_provider_uses_digest_pinned_controller() -> None:
