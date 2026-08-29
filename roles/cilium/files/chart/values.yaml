@@ -2125,6 +2125,10 @@ tunnel: ""
 # @default -- `"vxlan"`
 tunnelProtocol: ""
 
+# -- IP family for the underlay.
+# @default -- `"ipv4"`
+underlayProtocol: ""
+
 # -- Enable native-routing mode or tunneling mode.
 # Possible values:
 #   - ""
