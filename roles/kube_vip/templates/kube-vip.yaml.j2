@@ -21,10 +21,10 @@ spec:
       value: kube-system
     - name: vip_ddns
       value: "false"
+    - name: svc_enable
+      value: "{{ kube_vip_services_enabled | bool | lower }}"
 {% if kube_vip_mode == "arp" %}
     - name: vip_arp
-      value: "true"
-    - name: svc_enable
       value: "true"
     - name: svc_leasename
       value: plndr-svcs-lock
