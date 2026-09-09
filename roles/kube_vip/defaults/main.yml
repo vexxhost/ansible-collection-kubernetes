@@ -32,6 +32,9 @@ kube_vip_address: "{{ keepalived_vip | default(kubernetes_keepalived_vip) }}"
 # VIP mode for kube-vip (valide options: arp or bgp)
 kube_vip_mode: arp
 
+# Manage LoadBalancer Services (preserve the existing per-mode defaults)
+kube_vip_services_enabled: "{{ kube_vip_mode == 'arp' }}"
+
 # BGP peers, if BGP is enabled
 # kube_vip_bgp_peers: 192.168.0.10:65000::false,192.168.0.11:65000::false
 
