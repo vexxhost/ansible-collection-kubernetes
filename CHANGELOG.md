@@ -1,5 +1,18 @@
 # Changelog
 
+## [3.4.0](https://github.com/vexxhost/ansible-collection-kubernetes/compare/v3.3.0...v3.4.0) (2026-09-09)
+
+
+### Features
+
+* **kube_vip:** make Service management configurable in BGP mode ([#301](https://github.com/vexxhost/ansible-collection-kubernetes/issues/301)) ([f702932](https://github.com/vexxhost/ansible-collection-kubernetes/commit/f70293289022b9667b962408a61b47eb3e45ae47))
+
+
+### Bug Fixes
+
+* **kubelet:** use boolean swap condition ([#292](https://github.com/vexxhost/ansible-collection-kubernetes/issues/292)) ([0e3f6fd](https://github.com/vexxhost/ansible-collection-kubernetes/commit/0e3f6fd9bd0ba5ca9bfb57b79530083dac9d1e82))
+* small but important changes ([#294](https://github.com/vexxhost/ansible-collection-kubernetes/issues/294)) ([8b8e4cc](https://github.com/vexxhost/ansible-collection-kubernetes/commit/8b8e4ccc3594044ced333222d47021cc35fae1ac))
+
 ## [3.3.0](https://github.com/vexxhost/ansible-collection-kubernetes/compare/v3.2.0...v3.3.0) (2026-06-18)
 
 
