@@ -9,12 +9,12 @@ resolution-markers = [
 
 [[package]]
 name = "ansible-collection-kubernetes"
-version = "3.0.1"
+version = "3.4.0"
 source = { virtual = "." }
 dependencies = [
     { name = "ansible-core", version = "2.17.14", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
-    { name = "ansible-core", version = "2.19.5", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.11.*'" },
-    { name = "ansible-core", version = "2.20.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
+    { name = "ansible-core", version = "2.19.13", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.11.*'" },
+    { name = "ansible-core", version = "2.21.4", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
     { name = "docker-image-py" },
     { name = "jmespath" },
 ]
@@ -48,8 +48,8 @@ version = "25.12.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "ansible-core", version = "2.17.14", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
-    { name = "ansible-core", version = "2.19.5", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.11.*'" },
-    { name = "ansible-core", version = "2.20.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
+    { name = "ansible-core", version = "2.19.13", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.11.*'" },
+    { name = "ansible-core", version = "2.21.4", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
     { name = "jsonschema" },
     { name = "packaging" },
     { name = "pyyaml" },
@@ -68,11 +68,11 @@ resolution-markers = [
     "python_full_version < '3.11'",
 ]
 dependencies = [
-    { name = "cryptography", marker = "python_full_version < '3.11'" },
-    { name = "jinja2", marker = "python_full_version < '3.11'" },
-    { name = "packaging", marker = "python_full_version < '3.11'" },
-    { name = "pyyaml", marker = "python_full_version < '3.11'" },
-    { name = "resolvelib", version = "1.0.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
+    { name = "cryptography" },
+    { name = "jinja2" },
+    { name = "packaging" },
+    { name = "pyyaml" },
+    { name = "resolvelib", version = "1.0.1", source = { registry = "https://pypi.org/simple" } },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/ff/80/2925a0564f6f99a8002c3be3885b83c3a1dc5f57ebf00163f528889865f5/ansible_core-2.17.14.tar.gz", hash = "sha256:7c17fee39f8c29d70e3282a7e9c10bd70d5cd4fd13ddffc5dcaa52adbd142ff8", size = 3119687, upload-time = "2025-09-08T18:28:03.158Z" }
 wheels = [
@@ -81,40 +81,40 @@ wheels = [
 
 [[package]]
 name = "ansible-core"
-version = "2.19.5"
+version = "2.19.13"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
     "python_full_version == '3.11.*'",
 ]
 dependencies = [
-    { name = "cryptography", marker = "python_full_version == '3.11.*'" },
-    { name = "jinja2", marker = "python_full_version == '3.11.*'" },
-    { name = "packaging", marker = "python_full_version == '3.11.*'" },
-    { name = "pyyaml", marker = "python_full_version == '3.11.*'" },
-    { name = "resolvelib", version = "1.2.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.11.*'" },
+    { name = "cryptography" },
+    { name = "jinja2" },
+    { name = "packaging" },
+    { name = "pyyaml" },
+    { name = "resolvelib", version = "1.2.1", source = { registry = "https://pypi.org/simple" } },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/72/f7/030452764ef32f11ab7abe61a49ca6ccee777217253753f87b85aafd6183/ansible_core-2.19.5.tar.gz", hash = "sha256:d03660ff32ba8a5ae40a82148cb24b38a35d26c0155621ddd9148b7562fd8be2", size = 3412598, upload-time = "2025-12-09T16:48:44.079Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/70/10/fb022a98682af71ec7b21ea24dab3103af1c85ae884ac21c9e3f0a2ded9b/ansible_core-2.19.13.tar.gz", hash = "sha256:3711fc5db7a265f93b34cf3f0db8b9708fb0eec12211a6be32ed6edd6c68044b", size = 3432103, upload-time = "2026-09-08T16:47:54.44Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/ad/aa/547b4c30e72d801bd53b75c0233eb125978b5280b149f00b58d6c8ea26aa/ansible_core-2.19.5-py3-none-any.whl", hash = "sha256:7fa6c052bad2c294284b960d240b4cd227060fd2e3836d381db44d2bcfcdf4b7", size = 2415436, upload-time = "2025-12-09T16:48:42.677Z" },
+    { url = "https://files.pythonhosted.org/packages/84/ed/ab619a69824b22e6b6262c4ba5819d2745f5d9255561eea7f23f42c91a43/ansible_core-2.19.13-py3-none-any.whl", hash = "sha256:d4a256d0891b3cb31ddbc9ff8a7bf6fd359379007799c54390b66b8f94fed3d3", size = 2426742, upload-time = "2026-09-08T16:47:52.556Z" },
 ]
 
 [[package]]
 name = "ansible-core"
-version = "2.20.1"
+version = "2.21.4"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
     "python_full_version >= '3.12'",
 ]
 dependencies = [
-    { name = "cryptography", marker = "python_full_version >= '3.12'" },
-    { name = "jinja2", marker = "python_full_version >= '3.12'" },
-    { name = "packaging", marker = "python_full_version >= '3.12'" },
-    { name = "pyyaml", marker = "python_full_version >= '3.12'" },
-    { name = "resolvelib", version = "1.2.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
+    { name = "cryptography" },
+    { name = "jinja2" },
+    { name = "packaging" },
+    { name = "pyyaml" },
+    { name = "resolvelib", version = "1.2.1", source = { registry = "https://pypi.org/simple" } },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/3e/47/3543ea4e7ad65859c0043e9a03e1da99c57c22dfb29027e9951dd58e7524/ansible_core-2.20.1.tar.gz", hash = "sha256:a891e5f90cd46626778f0f3d545ec1115840c9b50e8adf25944c5e1748452106", size = 3313203, upload-time = "2025-12-09T16:49:57.189Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/df/72/2152230f254bd9c6b892f95d6d291a96fd09b632ce01c6b406eda8c5cd75/ansible_core-2.21.4.tar.gz", hash = "sha256:81a9329f4f12cfa5008dcab5d1bf23ae69b7effc08c0f00048ab2461147ae95a", size = 3394492, upload-time = "2026-09-08T16:51:48.569Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/56/8c/b9ef852c9322bffd08ef72c8d6737922af810920e8ebd6ae5c9c5ac1f623/ansible_core-2.20.1-py3-none-any.whl", hash = "sha256:2a66825b4a53f130b62515e7e2a3d811d544b19b6e8a22d9ef88c55896384cb3", size = 2412350, upload-time = "2025-12-09T16:49:55.562Z" },
+    { url = "https://files.pythonhosted.org/packages/a1/05/d4e28474dd027db4d60fef2422cf6bc80df100ab32e5fa5e7aad898ffd55/ansible_core-2.21.4-py3-none-any.whl", hash = "sha256:ebe74d9c8fadcb41ad2151e031bf1e785e3098aaa015019b4e19a0a96f0dcc4f", size = 2457154, upload-time = "2026-09-08T16:51:47.044Z" },
 ]
 
 [[package]]
@@ -344,7 +344,7 @@ name = "exceptiongroup"
 version = "1.3.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "typing-extensions", marker = "python_full_version < '3.11'" },
+    { name = "typing-extensions" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/50/79/66800aadf48771f6b62f7eb014e352e5d06856655206165d775e675a02c9/exceptiongroup-1.3.1.tar.gz", hash = "sha256:8b412432c6055b0b7d14c310000ae93352ed6754f70fa8f7c34141f91c4e3219", size = 30371, upload-time = "2025-11-21T23:01:54.787Z" }
 wheels = [
@@ -530,8 +530,8 @@ source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "ansible-compat" },
     { name = "ansible-core", version = "2.17.14", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
-    { name = "ansible-core", version = "2.19.5", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.11.*'" },
-    { name = "ansible-core", version = "2.20.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
+    { name = "ansible-core", version = "2.19.13", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.11.*'" },
+    { name = "ansible-core", version = "2.21.4", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
     { name = "click" },
     { name = "click-help-colors" },
     { name = "enrich" },
