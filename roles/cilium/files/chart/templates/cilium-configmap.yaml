@@ -469,6 +469,9 @@ data:
 {{- if .Values.tunnelPort }}
   tunnel-port: {{ .Values.tunnelPort | quote }}
 {{- end }}
+{{- if .Values.underlayProtocol }}
+  underlay-protocol: {{ .Values.underlayProtocol | quote }}
+{{- end }}
 
 {{- if .Values.MTU }}
   mtu: {{ .Values.MTU | quote }}
