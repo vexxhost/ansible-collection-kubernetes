@@ -25,13 +25,55 @@
     kind: Provider
   register: cluster_api_providers
 
-- name: Initialize Cluster API
-  ansible.builtin.import_tasks: init.yml
-  when: cluster_api_providers.resources | length == 0
+- name: Index the installed providers by type and name
+  run_once: true
+  ansible.builtin.set_fact:
+    _cluster_api_installed_providers: |
+      {% set res = {} -%}
+      {% for provider in cluster_api_providers.resources %}
+      {%   set _ = res.update({provider.type ~ '/' ~ provider.providerName: provider}) %}
+      {% endfor %}
+      {{ res }}
 
-- name: Upgrade Cluster API
-  ansible.builtin.import_tasks: upgrade.yml
-  when: cluster_api_providers.resources | length != 0
+- name: Find the providers to install or upgrade
+  run_once: true
+  ansible.builtin.set_fact:
+    _cluster_api_install_args: |
+      {% set res = [] -%}
+      {% for provider in _cluster_api_providers %}
+      {%   if (provider.type ~ '/' ~ provider.name) not in _cluster_api_installed_providers %}
+      {%     set _ = res.extend([_cluster_api_provider_flags[provider.type], provider.name ~ ':v' ~ provider.version]) %}
+      {%   endif %}
+      {% endfor %}
+      {{ res }}
+    _cluster_api_upgrade_args: |
+      {% set res = [] -%}
+      {% for provider in _cluster_api_providers %}
+      {%   set installed = _cluster_api_installed_providers.get(provider.type ~ '/' ~ provider.name) %}
+      {%   if installed and installed.version | regex_replace('^v', '') != provider.version %}
+      {%     set target = installed.metadata.namespace ~ '/' ~ provider.name ~ ':v' ~ provider.version %}
+      {%     set _ = res.extend([_cluster_api_provider_flags[provider.type], target]) %}
+      {%   endif %}
+      {% endfor %}
+      {{ res }}
+
+# NOTE: Upgrades run first so that newly added providers are validated against
+#       the contract of the target Cluster API version.
+- name: Upgrade Cluster API providers
+  run_once: true
+  changed_when: true
+  when: _cluster_api_upgrade_args | length > 0
+  ansible.builtin.command:
+    argv: "{{ [clusterctl_download_dest, 'upgrade', 'apply', '--config', clusterctl_config_file] + _cluster_api_upgrade_args }}"
+  environment: "{{ _cluster_api_environment }}"
+
+- name: Install Cluster API providers
+  run_once: true
+  changed_when: true
+  when: _cluster_api_install_args | length > 0
+  ansible.builtin.command:
+    argv: "{{ [clusterctl_download_dest, 'init', '--config', clusterctl_config_file] + _cluster_api_install_args }}"
+  environment: "{{ _cluster_api_environment }}"
 
 - name: Patch Cluster API
   ansible.builtin.import_tasks: patch.yml

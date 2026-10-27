@@ -131,6 +131,9 @@
         cluster_api_version: 1.13.2
         cluster_api_infrastructure_provider: openstack
         cluster_api_infrastructure_version: 0.14.4
+        cluster_api_addon_providers:
+          - name: csr-approver
+            version: 0.1.0
         cluster_api_node_selector:
           kubernetes.io/os: linux
 

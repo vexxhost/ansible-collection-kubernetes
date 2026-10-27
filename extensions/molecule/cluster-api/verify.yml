@@ -53,6 +53,19 @@
           name: capi-controller-manager
         - namespace: capo-system
           name: capo-controller-manager
+        - namespace: capi-csr-approver-system
+          name: capi-csr-approver-controller-manager
+
+    - name: Ensure that the node selector is set on all provider deployments
+      kubernetes.core.k8s_info:
+        api_version: apps/v1
+        kind: Deployment
+        label_selectors:
+          - cluster.x-k8s.io/provider
+      register: _cluster_api_deployments
+      failed_when: >-
+        _cluster_api_deployments.resources | length < 5 or
+        _cluster_api_deployments.resources | rejectattr('spec.template.spec.nodeSelector', 'equalto', {'kubernetes.io/os': 'linux'}) | list | length > 0
 
     - name: Ensure that the Cluster API CRDs exist
       kubernetes.core.k8s_info:
@@ -81,6 +94,7 @@
         _cluster_api_bootstrap_version: "{{ _cluster_api_providers.resources | selectattr('type', 'equalto', 'BootstrapProvider') | map(attribute='version') | first | regex_replace('^v', '') }}" # yamllint disable-line rule:line-length
         _cluster_api_control_plane_version: "{{ _cluster_api_providers.resources | selectattr('type', 'equalto', 'ControlPlaneProvider') | map(attribute='version') | first | regex_replace('^v', '') }}" # yamllint disable-line rule:line-length
         _cluster_api_infrastructure_version: "{{ _cluster_api_providers.resources | selectattr('type', 'equalto', 'InfrastructureProvider') | map(attribute='version') | first | regex_replace('^v', '') }}" # yamllint disable-line rule:line-length
+        _cluster_api_csr_approver_version: "{{ _cluster_api_providers.resources | selectattr('type', 'equalto', 'AddonProvider') | selectattr('providerName', 'equalto', 'csr-approver') | map(attribute='version') | first | regex_replace('^v', '') }}" # yamllint disable-line rule:line-length
 
     - name: Assert that the versions are the correct ones
       ansible.builtin.assert:
@@ -89,6 +103,7 @@
           - _cluster_api_bootstrap_version == cluster_api_bootstrap_version
           - _cluster_api_control_plane_version == cluster_api_control_plane_version
           - _cluster_api_infrastructure_version == cluster_api_infrastructure_version
+          - _cluster_api_csr_approver_version == "0.1.0"
 
     # Note(okozachenko1203): Until https://github.com/kubernetes-sigs/cluster-api/issues/9132 is fixed,
     #                        we set the default value of imagePullPolicy in CRDs. Without this,
