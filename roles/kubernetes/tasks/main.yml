@@ -8,6 +8,9 @@
     state: absent
   when: ansible_facts['os_family'] in ['Debian']
 
+- name: Configure kubeadm patches
+  ansible.builtin.include_tasks: kubeadm-patches.yml
+
 - name: Setup control plane
   when: inventory_hostname in groups[kubernetes_control_plane_group]
   ansible.builtin.include_tasks: control-plane.yml

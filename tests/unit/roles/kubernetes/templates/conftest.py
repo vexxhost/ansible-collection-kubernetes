@@ -67,6 +67,11 @@ def role_variables(**overrides):
 
 
 @pytest.fixture
+def role_vars():
+    return role_variables
+
+
+@pytest.fixture
 def render_kubeadm():
     def render(**overrides):
         env = _environment(Environment, loader=FileSystemLoader(ROLE / "templates"))

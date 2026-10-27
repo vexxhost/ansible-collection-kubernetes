@@ -59,3 +59,23 @@ kubernetes_kubeadm_scheduler_args: >-
     | combine(kubernetes_kubeadm_extra_args.scheduler | default({}))
   }}
 
+# kubeadm patch targets supported by kubernetes_version
+kubernetes_kubeadm_patch_targets: >-
+  {{
+    ['etcd', 'kube-apiserver', 'kube-controller-manager', 'kube-scheduler']
+    + (['kubeletconfiguration'] if kubernetes_version is version('1.25.0', '>=') else [])
+    + (['corednsdeployment'] if kubernetes_version is version('1.31.0', '>=') else [])
+  }}
+
+# NOTE: kubeadm recreates the CoreDNS Deployment during upgrades, which drops
+#       the node selector until the end of the run; the patch keeps it.
+kubernetes_kubeadm_managed_patches: >-
+  {{
+    {'corednsdeployment': {'spec': {'template': {'spec': {'nodeSelector': kubernetes_coredns_node_selector}}}}}
+    if 'corednsdeployment' in kubernetes_kubeadm_patch_targets and kubernetes_coredns_node_selector | default({}) | length > 0
+    else {}
+  }}
+
+# Arguments for "kubeadm upgrade apply" and "kubeadm upgrade node"
+kubernetes_kubeadm_upgrade_args: >-
+  {{ '--patches ' ~ kubernetes_kubeadm_patches_dir if kubernetes_version is version('1.22.0', '>=') else '' }}

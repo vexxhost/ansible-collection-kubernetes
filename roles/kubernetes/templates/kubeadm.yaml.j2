@@ -12,6 +12,10 @@ nodeRegistration:
   criSocket: "{{ kubelet_cri_socket }}"
 {% endif %}
   kubeletExtraArgs: {{ kubernetes_kubeadm_kubelet_args | vexxhost.kubernetes.kubeadm_args(kubernetes_kubeadm_api_version) | to_json }}
+{% if kubernetes_kubeadm_api_version != 'v1beta2' %}
+patches:
+  directory: "{{ kubernetes_kubeadm_patches_dir }}"
+{% endif %}
 ---
 apiVersion: kubeadm.k8s.io/{{ kubernetes_kubeadm_api_version }}
 kind: JoinConfiguration
@@ -20,6 +24,10 @@ nodeRegistration:
   criSocket: "{{ kubelet_cri_socket }}"
 {% endif %}
   kubeletExtraArgs: {{ kubernetes_kubeadm_kubelet_args | vexxhost.kubernetes.kubeadm_args(kubernetes_kubeadm_api_version) | to_json }}
+{% if kubernetes_kubeadm_api_version != 'v1beta2' %}
+patches:
+  directory: "{{ kubernetes_kubeadm_patches_dir }}"
+{% endif %}
 {% if (kubernetes_bootstrap_node is not defined) or (kubernetes_bootstrap_node is defined and inventory_hostname != kubernetes_bootstrap_node) %}
 discovery:
   bootstrapToken:
