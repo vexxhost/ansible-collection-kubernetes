@@ -26,8 +26,6 @@ def test_v1beta3_uses_argument_maps(render_kubeadm):
     documents = render_kubeadm(kubernetes_version="1.30.14")
 
     assert documents["InitConfiguration"]["nodeRegistration"]["kubeletExtraArgs"] == {
-        "cgroups-per-qos": "false",
-        "enforce-node-allocatable": "",
         "node-ip": "192.0.2.10",
         "container-runtime-endpoint": "unix:///run/containerd/containerd.sock",
     }
@@ -48,8 +46,6 @@ def test_v1beta4_uses_argument_lists(render_kubeadm):
     registration = documents["InitConfiguration"]["nodeRegistration"]
     assert registration["criSocket"] == "unix:///run/containerd/containerd.sock"
     assert registration["kubeletExtraArgs"] == [
-        {"name": "cgroups-per-qos", "value": "false"},
-        {"name": "enforce-node-allocatable", "value": ""},
         {"name": "node-ip", "value": "192.0.2.10"},
         {
             "name": "container-runtime-endpoint",

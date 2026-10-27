@@ -15,11 +15,7 @@ kubernetes_kubeadm_api_version: >-
 kubernetes_kubeadm_kubelet_args: >-
   {{
     ({'fail-swap-on': 'false'} if kubernetes_allow_unsafe_swap | bool else {})
-    | combine({
-        'cgroups-per-qos': 'false',
-        'enforce-node-allocatable': '',
-        'node-ip': kubernetes_node_ip,
-      })
+    | combine({'node-ip': kubernetes_node_ip})
     | combine({'container-runtime': 'remote'} if kubernetes_version is version('1.24.0', '<') else {})
     | combine({'container-runtime-endpoint': kubelet_cri_socket})
     | combine(kubernetes_kubeadm_extra_args.kubelet | default({}))
