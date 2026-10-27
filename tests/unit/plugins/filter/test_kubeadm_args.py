@@ -30,3 +30,19 @@ def test_name_value_list_for_v1beta4():
 def test_rejects_non_mapping():
     with pytest.raises(AnsibleFilterError):
         kubeadm_args(["bind-address=0.0.0.0"], "v1beta4")
+
+
+@pytest.mark.parametrize("api_version", ["v1beta3", "v1beta4"])
+def test_null_values_are_left_out(api_version):
+    args = {
+        "bind-address": "0.0.0.0",
+        "profiling": None,
+        "enforce-node-allocatable": "",
+    }
+
+    formatted = kubeadm_args(args, api_version)
+
+    names = (
+        [arg["name"] for arg in formatted] if isinstance(formatted, list) else formatted
+    )
+    assert list(names) == ["bind-address", "enforce-node-allocatable"]

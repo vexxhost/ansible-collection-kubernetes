@@ -17,6 +17,8 @@ DOCUMENTATION = """
       C(kubeletExtraArgs)) for the given kubeadm configuration API version.
     - kubeadm C(v1beta4) takes a list of C(name)/C(value) pairs, while older
       versions take a mapping. Values are always strings.
+    - Arguments set to C(null) are left out, so an override can remove an
+      argument the role sets by default.
   options:
     _input:
       type: dict
@@ -53,7 +55,7 @@ def kubeadm_args(value, api_version):
     if not is_string(api_version):
         raise AnsibleFilterError("kubeadm_args needs a kubeadm API version")
 
-    args = dict((str(name), str(arg)) for name, arg in value.items())
+    args = dict((str(name), str(arg)) for name, arg in value.items() if arg is not None)
     if api_version == "v1beta4":
         return [{"name": name, "value": arg} for name, arg in args.items()]
     return args
