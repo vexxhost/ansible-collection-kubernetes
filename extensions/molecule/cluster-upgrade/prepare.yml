@@ -30,3 +30,73 @@
         wait: true
         wait_condition:
           type: Ready
+
+# NOTE: Start a container on every node before the upgrade and record its
+#       container ID, so verify.yml can check the upgrade kept it running.
+- name: Start upgrade canary
+  hosts: controllers[0]
+  become: true
+  tasks:
+    - name: Create upgrade canary DaemonSet
+      kubernetes.core.k8s:
+        definition:
+          - apiVersion: v1
+            kind: Namespace
+            metadata:
+              name: upgrade-canary
+          - apiVersion: apps/v1
+            kind: DaemonSet
+            metadata:
+              name: upgrade-canary
+              namespace: upgrade-canary
+            spec:
+              selector:
+                matchLabels:
+                  app: upgrade-canary
+              template:
+                metadata:
+                  labels:
+                    app: upgrade-canary
+                spec:
+                  tolerations:
+                    - operator: Exists
+                  containers:
+                    - name: pause
+                      image: registry.k8s.io/pause:3.10
+
+    - name: Wait for upgrade canary rollout
+      ansible.builtin.command:
+        cmd: kubectl -n upgrade-canary rollout status daemonset/upgrade-canary --timeout=300s
+      changed_when: false
+
+    - name: Get upgrade canary pods
+      kubernetes.core.k8s_info:
+        kind: Pod
+        namespace: upgrade-canary
+        label_selectors:
+          - app=upgrade-canary
+      register: upgrade_canary_pods
+
+    - name: Check that every node runs an upgrade canary
+      ansible.builtin.assert:
+        that:
+          - upgrade_canary_pods.resources | length == groups['all'] | length
+
+    - name: Record upgrade canary container IDs
+      kubernetes.core.k8s:
+        definition:
+          apiVersion: v1
+          kind: ConfigMap
+          metadata:
+            name: upgrade-canary-baseline
+            namespace: upgrade-canary
+          data:
+            containers: "{{ upgrade_canary_containers | to_json }}"
+      vars:
+        upgrade_canary_containers: >-
+          {{
+            dict(
+              upgrade_canary_pods.resources | map(attribute='metadata.name')
+              | zip(upgrade_canary_pods.resources | map(attribute='status.containerStatuses.0.containerID'))
+            )
+          }}
