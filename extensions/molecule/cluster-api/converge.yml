@@ -18,10 +18,4 @@
   become: true
   roles:
     - vexxhost.kubernetes.cert_manager
-    # NOTE: "prepare.yml" installs an older Cluster API without add-ons, so this
-    #       upgrades it and installs the add-on in the same run.
-    - role: vexxhost.kubernetes.cluster_api
-      vars:
-        cluster_api_addon_providers:
-          - name: csr-approver
-            version: 0.1.0
+    - vexxhost.kubernetes.cluster_api
