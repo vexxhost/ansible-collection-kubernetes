@@ -55,6 +55,21 @@
     - /etc/kubernetes
     - /etc/kubernetes/manifests
 
+- name: Check if the node is part of a cluster
+  ansible.builtin.stat:
+    path: /etc/kubernetes/kubelet.conf
+  register: kubelet_cluster_config
+
+- name: Use the downloaded kubelet on nodes not yet in a cluster
+  when: not kubelet_cluster_config.stat.exists
+  ansible.builtin.file:
+    src: "{{ kubelet_download_dest }}"
+    dest: "{{ kubelet_live_binary_dest }}"
+    state: link
+    force: true
+    owner: root
+    group: root
+
 - name: Add kubelet systemd service config
   ansible.builtin.template:
     src: kubelet.service.j2

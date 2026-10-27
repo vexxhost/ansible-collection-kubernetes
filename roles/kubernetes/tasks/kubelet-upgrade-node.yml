@@ -27,6 +27,18 @@
       delay: 10
       until: kubernetes_kubelet_upgrade_kubeadm is succeeded
 
+    # NOTE: Only switch to the new kubelet now, after "kubeadm upgrade node",
+    #       right before it restarts.
+    - name: Switch to the new kubelet
+      delegate_to: "{{ kubernetes_kubelet_upgrade_host }}"
+      ansible.builtin.file:
+        src: "{{ kubernetes_kubelet_download_dest }}"
+        dest: "{{ kubernetes_kubelet_live_binary_dest }}"
+        state: link
+        force: true
+        owner: root
+        group: root
+
     - name: Restart the kubelet
       delegate_to: "{{ kubernetes_kubelet_upgrade_host }}"
       ansible.builtin.service:

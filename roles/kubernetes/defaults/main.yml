@@ -83,3 +83,8 @@ kubernetes_health_check_components:
 kubernetes_health_check_retries: 30
 kubernetes_health_check_delay: 10
 kubernetes_health_check_timeout: 300s
+
+# Kubelet binary for the target version and the path the kubelet runs from
+# (see the kubelet role)
+kubernetes_kubelet_download_dest: "{{ download_artifact_work_directory | default('/var/lib/downloads') }}/kubelet-{{ kubernetes_version }}"
+kubernetes_kubelet_live_binary_dest: /usr/bin/kubelet

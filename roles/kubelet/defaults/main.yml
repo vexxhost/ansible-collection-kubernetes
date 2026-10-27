@@ -499,7 +499,12 @@ kubelet_checksums:
     1.36.2: b0b45db96f0e6bf996780b8a2b8d868bf538dc7c3a60cf604cf0ea2d65c24b06
 
 kubelet_download_url: "https://dl.k8s.io/release/v{{ kubelet_version }}/bin/{{ ansible_facts['system'] | lower }}/{{ download_artifact_goarch }}/kubelet" # yamllint disable-line rule:line-length
-kubelet_download_dest: /usr/bin/kubelet
+# NOTE: The kubelet is downloaded to a versioned path. New nodes run it through
+#       a "kubelet_live_binary_dest" symlink created by this role, while nodes
+#       already in a cluster switch to it when the kubernetes role upgrades
+#       them, so a kubelet restart in between keeps the running version.
+kubelet_download_dest: "{{ download_artifact_work_directory | default('/var/lib/downloads') }}/kubelet-{{ kubelet_version }}"
+kubelet_live_binary_dest: /usr/bin/kubelet
 kubelet_binary_checksum: "{{ kubelet_checksums[download_artifact_goarch][kubelet_version] }}"
 
 # NOTE(mnaser): This is to accomodate for the uninstallation of the old packages
