@@ -15,8 +15,10 @@
 ---
 - name: Retrieve the "kubeadm-config" ConfigMap
   run_once: true
+  delegate_to: "{{ groups[kubernetes_control_plane_group | default('controllers')][0] }}"
   ignore_errors: true
   kubernetes.core.k8s_info:
+    kubeconfig: /etc/kubernetes/admin.conf
     api_version: v1
     kind: ConfigMap
     name: kubeadm-config
@@ -26,6 +28,7 @@
 - name: Determine if we are jumping multiple versions
   when:
     - kubernetes_upgrade_check_kubeadm_config is not failed
+    - kubernetes_upgrade_check_kubeadm_config.resources is defined
     - kubernetes_upgrade_check_kubeadm_config.resources | length > 0
   block:
     - name: Parse the ClusterConfiguration
@@ -47,6 +50,30 @@
         kubernetes_upgrade_check_desired_major: "{{ kubernetes_version.split('.')[0] | int }}"
         kubernetes_upgrade_check_desired_minor: "{{ kubernetes_version.split('.')[1] | int }}"
         kubernetes_upgrade_check_desired_patch: "{{ kubernetes_version.split('.')[2] | int }}"
+
+    - name: Fail if the target version is older than the cluster version
+      ansible.builtin.fail:
+        msg: |
+          The target Kubernetes version {{ kubernetes_version }} is older than
+          the current cluster version {{ kubernetes_upgrade_check_cluster_version }}.
+          Downgrading Kubernetes is not supported.
+      when:
+        - kubernetes_version is version(kubernetes_upgrade_check_cluster_version, '<')
+
+    - name: Fail if a limited worker run is newer than the control plane
+      ansible.builtin.fail:
+        msg: |
+          Refusing to upgrade worker {{ inventory_hostname }} to Kubernetes
+          {{ kubernetes_version }} because the control plane is still on
+          {{ kubernetes_upgrade_check_cluster_version }} and not every control
+          plane node is part of this play. Upgrade the control plane first;
+          workers must not run a newer version than the control plane.
+      when:
+        - inventory_hostname not in groups[kubernetes_control_plane_group | default('controllers')]
+        - kubernetes_version is version(kubernetes_upgrade_check_cluster_version, '>')
+        - >-
+          (ansible_play_hosts_all | select('in', groups[kubernetes_control_plane_group | default('controllers')]) | list | length)
+          < (groups[kubernetes_control_plane_group | default('controllers')] | length)
 
     - name: Fail if we're jumping more than one minor version
       ansible.builtin.fail:
