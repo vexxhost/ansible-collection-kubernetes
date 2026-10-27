@@ -68,6 +68,27 @@
       - effect: NoSchedule
         key: node-role.kubernetes.io/master
 
+- name: Check super-admin kubeconfig path
+  ansible.builtin.stat:
+    path: /etc/kubernetes/super-admin.conf
+    get_attributes: false
+    get_checksum: false
+    get_mime: false
+  register: kubernetes_super_admin_conf_stat
+  when:
+    - kubernetes_version is version('1.29.0', '>=')
+
+# NOTE: Older kube-vip manifests mounted this path without a hostPath type,
+#       so the container runtime created it as an empty directory before kubeadm 1.29+
+#       could write the file, which breaks "kubeadm upgrade".
+- name: Remove invalid super-admin kubeconfig directory
+  ansible.builtin.file:
+    path: /etc/kubernetes/super-admin.conf
+    state: absent
+  when:
+    - kubernetes_version is version('1.29.0', '>=')
+    - kubernetes_super_admin_conf_stat.stat.isdir | default(false)
+
 - name: Upgrade if necessary
   when:
     - kubernetes_upgrade_check_upgrade_required is defined
