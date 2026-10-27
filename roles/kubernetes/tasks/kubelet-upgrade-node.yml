@@ -1,0 +1,72 @@
+# Copyright (c) 2026 VEXXHOST, Inc.
+# SPDX-License-Identifier: Apache-2.0
+
+---
+- name: Get the kubelet version of the node
+  delegate_to: "{{ kubernetes_bootstrap_node | default(groups[kubernetes_control_plane_group][0]) }}"
+  kubernetes.core.k8s_info:
+    kubeconfig: /etc/kubernetes/admin.conf
+    kind: Node
+    name: "{{ hostvars[kubernetes_kubelet_upgrade_host].kubernetes_kubelet_node_name }}"
+  register: kubernetes_kubelet_upgrade_node
+
+- name: Upgrade the kubelet
+  when:
+    - kubernetes_kubelet_upgrade_node.resources | length > 0
+    - kubernetes_kubelet_upgrade_node.resources[0].status.nodeInfo.kubeletVersion != 'v' ~ kubernetes_version
+  vars:
+    kubernetes_kubelet_upgrade_control_plane: "{{ kubernetes_kubelet_upgrade_host in groups[kubernetes_control_plane_group] }}"
+  block:
+    - name: Upgrade the node configuration
+      delegate_to: "{{ kubernetes_kubelet_upgrade_host }}"
+      changed_when: true
+      ansible.builtin.command:
+        cmd: kubeadm upgrade node {{ kubernetes_kubeadm_upgrade_args }}
+      register: kubernetes_kubelet_upgrade_kubeadm
+      retries: 3
+      delay: 10
+      until: kubernetes_kubelet_upgrade_kubeadm is succeeded
+
+    - name: Restart the kubelet
+      delegate_to: "{{ kubernetes_kubelet_upgrade_host }}"
+      ansible.builtin.service:
+        name: kubelet
+        state: restarted
+        enabled: true
+
+    - name: Wait for the kubelet to be healthy
+      delegate_to: "{{ kubernetes_kubelet_upgrade_host }}"
+      ansible.builtin.uri:
+        url: http://localhost:10248/healthz
+      register: kubernetes_kubelet_upgrade_healthz
+      retries: "{{ kubernetes_health_check_retries }}"
+      delay: "{{ kubernetes_health_check_delay }}"
+      until: kubernetes_kubelet_upgrade_healthz is succeeded
+
+    # NOTE: Restarting a control plane kubelet restarts its static pods, so
+    #       wait for the local API server before the next node is upgraded.
+    - name: Wait for the local API server
+      when: kubernetes_kubelet_upgrade_control_plane | bool
+      delegate_to: "{{ kubernetes_kubelet_upgrade_host }}"
+      ansible.builtin.uri:
+        url: https://127.0.0.1:6443/readyz
+        validate_certs: false
+      register: kubernetes_kubelet_upgrade_readyz
+      retries: "{{ kubernetes_health_check_retries }}"
+      delay: "{{ kubernetes_health_check_delay }}"
+      until: kubernetes_kubelet_upgrade_readyz is succeeded
+
+    - name: Wait for the node to be ready
+      delegate_to: "{{ kubernetes_bootstrap_node | default(groups[kubernetes_control_plane_group][0]) }}"
+      kubernetes.core.k8s_info:
+        kubeconfig: /etc/kubernetes/admin.conf
+        kind: Node
+        name: "{{ hostvars[kubernetes_kubelet_upgrade_host].kubernetes_kubelet_node_name }}"
+        wait: true
+        wait_condition:
+          type: Ready
+        wait_timeout: "{{ kubernetes_health_check_retries * kubernetes_health_check_delay }}"
+
+    - name: Wait for the control plane after restarting its kubelet
+      when: kubernetes_kubelet_upgrade_control_plane | bool
+      ansible.builtin.include_tasks: health-check.yml
