@@ -70,6 +70,13 @@ kind: KubeletConfiguration
 {% if kubernetes_version is ansible.builtin.version('1.28.0', '>=') %}
 tlsMinVersion: VersionTLS13
 {% endif %}
+{% set kubelet_feature_gates = kubernetes_kubelet_managed_feature_gates | combine(kubernetes_kubelet_feature_gates) %}
+{% if kubelet_feature_gates | length > 0 %}
+featureGates:
+{% for name, enabled in kubelet_feature_gates | dictsort %}
+  {{ name }}: {{ enabled | bool | lower }}
+{% endfor %}
+{% endif %}
 ---
 apiVersion: kubeproxy.config.k8s.io/v1alpha1
 kind: KubeProxyConfiguration
