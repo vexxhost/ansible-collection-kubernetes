@@ -159,6 +159,16 @@
     #               failures for now, so set as non-voting for now.
     voting: false
 
+# NOTE: Kubernetes 1.31 changed the kubelet container hash, which restarts
+#       every container unless the hashes are migrated during the upgrade.
+- job:
+    name: ansible-collection-kubernetes-molecule-cluster-upgrade-1-31
+    parent: ansible-collection-kubernetes-molecule-cluster-upgrade
+    vars:
+      old_kubernetes_version: 1.30.14
+      kubernetes_version: 1.31.14
+    voting: false
+
 - job:
     name: ansible-collection-kubernetes-molecule-download-binaries
     parent: ansible-collection-kubernetes-molecule
@@ -222,6 +232,7 @@
         - ansible-collection-kubernetes-molecule-bgp
         - ansible-collection-kubernetes-molecule-cluster-api
         - ansible-collection-kubernetes-molecule-cluster-upgrade
+        - ansible-collection-kubernetes-molecule-cluster-upgrade-1-31
         - ansible-collection-kubernetes-molecule-download-binaries
         - ansible-collection-kubernetes-molecule-ha
         - ansible-collection-kubernetes-molecule-helm

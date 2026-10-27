@@ -10,12 +10,27 @@
     name: "{{ hostvars[kubernetes_kubelet_upgrade_host].kubernetes_kubelet_node_name }}"
   register: kubernetes_kubelet_upgrade_node
 
+- name: Set the kubelet version of the node
+  ansible.builtin.set_fact:
+    kubernetes_kubelet_upgrade_current: >-
+      {{
+        (kubernetes_kubelet_upgrade_node.resources | first).status.nodeInfo.kubeletVersion | regex_replace('^v', '')
+        if kubernetes_kubelet_upgrade_node.resources | length > 0 else ''
+      }}
+
 - name: Upgrade the kubelet
   when:
-    - kubernetes_kubelet_upgrade_node.resources | length > 0
-    - kubernetes_kubelet_upgrade_node.resources[0].status.nodeInfo.kubeletVersion != 'v' ~ kubernetes_version
+    - kubernetes_kubelet_upgrade_current | length > 0
+    - kubernetes_kubelet_upgrade_required | bool
   vars:
     kubernetes_kubelet_upgrade_control_plane: "{{ kubernetes_kubelet_upgrade_host in groups[kubernetes_control_plane_group] }}"
+    kubernetes_kubelet_upgrade_required: "{{ kubernetes_kubelet_upgrade_current != kubernetes_version }}"
+    kubernetes_kubelet_hash_migration: >-
+      {{
+        kubernetes_kubelet_container_hash_migration | bool
+        and kubernetes_kubelet_upgrade_current is version('1.31.0', '<')
+        and kubernetes_version is version('1.31.0', '>=')
+      }}
   block:
     - name: Upgrade the node configuration
       delegate_to: "{{ kubernetes_kubelet_upgrade_host }}"
@@ -27,8 +42,57 @@
       delay: 10
       until: kubernetes_kubelet_upgrade_kubeadm is succeeded
 
-    # NOTE: Only switch to the new kubelet now, after "kubeadm upgrade node",
-    #       right before it restarts.
+    # NOTE: The 1.31 kubelet hashes the image exactly as written in the pod
+    #       spec, so read the pod specs while the API is reachable.
+    - name: List the pods on the node
+      when: kubernetes_kubelet_hash_migration | bool
+      delegate_to: "{{ kubernetes_bootstrap_node | default(groups[kubernetes_control_plane_group][0]) }}"
+      kubernetes.core.k8s_info:
+        kubeconfig: /etc/kubernetes/admin.conf
+        kind: Pod
+        field_selectors:
+          - spec.nodeName={{ hostvars[kubernetes_kubelet_upgrade_host].kubernetes_kubelet_node_name }}
+      register: kubernetes_kubelet_upgrade_pods
+
+    - name: Stop the kubelet
+      delegate_to: "{{ kubernetes_kubelet_upgrade_host }}"
+      ansible.builtin.service:
+        name: kubelet
+        state: stopped
+
+    - name: Plan the container hash migration
+      when: kubernetes_kubelet_hash_migration | bool
+      delegate_to: "{{ kubernetes_kubelet_upgrade_host }}"
+      vexxhost.kubernetes.kubelet_container_hash_migration:
+        pods: "{{ kubernetes_kubelet_upgrade_pods.resources }}"
+      register: kubernetes_kubelet_hash_migration_plan
+
+    # NOTE: Stopping containerd leaves running containers alone (its unit uses
+    #       KillMode=process).
+    - name: Migrate the container hashes
+      when:
+        - kubernetes_kubelet_hash_migration | bool
+        - kubernetes_kubelet_hash_migration_plan.migrations | length > 0
+      block:
+        - name: Stop containerd
+          delegate_to: "{{ kubernetes_kubelet_upgrade_host }}"
+          ansible.builtin.service:
+            name: containerd
+            state: stopped
+
+        - name: Rewrite the container hashes
+          delegate_to: "{{ kubernetes_kubelet_upgrade_host }}"
+          vexxhost.kubernetes.kubelet_container_hash_migration:
+            migrations: "{{ kubernetes_kubelet_hash_migration_plan.migrations }}"
+      always:
+        - name: Start containerd
+          delegate_to: "{{ kubernetes_kubelet_upgrade_host }}"
+          ansible.builtin.service:
+            name: containerd
+            state: started
+
+    # NOTE: Only switch to the new kubelet now, after "kubeadm upgrade node"
+    #       and any migrations, right before it starts.
     - name: Switch to the new kubelet
       delegate_to: "{{ kubernetes_kubelet_upgrade_host }}"
       ansible.builtin.file:
@@ -39,11 +103,11 @@
         owner: root
         group: root
 
-    - name: Restart the kubelet
+    - name: Start the kubelet
       delegate_to: "{{ kubernetes_kubelet_upgrade_host }}"
       ansible.builtin.service:
         name: kubelet
-        state: restarted
+        state: started
         enabled: true
 
     - name: Wait for the kubelet to be healthy
@@ -82,3 +146,18 @@
     - name: Wait for the control plane after restarting its kubelet
       when: kubernetes_kubelet_upgrade_control_plane | bool
       ansible.builtin.include_tasks: health-check.yml
+  rescue:
+    # NOTE: Leave the node running even if a step failed.  Before the switch
+    #       to the new kubelet, this starts the previous kubelet again, which
+    #       keeps the containers running.
+    - name: Start the kubelet after a failed upgrade
+      delegate_to: "{{ kubernetes_kubelet_upgrade_host }}"
+      ansible.builtin.service:
+        name: kubelet
+        state: started
+
+    - name: Fail the kubelet upgrade
+      ansible.builtin.fail:
+        msg: >-
+          Upgrading the kubelet on {{ kubernetes_kubelet_upgrade_host }} failed:
+          {{ ansible_failed_result.msg | default('see the failed task above') }}

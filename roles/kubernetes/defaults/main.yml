@@ -95,3 +95,10 @@ kubernetes_kubelet_live_binary_dest: /usr/bin/kubelet
 # until a later run with this enabled.  New nodes always join with the
 # kubelet for kubernetes_version.
 kubernetes_kubelet_upgrade: true
+
+# Keep running containers when kubelets are upgraded from 1.30 to 1.31.
+# Kubernetes 1.31 changed how the kubelet hashes containers, so without this
+# every running container restarts when its node's kubelet is upgraded.  When
+# enabled, the stored hashes are rewritten in containerd's metadata database
+# (with a backup next to it) while the kubelet and containerd are stopped.
+kubernetes_kubelet_container_hash_migration: true
