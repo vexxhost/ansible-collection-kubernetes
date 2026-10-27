@@ -14,6 +14,26 @@ kubernetes_repository_apt: "deb https://apt.kubernetes.io/ kubernetes-xenial mai
 # Kubernetes image repository (leave undefined to use the `kubeadm` default)
 kubernetes_image_repository: registry.k8s.io
 
+# Directory for kubeadm patches on each node
+kubernetes_kubeadm_patches_dir: /etc/kubernetes/kubeadm-patches
+
+# Strategic merge patches for components kubeadm writes, keyed by target:
+# etcd, kube-apiserver, kube-controller-manager, kube-scheduler,
+# kubeletconfiguration (Kubernetes 1.25+) and corednsdeployment (1.31+).
+# They are merged on top of the patches this role manages and apply whenever
+# kubeadm writes the component (join and upgrades). Patches are stored on each
+# node, so they can be set per host or per group.
+#
+#   kubernetes_kubeadm_patches:
+#     kube-apiserver:
+#       spec:
+#         containers:
+#           - name: kube-apiserver
+#             resources:
+#               requests:
+#                 cpu: "1"
+kubernetes_kubeadm_patches: {}
+
 # Extra arguments for the kubelet and control plane components, merged on top
 # of the ones this role sets (see roles/kubernetes/vars/main.yml). Set an
 # argument to null to remove one the role sets. Kubelet arguments only apply to

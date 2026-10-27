@@ -75,3 +75,18 @@ def test_v1beta4_disables_kube_proxy_when_removed(render_kubeadm):
     )
 
     assert documents["ClusterConfiguration"]["proxy"] == {"disabled": True}
+
+
+@pytest.mark.parametrize(
+    "version,expected",
+    [
+        ("1.21.14", None),
+        ("1.30.14", {"directory": "/etc/kubernetes/kubeadm-patches"}),
+        ("1.31.14", {"directory": "/etc/kubernetes/kubeadm-patches"}),
+    ],
+)
+def test_patches_directory(render_kubeadm, version, expected):
+    documents = render_kubeadm(kubernetes_version=version)
+
+    assert documents["InitConfiguration"].get("patches") == expected
+    assert documents["JoinConfiguration"].get("patches") == expected
