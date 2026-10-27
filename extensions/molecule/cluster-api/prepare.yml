@@ -27,3 +27,6 @@
         cluster_api_version: 1.10.5
         cluster_api_infrastructure_provider: openstack
         cluster_api_infrastructure_version: 0.12.7
+        # NOTE: The add-ons need a newer Cluster API, so converge installs them
+        #       during the upgrade.
+        cluster_api_addon_providers: []

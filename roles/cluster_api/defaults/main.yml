@@ -21,6 +21,16 @@ cluster_api_control_plane_version: "{{ cluster_api_version }}"
 # cluster_api_infrastructure_provider:
 # cluster_api_infrastructure_version:
 
+# List of clusterctl add-on providers to install and upgrade together with
+# Cluster API. Each entry needs a ``name`` and a ``version``. The manifests are
+# loaded from ``files/providers/addon-<name>/v<version>`` in this role unless
+# ``url`` points to another ``addon-components.yaml``.
+#
+# cluster_api_addon_providers:
+#   - name: csr-approver
+#     version: 0.1.0
+cluster_api_addon_providers: []
+
 cluster_api_node_selector: {}
 
 # https://cluster-api-openstack.sigs.k8s.io/clusteropenstack/configuration.html#timeout-settings
