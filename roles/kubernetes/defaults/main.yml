@@ -51,6 +51,10 @@ kubernetes_kubeadm_extra_args:
   controllerManager: {}
   scheduler: {}
 
+# Kubelet feature gates rendered into the KubeletConfiguration. These are
+# merged on top of the role-managed gates (kubernetes_kubelet_managed_feature_gates).
+kubernetes_kubelet_feature_gates: {}
+
 # Deprecated: Please use "kubelet_node_ip" instead.
 kubernetes_node_ip: "{{ kubelet_node_ip }}"
 

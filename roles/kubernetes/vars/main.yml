@@ -55,6 +55,20 @@ kubernetes_kubeadm_scheduler_args: >-
     | combine(kubernetes_kubeadm_extra_args.scheduler | default({}))
   }}
 
+# NOTE: In-place pod resize is enabled by default from 1.33 and needs pod
+#       cgroups: with --cgroups-per-qos=false, which this role used to set and
+#       which nodes that joined before keep (kubeadm does not rewrite
+#       kubeadm-flags.env on upgrades), the kubelet panics in
+#       doPodResizeAction.  The kubelet configuration is shared by every node,
+#       so keep it off on 1.33 and 1.34.  From 1.35 the gate is GA and locked,
+#       so it can no longer be turned off.
+kubernetes_kubelet_managed_feature_gates: >-
+  {{
+    {'InPlacePodVerticalScaling': false}
+    if kubernetes_version is version('1.33.0', '>=') and kubernetes_version is version('1.35.0', '<')
+    else {}
+  }}
+
 # kubeadm patch targets supported by kubernetes_version
 kubernetes_kubeadm_patch_targets: >-
   {{
