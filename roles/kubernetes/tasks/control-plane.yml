@@ -100,16 +100,16 @@
       ansible.builtin.command:
         cmd: kubeadm upgrade apply --v=5 --yes v{{ kubernetes_version }} {{ kubernetes_kubeadm_upgrade_args }}
 
-    - name: Check if the Kubernetes API services is up to date
-      ansible.builtin.command:
-        cmd: grep -q "v{{ kubernetes_version }}" /etc/kubernetes/manifests/kube-apiserver.yaml
-      changed_when: false
-      ignore_errors: true
-      register: kube_apiserver_version_check
+    - name: Wait for the control plane after the upgrade
+      run_once: true
+      ansible.builtin.include_tasks: health-check.yml
 
-    - name: Trigger an upgrade of the Kubernetes API services
-      throttle: 1
-      changed_when: true
-      ansible.builtin.command:
-        cmd: kubeadm upgrade node {{ kubernetes_kubeadm_upgrade_args }}
-      when: kube_apiserver_version_check is failed
+    # NOTE: Upgrade the other control plane nodes one at a time and wait for
+    #       the whole control plane to be healthy in between, so etcd and the
+    #       API servers never restart on more than one node at once.
+    - name: Upgrade the control plane nodes one at a time
+      run_once: true
+      ansible.builtin.include_tasks: control-plane-upgrade-node.yml
+      loop: "{{ ansible_play_hosts | select('in', groups[kubernetes_control_plane_group]) | list }}"
+      loop_control:
+        loop_var: kubernetes_control_plane_upgrade_host

@@ -71,6 +71,11 @@
         cilium_helm_values:
           operator:
             replicas: 1
+        # NOTE: The default selector (openstack-control-plane: enabled) is an
+        #       Atmosphere node label that CI nodes do not have, which leaves
+        #       CoreDNS unschedulable.
+        kubernetes_coredns_node_selector:
+          node-role.kubernetes.io/control-plane: ""
       controllers:
         kube_vip_interface: "{{ ansible_facts['default_ipv4'].interface }}"
         kube_vip_address: 172.17.0.100
