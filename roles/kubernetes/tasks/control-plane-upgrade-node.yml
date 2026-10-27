@@ -1,0 +1,24 @@
+# Copyright (c) 2026 VEXXHOST, Inc.
+# SPDX-License-Identifier: Apache-2.0
+
+---
+- name: Check if the Kubernetes API service is up to date
+  delegate_to: "{{ kubernetes_control_plane_upgrade_host }}"
+  check_mode: false
+  ansible.builtin.command:
+    cmd: grep -q "v{{ kubernetes_version }}" /etc/kubernetes/manifests/kube-apiserver.yaml
+  changed_when: false
+  failed_when: false
+  register: kubernetes_control_plane_version_check
+
+- name: Upgrade the control plane and wait for it
+  when: kubernetes_control_plane_version_check.rc != 0
+  block:
+    - name: Trigger an upgrade of the Kubernetes API services
+      delegate_to: "{{ kubernetes_control_plane_upgrade_host }}"
+      changed_when: true
+      ansible.builtin.command:
+        cmd: kubeadm upgrade node {{ kubernetes_kubeadm_upgrade_args }}
+
+    - name: Wait for the control plane after upgrading the node
+      ansible.builtin.include_tasks: health-check.yml
