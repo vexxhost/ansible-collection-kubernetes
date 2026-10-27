@@ -135,6 +135,18 @@
         group: root
         mode: "0600"
 
+    # NOTE: Only switch to the new kubelet now, after "kubeadm upgrade node"
+    #       and any migrations, right before it starts.
+    - name: Switch to the new kubelet
+      delegate_to: "{{ kubernetes_kubelet_upgrade_host }}"
+      ansible.builtin.file:
+        src: "{{ kubernetes_kubelet_download_dest }}"
+        dest: "{{ kubernetes_kubelet_live_binary_dest }}"
+        state: link
+        force: true
+        owner: root
+        group: root
+
     - name: Start the kubelet
       delegate_to: "{{ kubernetes_kubelet_upgrade_host }}"
       ansible.builtin.service:
@@ -179,9 +191,9 @@
       when: kubernetes_kubelet_upgrade_control_plane | bool
       ansible.builtin.include_tasks: health-check.yml
   rescue:
-    # NOTE: Leave the node running even if a step failed.  If the container
-    #       hash migration failed, the new kubelet restarts the containers, as
-    #       an upgrade without the migration would.
+    # NOTE: Leave the node running even if a step failed.  Before the switch
+    #       to the new kubelet, this starts the previous kubelet again, which
+    #       keeps the containers running.
     - name: Start the kubelet after a failed upgrade
       delegate_to: "{{ kubernetes_kubelet_upgrade_host }}"
       ansible.builtin.service:

@@ -5,7 +5,7 @@ Wants=network-online.target
 After=network-online.target
 
 [Service]
-ExecStart=/usr/bin/kubelet
+ExecStart={{ kubelet_live_binary_dest }}
 Restart=always
 StartLimitInterval=0
 RestartSec=10

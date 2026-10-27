@@ -29,4 +29,6 @@ dependencies:
   - role: kubelet
     vars:
       kubelet_version: "{{ kubernetes_version }}"
+      kubelet_download_dest: "{{ kubernetes_kubelet_download_dest }}"
+      kubelet_live_binary_dest: "{{ kubernetes_kubelet_live_binary_dest }}"
       kubelet_allow_unsafe_swap: "{{ kubernetes_allow_unsafe_swap }}"

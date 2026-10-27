@@ -90,3 +90,8 @@ kubernetes_health_check_timeout: 300s
 # enabled, the stored hashes are rewritten in containerd's metadata database
 # (with a backup next to it) while the kubelet and containerd are stopped.
 kubernetes_kubelet_container_hash_migration: true
+
+# Kubelet binary for the target version and the path the kubelet runs from
+# (see the kubelet role)
+kubernetes_kubelet_download_dest: "{{ download_artifact_work_directory | default('/var/lib/downloads') }}/kubelet-{{ kubernetes_version }}"
+kubernetes_kubelet_live_binary_dest: /usr/bin/kubelet
