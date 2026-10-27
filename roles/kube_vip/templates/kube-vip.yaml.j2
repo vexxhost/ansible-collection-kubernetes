@@ -98,10 +98,11 @@ spec:
   hostNetwork: true
   volumes:
   - hostPath:
-{% if kubernetes_version is ansible.builtin.version('1.28.14', '<') %}
+{% if kubernetes_version is ansible.builtin.version('1.29.0', '<') %}
       path: "/etc/kubernetes/admin.conf"
 {% else %}
       path: "{{ kube_vip_kubeconfig_path }}"
 {% endif %}
+      type: File
     name: kubeconfig
 status: {}
