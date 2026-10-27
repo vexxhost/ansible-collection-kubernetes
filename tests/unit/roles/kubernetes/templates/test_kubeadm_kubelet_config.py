@@ -19,24 +19,24 @@ def kubelet_args(documents):
 
 
 @pytest.mark.parametrize("version", ["1.28.15", "1.31.14", "1.36.2"])
-def test_kubelet_disables_qos_cgroups_by_default(render_kubeadm, version):
+def test_kubelet_keeps_qos_cgroup_defaults(render_kubeadm, version):
     args = kubelet_args(render_kubeadm(kubernetes_version=version))
 
-    assert args["cgroups-per-qos"] == "false"
-    assert args["enforce-node-allocatable"] == ""
+    assert "cgroups-per-qos" not in args
+    assert "enforce-node-allocatable" not in args
 
 
-def test_extra_args_can_remove_role_arguments(render_kubeadm):
+def test_extra_args_can_restore_legacy_qos_flags(render_kubeadm):
     documents = render_kubeadm(
         kubernetes_version="1.31.14",
         kubernetes_kubeadm_extra_args={
-            "kubelet": {"cgroups-per-qos": None, "enforce-node-allocatable": None}
+            "kubelet": {"cgroups-per-qos": "false", "enforce-node-allocatable": ""}
         },
     )
 
     args = kubelet_args(documents)
-    assert "cgroups-per-qos" not in args
-    assert "enforce-node-allocatable" not in args
+    assert args["cgroups-per-qos"] == "false"
+    assert args["enforce-node-allocatable"] == ""
 
 
 @pytest.mark.parametrize("version", ["1.30.14", "1.31.14"])
