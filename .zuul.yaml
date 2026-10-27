@@ -53,6 +53,15 @@
     nodeset: debian-trixie-single-node
     pre-run: test-playbooks/molecule/pre.yml
     post-run: test-playbooks/molecule/post.yml
+    # NOTE: The molecule job installs collection dependencies from these
+    #       checkouts instead of downloading them from Ansible Galaxy.
+    required-projects:
+      - ansible-collections/ansible.posix
+      - ansible-collections/community.crypto
+      - ansible-collections/community.general
+      - ansible-collections/community.library_inventory_filtering
+      - ansible-collections/kubernetes.core
+      - vexxhost/ansible-collection-containers
     roles:
       - zuul: opendev.org/openstack/openstack-helm
     vars:
