@@ -1,0 +1,47 @@
+# Copyright (c) 2026 VEXXHOST, Inc.
+# SPDX-License-Identifier: Apache-2.0
+
+---
+# kubeadm configuration API version for kubernetes_version
+kubernetes_kubeadm_api_version: >-
+  {{
+    'v1beta2' if kubernetes_version is version('1.22.0', '<') else
+    'v1beta3' if kubernetes_version is version('1.31.0', '<') else
+    'v1beta4'
+  }}
+
+# Component arguments rendered into the kubeadm configuration (see the
+# vexxhost.kubernetes.kubeadm_args filter for the format).
+kubernetes_kubeadm_kubelet_args: >-
+  {{
+    ({'fail-swap-on': 'false'} if kubernetes_allow_unsafe_swap | bool else {})
+    | combine({
+        'cgroups-per-qos': 'false',
+        'enforce-node-allocatable': '',
+        'node-ip': kubernetes_node_ip,
+      })
+    | combine({'container-runtime': 'remote'} if kubernetes_version is version('1.24.0', '<') else {})
+    | combine({'container-runtime-endpoint': kubelet_cri_socket})
+  }}
+
+kubernetes_kubeadm_tls_args: >-
+  {{ {'tls-min-version': 'VersionTLS13'} if kubernetes_version is version('1.28.0', '>=') else {} }}
+
+kubernetes_kubeadm_etcd_args: >-
+  {{ {'tls-min-version': 'TLS1.3'} if kubernetes_version is version('1.28.0', '>=') else {} }}
+
+kubernetes_kubeadm_api_server_args: >-
+  {{
+    kubernetes_kubeadm_tls_args
+    | combine({
+        'oidc-username-claim': kubernetes_oidc_username_claim | default(''),
+        'oidc-issuer-url': kubernetes_oidc_issuer_url,
+        'oidc-client-id': kubernetes_oidc_client_id | default(''),
+      } if kubernetes_oidc_issuer_url is defined else {})
+  }}
+
+kubernetes_kubeadm_controller_manager_args: >-
+  {{ {'bind-address': '0.0.0.0'} | combine(kubernetes_kubeadm_tls_args) }}
+
+kubernetes_kubeadm_scheduler_args: >-
+  {{ {'bind-address': '0.0.0.0'} | combine(kubernetes_kubeadm_tls_args) }}

@@ -1,43 +1,25 @@
+{#
+  NOTE: Component arguments are rendered inline as JSON (valid YAML): a mapping
+        before kubeadm v1beta4 and a list of name/value pairs from it.
+#}
 ---
-{% if kubernetes_version is ansible.builtin.version('1.22.0', '<') %}
-apiVersion: kubeadm.k8s.io/v1beta2
-{% else %}
-apiVersion: kubeadm.k8s.io/v1beta3
-{% endif %}
+apiVersion: kubeadm.k8s.io/{{ kubernetes_kubeadm_api_version }}
 kind: InitConfiguration
 localAPIEndpoint:
   advertiseAddress: "{{ kubernetes_node_ip }}"
 nodeRegistration:
-  kubeletExtraArgs:
-{% if kubernetes_allow_unsafe_swap %}
-    fail-swap-on: "false"
+{% if kubernetes_kubeadm_api_version == 'v1beta4' %}
+  criSocket: "{{ kubelet_cri_socket }}"
 {% endif %}
-    cgroups-per-qos: "false"
-    enforce-node-allocatable: ""
-    node-ip: "{{ kubernetes_node_ip }}"
-{% if kubernetes_version is ansible.builtin.version('1.24.0', '<') %}
-    container-runtime: "remote"
-{% endif %}
-    container-runtime-endpoint: "{{ kubelet_cri_socket }}"
+  kubeletExtraArgs: {{ kubernetes_kubeadm_kubelet_args | vexxhost.kubernetes.kubeadm_args(kubernetes_kubeadm_api_version) | to_json }}
 ---
-{% if kubernetes_version is ansible.builtin.version('1.22.0', '<') %}
-apiVersion: kubeadm.k8s.io/v1beta2
-{% else %}
-apiVersion: kubeadm.k8s.io/v1beta3
-{% endif %}
+apiVersion: kubeadm.k8s.io/{{ kubernetes_kubeadm_api_version }}
 kind: JoinConfiguration
 nodeRegistration:
-  kubeletExtraArgs:
-{% if kubernetes_allow_unsafe_swap %}
-    fail-swap-on: "false"
+{% if kubernetes_kubeadm_api_version == 'v1beta4' %}
+  criSocket: "{{ kubelet_cri_socket }}"
 {% endif %}
-    cgroups-per-qos: "false"
-    enforce-node-allocatable: ""
-    node-ip: "{{ kubernetes_node_ip }}"
-{% if kubernetes_version is ansible.builtin.version('1.24.0', '<') %}
-    container-runtime: "remote"
-{% endif %}
-    container-runtime-endpoint: "{{ kubelet_cri_socket }}"
+  kubeletExtraArgs: {{ kubernetes_kubeadm_kubelet_args | vexxhost.kubernetes.kubeadm_args(kubernetes_kubeadm_api_version) | to_json }}
 {% if (kubernetes_bootstrap_node is not defined) or (kubernetes_bootstrap_node is defined and inventory_hostname != kubernetes_bootstrap_node) %}
 discovery:
   bootstrapToken:
@@ -52,11 +34,7 @@ controlPlane:
 {% endif %}
 {% endif %}
 ---
-{% if kubernetes_version is ansible.builtin.version('1.22.0', '<') %}
-apiVersion: kubeadm.k8s.io/v1beta2
-{% else %}
-apiVersion: kubeadm.k8s.io/v1beta3
-{% endif %}
+apiVersion: kubeadm.k8s.io/{{ kubernetes_kubeadm_api_version }}
 kind: ClusterConfiguration
 kubernetesVersion: v{{ kubernetes_version }}
 controlPlaneEndpoint: "{{ kubernetes_hostname }}:6443"
@@ -65,34 +43,19 @@ imageRepository: "{{ kubernetes_image_repository }}"
 dns:
   imageRepository: "{{ kubernetes_image_repository }}/coredns"
 {% endif %}
+{% if kubernetes_kubeadm_api_version == 'v1beta4' and kubernetes_remove_kube_proxy | bool %}
+proxy:
+  disabled: true
+{% endif %}
 etcd:
   local:
-    extraArgs:
-{% if kubernetes_version is ansible.builtin.version('1.28.0', '>=') %}
-      tls-min-version: TLS1.3
-{% endif %}
+    extraArgs: {{ kubernetes_kubeadm_etcd_args | vexxhost.kubernetes.kubeadm_args(kubernetes_kubeadm_api_version) | to_json }}
 apiServer:
-  extraArgs:
-{% if kubernetes_version is ansible.builtin.version('1.28.0', '>=') %}
-    tls-min-version: VersionTLS13
-{% endif %}
-{% if kubernetes_oidc_issuer_url is defined %}
-    oidc-username-claim: "{{ kubernetes_oidc_username_claim }}"
-    oidc-issuer-url: {{ kubernetes_oidc_issuer_url }}
-    oidc-client-id: {{ kubernetes_oidc_client_id }}
-{% endif %}
+  extraArgs: {{ kubernetes_kubeadm_api_server_args | vexxhost.kubernetes.kubeadm_args(kubernetes_kubeadm_api_version) | to_json }}
 controllerManager:
-  extraArgs:
-    bind-address: 0.0.0.0
-{% if kubernetes_version is ansible.builtin.version('1.28.0', '>=') %}
-    tls-min-version: VersionTLS13
-{% endif %}
+  extraArgs: {{ kubernetes_kubeadm_controller_manager_args | vexxhost.kubernetes.kubeadm_args(kubernetes_kubeadm_api_version) | to_json }}
 scheduler:
-  extraArgs:
-    bind-address: 0.0.0.0
-{% if kubernetes_version is ansible.builtin.version('1.28.0', '>=') %}
-    tls-min-version: VersionTLS13
-{% endif %}
+  extraArgs: {{ kubernetes_kubeadm_scheduler_args | vexxhost.kubernetes.kubeadm_args(kubernetes_kubeadm_api_version) | to_json }}
 ---
 apiVersion: kubelet.config.k8s.io/v1beta1
 kind: KubeletConfiguration
