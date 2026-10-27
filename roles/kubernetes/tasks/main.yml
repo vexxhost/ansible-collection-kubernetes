@@ -26,6 +26,7 @@
 # NOTE: Upgrade one node at a time, control plane nodes first, and wait for
 #       each node (and the control plane) to be healthy before the next one.
 - name: Upgrade the kubelets one node at a time
+  when: kubernetes_kubelet_upgrade | bool
   run_once: true
   ansible.builtin.include_tasks: kubelet-upgrade-node.yml
   loop: >-
