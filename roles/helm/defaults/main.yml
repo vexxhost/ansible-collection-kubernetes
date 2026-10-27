@@ -31,6 +31,10 @@ helm_binary_checksum: "{{ helm_checksums[download_artifact_goarch][helm_version]
 helm_package_name: helm
 helm_repository_apt: "deb https://baltocdn.com/helm/stable/debian/ all main"
 
+# Helm plugins directory. This is Helm's default for root (it also honours
+# HELM_PLUGINS and XDG_DATA_HOME, which this role does not set).
+helm_plugins_path: /root/.local/share/helm/plugins
+
 helm_diff_version: v3.8.1
 helm_diff_checksums:
   amd64:
