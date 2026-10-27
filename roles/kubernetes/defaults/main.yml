@@ -83,3 +83,10 @@ kubernetes_health_check_components:
 kubernetes_health_check_retries: 30
 kubernetes_health_check_delay: 10
 kubernetes_health_check_timeout: 300s
+
+# Keep running containers when kubelets are upgraded from 1.30 to 1.31.
+# Kubernetes 1.31 changed how the kubelet hashes containers, so without this
+# every running container restarts when its node's kubelet is upgraded.  When
+# enabled, the stored hashes are rewritten in containerd's metadata database
+# (with a backup next to it) while the kubelet and containerd are stopped.
+kubernetes_kubelet_container_hash_migration: true
