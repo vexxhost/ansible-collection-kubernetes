@@ -22,13 +22,17 @@ kubernetes_kubeadm_kubelet_args: >-
       })
     | combine({'container-runtime': 'remote'} if kubernetes_version is version('1.24.0', '<') else {})
     | combine({'container-runtime-endpoint': kubelet_cri_socket})
+    | combine(kubernetes_kubeadm_extra_args.kubelet | default({}))
   }}
 
 kubernetes_kubeadm_tls_args: >-
   {{ {'tls-min-version': 'VersionTLS13'} if kubernetes_version is version('1.28.0', '>=') else {} }}
 
 kubernetes_kubeadm_etcd_args: >-
-  {{ {'tls-min-version': 'TLS1.3'} if kubernetes_version is version('1.28.0', '>=') else {} }}
+  {{
+    ({'tls-min-version': 'TLS1.3'} if kubernetes_version is version('1.28.0', '>=') else {})
+    | combine(kubernetes_kubeadm_extra_args.etcd | default({}))
+  }}
 
 kubernetes_kubeadm_api_server_args: >-
   {{
@@ -38,10 +42,19 @@ kubernetes_kubeadm_api_server_args: >-
         'oidc-issuer-url': kubernetes_oidc_issuer_url,
         'oidc-client-id': kubernetes_oidc_client_id | default(''),
       } if kubernetes_oidc_issuer_url is defined else {})
+    | combine(kubernetes_kubeadm_extra_args.apiServer | default({}))
   }}
 
 kubernetes_kubeadm_controller_manager_args: >-
-  {{ {'bind-address': '0.0.0.0'} | combine(kubernetes_kubeadm_tls_args) }}
+  {{
+    {'bind-address': '0.0.0.0'}
+    | combine(kubernetes_kubeadm_tls_args)
+    | combine(kubernetes_kubeadm_extra_args.controllerManager | default({}))
+  }}
 
 kubernetes_kubeadm_scheduler_args: >-
-  {{ {'bind-address': '0.0.0.0'} | combine(kubernetes_kubeadm_tls_args) }}
+  {{
+    {'bind-address': '0.0.0.0'}
+    | combine(kubernetes_kubeadm_tls_args)
+    | combine(kubernetes_kubeadm_extra_args.scheduler | default({}))
+  }}
