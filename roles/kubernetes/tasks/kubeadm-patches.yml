@@ -1,0 +1,53 @@
+# Copyright (c) 2026 VEXXHOST, Inc.
+# SPDX-License-Identifier: Apache-2.0
+
+---
+- name: Manage kubeadm patches
+  vars:
+    kubernetes_kubeadm_all_patches: >-
+      {{ kubernetes_kubeadm_managed_patches | combine(kubernetes_kubeadm_patches, recursive=True) }}
+    kubernetes_kubeadm_patch_files: >-
+      {{ kubernetes_kubeadm_all_patches.keys() | map('regex_replace', '$', '+strategic.yaml') | list }}
+  block:
+    - name: Check kubeadm patch targets
+      ansible.builtin.assert:
+        that:
+          - kubernetes_kubeadm_all_patches.keys() | difference(kubernetes_kubeadm_patch_targets) | length == 0
+        fail_msg: >-
+          Unsupported kubeadm patch targets for Kubernetes {{ kubernetes_version }}:
+          {{ kubernetes_kubeadm_all_patches.keys() | difference(kubernetes_kubeadm_patch_targets) | join(', ') }}.
+          Supported: {{ kubernetes_kubeadm_patch_targets | join(', ') }}.
+        quiet: true
+
+    - name: Create kubeadm patches directory
+      ansible.builtin.file:
+        path: "{{ kubernetes_kubeadm_patches_dir }}"
+        state: directory
+        owner: root
+        group: root
+        mode: "0750"
+
+    - name: Write kubeadm patches
+      ansible.builtin.copy:
+        content: "{{ item.value | to_nice_yaml(indent=2) }}"
+        dest: "{{ kubernetes_kubeadm_patches_dir }}/{{ item.key }}+strategic.yaml"
+        owner: root
+        group: root
+        mode: "0640"
+      loop: "{{ kubernetes_kubeadm_all_patches | dict2items }}"
+      loop_control:
+        label: "{{ item.key }}"
+
+    - name: Find kubeadm patches
+      ansible.builtin.find:
+        paths: "{{ kubernetes_kubeadm_patches_dir }}"
+      register: kubernetes_kubeadm_patches_found
+
+    - name: Remove other kubeadm patches
+      ansible.builtin.file:
+        path: "{{ item.path }}"
+        state: absent
+      loop: "{{ kubernetes_kubeadm_patches_found.files }}"
+      loop_control:
+        label: "{{ item.path | basename }}"
+      when: item.path | basename not in kubernetes_kubeadm_patch_files

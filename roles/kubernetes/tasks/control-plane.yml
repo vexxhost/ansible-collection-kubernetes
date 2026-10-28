@@ -97,8 +97,8 @@
     - name: Start an upgrade
       run_once: true
       changed_when: true
-      ansible.builtin.shell: |
-        kubeadm upgrade apply --v=5 --yes v{{ kubernetes_version }}
+      ansible.builtin.command:
+        cmd: kubeadm upgrade apply --v=5 --yes v{{ kubernetes_version }} {{ kubernetes_kubeadm_upgrade_args }}
 
     - name: Check if the Kubernetes API services is up to date
       ansible.builtin.command:
@@ -110,6 +110,6 @@
     - name: Trigger an upgrade of the Kubernetes API services
       throttle: 1
       changed_when: true
-      ansible.builtin.shell: |
-        kubeadm upgrade node
+      ansible.builtin.command:
+        cmd: kubeadm upgrade node {{ kubernetes_kubeadm_upgrade_args }}
       when: kube_apiserver_version_check is failed
