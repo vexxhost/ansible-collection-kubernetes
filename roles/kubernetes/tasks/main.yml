@@ -19,12 +19,22 @@
   when: inventory_hostname not in groups[kubernetes_control_plane_group]
   ansible.builtin.include_tasks: nodes.yml
 
-- name: Upgrade & restart Kubelet node for upgrade (if needed)
-  throttle: 1
-  vexxhost.kubernetes.kubeadm_upgrade_node:
-    api_endpoint: "https://{{ kubernetes_hostname }}:6443"
-    node: "{{ kubelet_hostname }}"
-    version: "{{ kubernetes_version }}"
+- name: Record the node name for kubelet upgrades
+  ansible.builtin.set_fact:
+    kubernetes_kubelet_node_name: "{{ kubelet_hostname }}"
+
+# NOTE: Upgrade one node at a time, control plane nodes first, and wait for
+#       each node (and the control plane) to be healthy before the next one.
+- name: Upgrade the kubelets one node at a time
+  run_once: true
+  ansible.builtin.include_tasks: kubelet-upgrade-node.yml
+  loop: >-
+    {{
+      (ansible_play_hosts | select('in', groups[kubernetes_control_plane_group]) | list)
+      + (ansible_play_hosts | reject('in', groups[kubernetes_control_plane_group]) | list)
+    }}
+  loop_control:
+    loop_var: kubernetes_kubelet_upgrade_host
 
 # NOTE: "kubeadm upgrade" can install kube-proxy again (from 1.33 it only
 #       skips it when proxy.disabled is stored in the cluster configuration),
