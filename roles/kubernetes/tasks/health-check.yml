@@ -1,0 +1,50 @@
+# Copyright (c) 2026 VEXXHOST, Inc.
+# SPDX-License-Identifier: Apache-2.0
+
+---
+- name: Wait for the Kubernetes API to be ready
+  delegate_to: "{{ kubernetes_bootstrap_node | default(groups[kubernetes_control_plane_group][0]) }}"
+  ansible.builtin.command:
+    cmd: kubectl --kubeconfig /etc/kubernetes/admin.conf get --raw=/readyz
+  changed_when: false
+  register: kubernetes_health_check_readyz
+  retries: "{{ kubernetes_health_check_retries }}"
+  delay: "{{ kubernetes_health_check_delay }}"
+  until: kubernetes_health_check_readyz is succeeded
+
+- name: Wait for a control plane pod on every control plane node
+  delegate_to: "{{ kubernetes_bootstrap_node | default(groups[kubernetes_control_plane_group][0]) }}"
+  ansible.builtin.command:
+    cmd: >-
+      kubectl --kubeconfig /etc/kubernetes/admin.conf -n kube-system
+      get pods -l component={{ item }} -o name
+  changed_when: false
+  register: kubernetes_health_check_pods
+  retries: "{{ kubernetes_health_check_retries }}"
+  delay: "{{ kubernetes_health_check_delay }}"
+  until:
+    - kubernetes_health_check_pods is succeeded
+    - kubernetes_health_check_pods.stdout_lines | length == groups[kubernetes_control_plane_group] | length
+  loop: "{{ kubernetes_health_check_components }}"
+
+- name: Wait for the control plane pods to be ready
+  delegate_to: "{{ kubernetes_bootstrap_node | default(groups[kubernetes_control_plane_group][0]) }}"
+  ansible.builtin.command:
+    cmd: >-
+      kubectl --kubeconfig /etc/kubernetes/admin.conf -n kube-system
+      wait --for=condition=Ready pod -l component={{ item }}
+      --timeout={{ kubernetes_health_check_timeout }}
+  changed_when: false
+  loop: "{{ kubernetes_health_check_components }}"
+
+# NOTE: Wait for DNS to be served rather than for the rollout to finish: new
+#       CoreDNS pods may not be schedulable yet (for example, when no node has
+#       the labels in kubernetes_coredns_node_selector), while the old pods
+#       keep serving.
+- name: Wait for CoreDNS to be available
+  delegate_to: "{{ kubernetes_bootstrap_node | default(groups[kubernetes_control_plane_group][0]) }}"
+  ansible.builtin.command:
+    cmd: >-
+      kubectl --kubeconfig /etc/kubernetes/admin.conf -n kube-system
+      wait --for=condition=Available deployment/coredns --timeout={{ kubernetes_health_check_timeout }}
+  changed_when: false

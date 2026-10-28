@@ -73,3 +73,13 @@ kubernetes_allow_custom_ca: false
 
 # Do not use kube-proxy. Instead use/configure cni replacement.
 kubernetes_remove_kube_proxy: false
+
+# Health checks run between upgrade steps
+kubernetes_health_check_components:
+  - etcd
+  - kube-apiserver
+  - kube-controller-manager
+  - kube-scheduler
+kubernetes_health_check_retries: 30
+kubernetes_health_check_delay: 10
+kubernetes_health_check_timeout: 300s
