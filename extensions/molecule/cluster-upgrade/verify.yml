@@ -73,3 +73,20 @@
           Before: {{ upgrade_canary_before }}.
           After: {{ upgrade_canary_after }}.
         success_msg: The upgrade kept all {{ upgrade_canary_before | length }} canary containers running
+
+# NOTE: prepare.yml removed bind-address from the stored configuration, so
+#       this checks the upgrade put it back on every control plane node.
+- name: Verify control plane endpoints
+  hosts: controllers
+  become: true
+  tasks:
+    - name: Check the scheduler and controller manager are reachable on the node IP
+      ansible.builtin.uri:
+        url: "https://{{ ansible_facts['default_ipv4']['address'] }}:{{ item }}/healthz"
+        validate_certs: false
+        return_content: true
+      register: control_plane_healthz
+      failed_when: control_plane_healthz.content != 'ok'
+      loop:
+        - 10257
+        - 10259

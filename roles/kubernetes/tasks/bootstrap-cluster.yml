@@ -102,6 +102,11 @@
     PATH: /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
   when: inventory_hostname == kubernetes_bootstrap_node
 
+# NOTE: Before any node joins, so new control plane nodes get the arguments
+#       too, and before "kubeadm upgrade apply" in control-plane.yml.
+- name: Update the stored kubeadm cluster configuration
+  ansible.builtin.include_tasks: cluster-configuration.yml
+
 - name: Check if the node is already part of the cluster
   ansible.builtin.stat:
     path: /etc/kubernetes/kubelet.conf

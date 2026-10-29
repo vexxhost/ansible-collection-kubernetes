@@ -37,7 +37,10 @@ kubernetes_kubeadm_patches: {}
 # Extra arguments for the kubelet and control plane components, merged on top
 # of the ones this role sets (see roles/kubernetes/vars/main.yml). Set an
 # argument to null to remove one the role sets. Kubelet arguments only apply to
-# nodes as they join the cluster; control plane arguments apply on upgrades.
+# nodes as they join the cluster. Control plane arguments are merged into the
+# cluster configuration stored in the kube-system/kubeadm-config ConfigMap on
+# every run (other stored arguments are kept), and kubeadm applies them when
+# it next writes the components: on upgrades and when control plane nodes join.
 #
 #   kubernetes_kubeadm_extra_args:
 #     kubelet:
