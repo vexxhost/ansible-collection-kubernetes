@@ -18,23 +18,20 @@
         if kubernetes_kubelet_upgrade_node.resources | length > 0 else ''
       }}
 
-# NOTE: The 1.35 kubelet expects actuated_pods_state to cover every pod in
-#       allocated_pods_state, but older kubelets leave it missing or
-#       incomplete, so the new kubelet panics in doPodResizeAction ("Missing
-#       actuated resource record").  In-place resize is off before 1.35, so
-#       the allocated state matches what is running and can be copied.  Once
-#       a node runs 1.35+, the kubelet owns the file: only seed it if missing.
-- name: Check the kubelet resize state
+# NOTE: The 1.35 kubelet tries to resize every running container missing from
+#       actuated_pods_state, which panics in doPodResizeAction on nodes with
+#       --cgroups-per-qos=false.  Kubelets before 1.35 only keep that file
+#       when in-place resize is on (it is off on 1.33 and 1.34), so write it
+#       from the pod specs when moving to 1.35.  Once a node runs 1.35+, the
+#       kubelet owns the file: only write it if missing.
+- name: Check the kubelet actuated pod state
   when:
     - kubernetes_kubelet_upgrade_current | length > 0
     - kubernetes_version is version('1.35.0', '>=')
   delegate_to: "{{ kubernetes_kubelet_upgrade_host }}"
   ansible.builtin.stat:
-    path: "/var/lib/kubelet/{{ item }}"
-  loop:
-    - allocated_pods_state
-    - actuated_pods_state
-  register: kubernetes_kubelet_resize_state
+    path: /var/lib/kubelet/actuated_pods_state
+  register: kubernetes_kubelet_actuated_state
 
 - name: Upgrade the kubelet
   when:
@@ -49,17 +46,12 @@
         and kubernetes_kubelet_upgrade_current is version('1.31.0', '<')
         and kubernetes_version is version('1.31.0', '>=')
       }}
-    kubernetes_kubelet_allocated_state: "{{ kubernetes_kubelet_resize_state.results[0].stat | default({}) }}"
-    kubernetes_kubelet_actuated_state: "{{ kubernetes_kubelet_resize_state.results[1].stat | default({}) }}"
     kubernetes_kubelet_resize_state_seed: >-
       {{
-        kubernetes_kubelet_allocated_state.exists | default(false)
+        kubernetes_version is version('1.35.0', '>=')
         and (
-          not kubernetes_kubelet_actuated_state.exists
-          or (
-            kubernetes_kubelet_upgrade_current is version('1.35.0', '<')
-            and kubernetes_kubelet_actuated_state.checksum != kubernetes_kubelet_allocated_state.checksum
-          )
+          kubernetes_kubelet_upgrade_current is version('1.35.0', '<')
+          or not (kubernetes_kubelet_actuated_state.stat.exists | default(true))
         )
       }}
   block:
@@ -75,9 +67,10 @@
       until: kubernetes_kubelet_upgrade_kubeadm is succeeded
 
     # NOTE: The 1.31 kubelet hashes the image exactly as written in the pod
-    #       spec, so read the pod specs while the API is reachable.
+    #       spec, and the 1.35 actuated pod state is written from the pod
+    #       specs, so read them while the API is reachable.
     - name: List the pods on the node
-      when: kubernetes_kubelet_hash_migration | bool
+      when: kubernetes_kubelet_hash_migration | bool or kubernetes_kubelet_resize_state_seed | bool
       delegate_to: "{{ kubernetes_bootstrap_node | default(groups[kubernetes_control_plane_group][0]) }}"
       kubernetes.core.k8s_info:
         kubeconfig: /etc/kubernetes/admin.conf
@@ -123,17 +116,11 @@
             name: containerd
             state: started
 
-    - name: Seed the kubelet actuated pod state
+    - name: Write the kubelet actuated pod state
       when: kubernetes_kubelet_resize_state_seed | bool
       delegate_to: "{{ kubernetes_kubelet_upgrade_host }}"
-      ansible.builtin.copy:
-        src: /var/lib/kubelet/allocated_pods_state
-        dest: /var/lib/kubelet/actuated_pods_state
-        remote_src: true
-        backup: true
-        owner: root
-        group: root
-        mode: "0600"
+      vexxhost.kubernetes.kubelet_resize_state:
+        pods: "{{ kubernetes_kubelet_upgrade_pods.resources }}"
 
     # NOTE: Only switch to the new kubelet now, after "kubeadm upgrade node"
     #       and any migrations, right before it starts.
