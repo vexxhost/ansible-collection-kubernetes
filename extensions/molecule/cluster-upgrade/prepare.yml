@@ -18,6 +18,41 @@
   vars:
     kubernetes_version: "{{ old_kubernetes_version }}"
 
+# NOTE: Clusters created before the role set bind-address for the scheduler
+#       and controller manager don't have it in the stored configuration, so
+#       kubeadm used to drop it on upgrade. Remove it so the upgrade has to
+#       bring it back.
+- name: Remove bind-address from the stored kubeadm configuration
+  hosts: controllers[0]
+  become: true
+  tasks:
+    - name: Get the stored kubeadm configuration
+      kubernetes.core.k8s_info:
+        kind: ConfigMap
+        namespace: kube-system
+        name: kubeadm-config
+      register: kubeadm_config
+
+    - name: Remove bind-address for the scheduler and controller manager
+      kubernetes.core.k8s:
+        definition:
+          apiVersion: v1
+          kind: ConfigMap
+          metadata:
+            name: kubeadm-config
+            namespace: kube-system
+          data:
+            ClusterConfiguration: >-
+              {{
+                kubeadm_config.resources[0].data.ClusterConfiguration
+                | from_yaml
+                | vexxhost.kubernetes.kubeadm_cluster_args({
+                    'controllerManager': {'bind-address': None},
+                    'scheduler': {'bind-address': None},
+                  })
+                | to_nice_yaml(indent=2)
+              }}
+
 - name: Wait for all nodes to become Ready
   hosts: all
   become: true

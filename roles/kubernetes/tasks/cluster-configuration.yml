@@ -1,0 +1,50 @@
+# Copyright (c) 2026 VEXXHOST, Inc.
+# SPDX-License-Identifier: Apache-2.0
+
+---
+# NOTE: kubeadm only reads /etc/kubernetes/kubeadm.yaml for "kubeadm init".
+#       "kubeadm join" and "kubeadm upgrade" render the control plane from
+#       the ClusterConfiguration stored in the kubeadm-config ConfigMap, so
+#       clusters created before an argument was added to this role (such as
+#       bind-address for the scheduler and controller manager) lose it on
+#       every upgrade. Merge the role's arguments into the stored copy.
+- name: Get the stored kubeadm cluster configuration
+  run_once: true
+  delegate_to: "{{ kubernetes_bootstrap_node }}"
+  kubernetes.core.k8s_info:
+    kubeconfig: /etc/kubernetes/admin.conf
+    api_version: v1
+    kind: ConfigMap
+    namespace: kube-system
+    name: kubeadm-config
+  register: kubernetes_kubeadm_config
+
+# NOTE: Compare the parsed configuration so the ConfigMap is only written
+#       when an argument changes, and not because of YAML formatting.
+- name: Update the component arguments in the stored kubeadm cluster configuration
+  run_once: true
+  delegate_to: "{{ kubernetes_bootstrap_node }}"
+  vars:
+    kubernetes_kubeadm_stored_cluster_configuration: >-
+      {{ kubernetes_kubeadm_config.resources[0].data.ClusterConfiguration | from_yaml }}
+    kubernetes_kubeadm_cluster_configuration: >-
+      {{
+        kubernetes_kubeadm_stored_cluster_configuration
+        | vexxhost.kubernetes.kubeadm_cluster_args({
+            'etcd': kubernetes_kubeadm_etcd_args,
+            'apiServer': kubernetes_kubeadm_api_server_args,
+            'controllerManager': kubernetes_kubeadm_controller_manager_args,
+            'scheduler': kubernetes_kubeadm_scheduler_args,
+          })
+      }}
+  when: kubernetes_kubeadm_cluster_configuration != kubernetes_kubeadm_stored_cluster_configuration
+  kubernetes.core.k8s:
+    kubeconfig: /etc/kubernetes/admin.conf
+    definition:
+      apiVersion: v1
+      kind: ConfigMap
+      metadata:
+        name: kubeadm-config
+        namespace: kube-system
+      data:
+        ClusterConfiguration: "{{ kubernetes_kubeadm_cluster_configuration | to_nice_yaml(indent=2) }}"
