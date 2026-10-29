@@ -33,3 +33,43 @@
         fail_msg: "Cilium pods have been restarted"
         success_msg: "Cilium pods have not been restarted"
       loop: "{{ cilium_pods.resources }}"
+
+    - name: Get upgrade canary baseline # noqa: run-once[task]
+      run_once: true
+      kubernetes.core.k8s_info:
+        kind: ConfigMap
+        namespace: upgrade-canary
+        name: upgrade-canary-baseline
+      register: upgrade_canary_baseline
+
+    - name: Get upgrade canary pods # noqa: run-once[task]
+      run_once: true
+      kubernetes.core.k8s_info:
+        kind: Pod
+        namespace: upgrade-canary
+        label_selectors:
+          - app=upgrade-canary
+      register: upgrade_canary_pods
+
+    - name: Verify the upgrade kept the canary containers running # noqa: run-once[task]
+      run_once: true
+      vars:
+        upgrade_canary_before: "{{ upgrade_canary_baseline.resources[0].data.containers | from_json }}"
+        upgrade_canary_after: >-
+          {{
+            dict(
+              upgrade_canary_pods.resources | map(attribute='metadata.name')
+              | zip(upgrade_canary_pods.resources | map(attribute='status.containerStatuses.0.containerID'))
+            )
+          }}
+        upgrade_canary_restarts: >-
+          {{ upgrade_canary_pods.resources | map(attribute='status.containerStatuses.0.restartCount') | sum }}
+      ansible.builtin.assert:
+        that:
+          - upgrade_canary_after == upgrade_canary_before
+          - upgrade_canary_restarts | int == 0
+        fail_msg: >-
+          The upgrade restarted canary containers.
+          Before: {{ upgrade_canary_before }}.
+          After: {{ upgrade_canary_after }}.
+        success_msg: The upgrade kept all {{ upgrade_canary_before | length }} canary containers running
