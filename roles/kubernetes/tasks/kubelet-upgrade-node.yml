@@ -18,10 +18,28 @@
         if kubernetes_kubelet_upgrade_node.resources | length > 0 else ''
       }}
 
+# NOTE: The 1.35 kubelet expects actuated_pods_state to cover every pod in
+#       allocated_pods_state, but older kubelets leave it missing or
+#       incomplete, so the new kubelet panics in doPodResizeAction ("Missing
+#       actuated resource record").  In-place resize is off before 1.35, so
+#       the allocated state matches what is running and can be copied.  Once
+#       a node runs 1.35+, the kubelet owns the file: only seed it if missing.
+- name: Check the kubelet resize state
+  when:
+    - kubernetes_kubelet_upgrade_current | length > 0
+    - kubernetes_version is version('1.35.0', '>=')
+  delegate_to: "{{ kubernetes_kubelet_upgrade_host }}"
+  ansible.builtin.stat:
+    path: "/var/lib/kubelet/{{ item }}"
+  loop:
+    - allocated_pods_state
+    - actuated_pods_state
+  register: kubernetes_kubelet_resize_state
+
 - name: Upgrade the kubelet
   when:
     - kubernetes_kubelet_upgrade_current | length > 0
-    - kubernetes_kubelet_upgrade_required | bool
+    - kubernetes_kubelet_upgrade_required | bool or kubernetes_kubelet_resize_state_seed | bool
   vars:
     kubernetes_kubelet_upgrade_control_plane: "{{ kubernetes_kubelet_upgrade_host in groups[kubernetes_control_plane_group] }}"
     kubernetes_kubelet_upgrade_required: "{{ kubernetes_kubelet_upgrade_current != kubernetes_version }}"
@@ -31,8 +49,22 @@
         and kubernetes_kubelet_upgrade_current is version('1.31.0', '<')
         and kubernetes_version is version('1.31.0', '>=')
       }}
+    kubernetes_kubelet_allocated_state: "{{ kubernetes_kubelet_resize_state.results[0].stat | default({}) }}"
+    kubernetes_kubelet_actuated_state: "{{ kubernetes_kubelet_resize_state.results[1].stat | default({}) }}"
+    kubernetes_kubelet_resize_state_seed: >-
+      {{
+        kubernetes_kubelet_allocated_state.exists | default(false)
+        and (
+          not kubernetes_kubelet_actuated_state.exists
+          or (
+            kubernetes_kubelet_upgrade_current is version('1.35.0', '<')
+            and kubernetes_kubelet_actuated_state.checksum != kubernetes_kubelet_allocated_state.checksum
+          )
+        )
+      }}
   block:
     - name: Upgrade the node configuration
+      when: kubernetes_kubelet_upgrade_required | bool
       delegate_to: "{{ kubernetes_kubelet_upgrade_host }}"
       changed_when: true
       ansible.builtin.command:
@@ -90,6 +122,18 @@
           ansible.builtin.service:
             name: containerd
             state: started
+
+    - name: Seed the kubelet actuated pod state
+      when: kubernetes_kubelet_resize_state_seed | bool
+      delegate_to: "{{ kubernetes_kubelet_upgrade_host }}"
+      ansible.builtin.copy:
+        src: /var/lib/kubelet/allocated_pods_state
+        dest: /var/lib/kubelet/actuated_pods_state
+        remote_src: true
+        backup: true
+        owner: root
+        group: root
+        mode: "0600"
 
     # NOTE: Only switch to the new kubelet now, after "kubeadm upgrade node"
     #       and any migrations, right before it starts.
