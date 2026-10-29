@@ -74,3 +74,40 @@ def test_extra_args_for_some_components_only(render_kubeadm):
         "tls-min-version": "TLS1.3",
         "quota-backend-bytes": "8589934592",
     }
+
+
+@pytest.mark.parametrize(
+    "version,expected",
+    [
+        ("1.32.13", None),
+        ("1.33.13", {"InPlacePodVerticalScaling": False}),
+        ("1.34.9", {"InPlacePodVerticalScaling": False}),
+        ("1.35.6", None),
+        ("1.36.2", None),
+    ],
+)
+def test_in_place_resize_disabled_while_overridable(render_kubeadm, version, expected):
+    documents = render_kubeadm(kubernetes_version=version)
+
+    assert documents["KubeletConfiguration"].get("featureGates") == expected
+
+
+@pytest.mark.parametrize("version", ["1.28.15", "1.34.9", "1.35.6"])
+def test_user_feature_gates_are_rendered(render_kubeadm, version):
+    documents = render_kubeadm(
+        kubernetes_version=version,
+        kubernetes_kubelet_feature_gates={"ExampleGate": "true"},
+    )
+
+    assert documents["KubeletConfiguration"]["featureGates"]["ExampleGate"] is True
+
+
+def test_user_feature_gates_override_managed_gates(render_kubeadm):
+    documents = render_kubeadm(
+        kubernetes_version="1.34.9",
+        kubernetes_kubelet_feature_gates={"InPlacePodVerticalScaling": True},
+    )
+
+    assert documents["KubeletConfiguration"]["featureGates"] == {
+        "InPlacePodVerticalScaling": True
+    }
