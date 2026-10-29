@@ -88,3 +88,10 @@ kubernetes_health_check_timeout: 300s
 # (see the kubelet role)
 kubernetes_kubelet_download_dest: "{{ download_artifact_work_directory | default('/var/lib/downloads') }}/kubelet-{{ kubernetes_version }}"
 kubernetes_kubelet_live_binary_dest: /usr/bin/kubelet
+
+# Upgrade kubelets to kubernetes_version on nodes already in the cluster.
+# Set to false to upgrade only the control plane in this run: those nodes keep
+# running their current kubelet (within the version skew Kubernetes supports)
+# until a later run with this enabled.  New nodes always join with the
+# kubelet for kubernetes_version.
+kubernetes_kubelet_upgrade: true
