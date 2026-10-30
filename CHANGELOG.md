@@ -1,5 +1,35 @@
 # Changelog
 
+## [3.5.0](https://github.com/vexxhost/ansible-collection-kubernetes/compare/v3.4.0...v3.5.0) (2026-10-30)
+
+
+### Features
+
+* **cluster_api:** manage clusterctl add-on providers ([#319](https://github.com/vexxhost/ansible-collection-kubernetes/issues/319)) ([5ed9fb0](https://github.com/vexxhost/ansible-collection-kubernetes/commit/5ed9fb0b54b5d5f7656c9f59631a83dd0f520b92))
+* **kubelet:** switch to the new kubelet only during the node upgrade ([#328](https://github.com/vexxhost/ansible-collection-kubernetes/issues/328)) ([e51efa2](https://github.com/vexxhost/ansible-collection-kubernetes/commit/e51efa26abf6762b432a0f61adee0438bf553193))
+* **kubernetes:** add kubeadm argument overrides ([#322](https://github.com/vexxhost/ansible-collection-kubernetes/issues/322)) ([a9fd1f9](https://github.com/vexxhost/ansible-collection-kubernetes/commit/a9fd1f9fd8815687d263076eec3f22cd4d53a185))
+* **kubernetes:** allow upgrading the control plane without the kubelets ([#330](https://github.com/vexxhost/ansible-collection-kubernetes/issues/330)) ([35a3d92](https://github.com/vexxhost/ansible-collection-kubernetes/commit/35a3d9272ee4a98019bcac07159ae5f531b7622f))
+* **kubernetes:** keep containers running across the 1.31 kubelet upgrade ([#327](https://github.com/vexxhost/ansible-collection-kubernetes/issues/327)) ([f8be23d](https://github.com/vexxhost/ansible-collection-kubernetes/commit/f8be23d90abc7b920453433e6e37c5bbf6994a54))
+* **kubernetes:** manage kubeadm patches ([#323](https://github.com/vexxhost/ansible-collection-kubernetes/issues/323)) ([4f10688](https://github.com/vexxhost/ansible-collection-kubernetes/commit/4f106884fd12ddf26d006a09bcea812d4b167996))
+* **kubernetes:** render kubeadm v1beta4 configuration on 1.31+ ([#307](https://github.com/vexxhost/ansible-collection-kubernetes/issues/307)) ([d931e45](https://github.com/vexxhost/ansible-collection-kubernetes/commit/d931e45c4ddb24108598d168976c3538e7eef9b2))
+* **kubernetes:** upgrade control plane nodes one at a time with health checks ([#324](https://github.com/vexxhost/ansible-collection-kubernetes/issues/324)) ([9aead81](https://github.com/vexxhost/ansible-collection-kubernetes/commit/9aead81b6e60899a77af3a0aef27e9d1f71bfac1))
+
+
+### Bug Fixes
+
+* **helm:** configure the plugins directory instead of asking helm ([#303](https://github.com/vexxhost/ansible-collection-kubernetes/issues/303)) ([cfffeca](https://github.com/vexxhost/ansible-collection-kubernetes/commit/cfffecad84d2e01df62e047c31e39fe2050e4c00))
+* **kube_vip:** stop super-admin.conf from becoming a directory ([#304](https://github.com/vexxhost/ansible-collection-kubernetes/issues/304)) ([1a51456](https://github.com/vexxhost/ansible-collection-kubernetes/commit/1a5145607725aa1fe88e269e608d2f269d882806))
+* **kubernetes_upgrade_check:** guard worker-only runs and downgrades ([#305](https://github.com/vexxhost/ansible-collection-kubernetes/issues/305)) ([35a7ba3](https://github.com/vexxhost/ansible-collection-kubernetes/commit/35a7ba31dd8773418a2fa9ca822cb06c7eff3f3c))
+* **kubernetes:** keep in-place pod resize off on 1.33 and 1.34 ([#332](https://github.com/vexxhost/ansible-collection-kubernetes/issues/332)) ([bb34d22](https://github.com/vexxhost/ansible-collection-kubernetes/commit/bb34d22901e99d04fed1b723e59a38abb890ac0a))
+* **kubernetes:** keep role arguments in the stored kubeadm configuration ([#302](https://github.com/vexxhost/ansible-collection-kubernetes/issues/302)) ([a3b4410](https://github.com/vexxhost/ansible-collection-kubernetes/commit/a3b4410f32550865825dcb46812b38f12658d6f2))
+* **kubernetes:** match the kubelet cgroup driver to containerd ([#340](https://github.com/vexxhost/ansible-collection-kubernetes/issues/340)) ([fcf46fe](https://github.com/vexxhost/ansible-collection-kubernetes/commit/fcf46fe152d7ae6a68f317e080e3153c5760bc55)), closes [#339](https://github.com/vexxhost/ansible-collection-kubernetes/issues/339)
+* **kubernetes:** remove kube-proxy after upgrades ([#312](https://github.com/vexxhost/ansible-collection-kubernetes/issues/312)) ([b3ef983](https://github.com/vexxhost/ansible-collection-kubernetes/commit/b3ef983d79fca2810b2f1400831289b8bad1fc3f))
+* **kubernetes:** retry the node check after a control plane kubelet upgrade ([#341](https://github.com/vexxhost/ansible-collection-kubernetes/issues/341)) ([195d5b6](https://github.com/vexxhost/ansible-collection-kubernetes/commit/195d5b6fcc7f473d26ebd55c9f23db1e28cc4e9e))
+* **kubernetes:** seed kubelet resize state when moving to 1.35 ([#326](https://github.com/vexxhost/ansible-collection-kubernetes/issues/326)) ([19eb928](https://github.com/vexxhost/ansible-collection-kubernetes/commit/19eb9286dffa6d1b864e2e90d54d2924d96854ef))
+* **kubernetes:** stop disabling pod QoS cgroups on new nodes ([#331](https://github.com/vexxhost/ansible-collection-kubernetes/issues/331)) ([da3716f](https://github.com/vexxhost/ansible-collection-kubernetes/commit/da3716f84b725d1d0e38167880f42c3417c45a23))
+* **kubernetes:** wait for 1.28 before requiring TLS 1.3 on etcd ([#343](https://github.com/vexxhost/ansible-collection-kubernetes/issues/343)) ([d986c16](https://github.com/vexxhost/ansible-collection-kubernetes/commit/d986c166bc4eb978aff1617854a5b9f982472c90))
+* **kubernetes:** write the kubelet actuated pod state when moving to 1.35 ([#342](https://github.com/vexxhost/ansible-collection-kubernetes/issues/342)) ([2ee7199](https://github.com/vexxhost/ansible-collection-kubernetes/commit/2ee7199dc6559270f4dd0372b9eea08b60d2eb9b))
+
 ## [3.4.0](https://github.com/vexxhost/ansible-collection-kubernetes/compare/v3.3.0...v3.4.0) (2026-09-09)
 
 
