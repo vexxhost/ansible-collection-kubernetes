@@ -24,9 +24,17 @@ kubernetes_kubeadm_kubelet_args: >-
 kubernetes_kubeadm_tls_args: >-
   {{ {'tls-min-version': 'VersionTLS13'} if kubernetes_version is version('1.28.0', '>=') else {} }}
 
+# NOTE: API servers before 1.28 can't connect to an etcd that only accepts
+#       TLS 1.3, and "kubeadm upgrade apply" upgrades etcd before the API
+#       server, so only require TLS 1.3 once the cluster already runs 1.28.
 kubernetes_kubeadm_etcd_args: >-
   {{
-    ({'tls-min-version': 'TLS1.3'} if kubernetes_version is version('1.28.0', '>=') else {})
+    (
+      {'tls-min-version': 'TLS1.3'}
+      if kubernetes_version is version('1.28.0', '>=')
+      and kubernetes_upgrade_check_cluster_version | default(kubernetes_version) is version('1.28.0', '>=')
+      else {}
+    )
     | combine(kubernetes_kubeadm_extra_args.etcd | default({}))
   }}
 

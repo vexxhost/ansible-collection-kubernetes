@@ -126,3 +126,26 @@ def test_user_feature_gates_override_managed_gates(render_kubeadm):
     assert documents["KubeletConfiguration"]["featureGates"] == {
         "InPlacePodVerticalScaling": True
     }
+
+
+def etcd_args(documents):
+    return as_mapping(documents["ClusterConfiguration"]["etcd"]["local"]["extraArgs"])
+
+
+@pytest.mark.parametrize(
+    "version,cluster_version,expected",
+    [
+        ("1.27.16", None, {}),
+        ("1.28.15", None, {"tls-min-version": "TLS1.3"}),
+        ("1.28.15", "1.27.16", {}),
+        ("1.29.15", "1.28.15", {"tls-min-version": "TLS1.3"}),
+    ],
+)
+def test_etcd_requires_tls13_once_the_cluster_runs_128(
+    render_kubeadm, version, cluster_version, expected
+):
+    overrides = {"kubernetes_version": version}
+    if cluster_version:
+        overrides["kubernetes_upgrade_check_cluster_version"] = cluster_version
+
+    assert etcd_args(render_kubeadm(**overrides)) == expected
