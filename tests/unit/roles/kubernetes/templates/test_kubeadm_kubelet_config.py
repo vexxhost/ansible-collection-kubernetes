@@ -92,6 +92,21 @@ def test_in_place_resize_disabled_while_overridable(render_kubeadm, version, exp
     assert documents["KubeletConfiguration"].get("featureGates") == expected
 
 
+@pytest.mark.parametrize("version", ["1.28.15", "1.30.14", "1.31.14", "1.36.2"])
+def test_kubelet_uses_the_runc_cgroup_driver(render_kubeadm, version):
+    documents = render_kubeadm(kubernetes_version=version)
+
+    assert documents["KubeletConfiguration"]["cgroupDriver"] == "cgroupfs"
+
+
+def test_kubelet_cgroup_driver_can_be_overridden(render_kubeadm):
+    documents = render_kubeadm(
+        kubernetes_version="1.30.14", kubernetes_kubelet_cgroup_driver="systemd"
+    )
+
+    assert documents["KubeletConfiguration"]["cgroupDriver"] == "systemd"
+
+
 @pytest.mark.parametrize("version", ["1.28.15", "1.34.9", "1.35.6"])
 def test_user_feature_gates_are_rendered(render_kubeadm, version):
     documents = render_kubeadm(

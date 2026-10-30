@@ -67,6 +67,7 @@ scheduler:
 ---
 apiVersion: kubelet.config.k8s.io/v1beta1
 kind: KubeletConfiguration
+cgroupDriver: {{ kubernetes_kubelet_cgroup_driver }}
 {% if kubernetes_version is ansible.builtin.version('1.28.0', '>=') %}
 tlsMinVersion: VersionTLS13
 {% endif %}

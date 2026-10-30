@@ -58,6 +58,13 @@ kubernetes_kubeadm_extra_args:
 # merged on top of the role-managed gates (kubernetes_kubelet_managed_feature_gates).
 kubernetes_kubelet_feature_gates: {}
 
+# Cgroup driver rendered into the KubeletConfiguration. It must match the
+# driver runc uses, which the vexxhost.containers.containerd role leaves at
+# cgroupfs (it does not set SystemdCgroup). kubeadm would otherwise default to
+# systemd, which kubelets before 1.31 (and any kubelet on containerd 1.7, which
+# can't report its driver) use as is.
+kubernetes_kubelet_cgroup_driver: cgroupfs
+
 # Deprecated: Please use "kubelet_node_ip" instead.
 kubernetes_node_ip: "{{ kubelet_node_ip }}"
 
