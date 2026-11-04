@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.5.1](https://github.com/vexxhost/ansible-collection-kubernetes/compare/v3.5.0...v3.5.1) (2026-11-04)
+
+
+### Bug Fixes
+
+* **kubernetes_upgrade_check:** refuse kubelets that crash without QoS cgroups ([#345](https://github.com/vexxhost/ansible-collection-kubernetes/issues/345)) ([6c2ac22](https://github.com/vexxhost/ansible-collection-kubernetes/commit/6c2ac22618499c98c5485c81ff53b7552b12e7d3))
+
 ## [3.5.0](https://github.com/vexxhost/ansible-collection-kubernetes/compare/v3.4.0...v3.5.0) (2026-10-30)
 
 
