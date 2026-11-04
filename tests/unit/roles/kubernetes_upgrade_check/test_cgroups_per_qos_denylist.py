@@ -48,6 +48,27 @@ def test_denied(version):
     assert len(denied_by(version)) == 1
 
 
+@pytest.mark.parametrize(
+    "version,denied",
+    [
+        ("1.35.11", True),
+        ("1.35.12", False),
+        ("1.36.7", True),
+        ("1.36.8", False),
+        ("1.37.3", True),
+        ("1.37.4", False),
+        ("1.38.0", False),
+    ],
+)
+def test_branches_are_lifted_separately(version, denied):
+    denylist = [
+        {"min": "1.35.9", "max": "1.35.12"},
+        {"min": "1.36.4", "max": "1.36.8"},
+        {"min": "1.37.0", "max": "1.37.4"},
+    ]
+    assert bool(denied_by(version, denylist)) is denied
+
+
 def test_max_is_exclusive():
     denylist = [{"min": "1.36.4", "max": "1.36.8"}]
     assert len(denied_by("1.36.7", denylist)) == 1

@@ -24,17 +24,24 @@ This does not depend on the upgrade: any such pod crashes the kubelet.
 [kubernetes/kubernetes#137999](https://github.com/kubernetes/kubernetes/pull/137999)
 fixes it, but has not merged yet.
 
-The default denylist covers 1.35.9 up to 1.36.0, and 1.36.4 onwards.  Once a
-release includes a fix, set `max` on the last entry to that release, for
-example:
+The default denylist has one entry per minor version: 1.35.9 and later 1.35
+releases, 1.36.4 and later 1.36 releases, and everything from 1.37.0.  The fix
+will ship in a different patch release on each branch, so when a branch gets
+it, set `max` on that branch's entry to the first fixed release.  For example,
+if 1.35.12, 1.36.8 and 1.37.4 include the fix:
 
 ```yaml
 kubernetes_upgrade_check_cgroups_per_qos_denylist:
   - min: "1.35.9"
-    max: "1.36.0"
+    max: "1.35.12"
   - min: "1.36.4"
-    max: "1.36.9"
+    max: "1.36.8"
+  - min: "1.37.0"
+    max: "1.37.4"
 ```
+
+Overriding the variable replaces the whole list.  Setting it to `[]` turns
+the check off.
 
 Whether a node runs pods in QoS cgroups is read from
 `/var/lib/kubelet/kubeadm-flags.env`, `/etc/default/kubelet` and
