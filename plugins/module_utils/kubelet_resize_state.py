@@ -79,9 +79,14 @@ def entries(pods):
         for container in spec.get("initContainers") or []:
             if container.get("restartPolicy") == "Always":
                 containers[container["name"]] = _resources(container.get("resources"))
+        # NOTE: The 1.36 kubelet records pod-level resources on every pod it
+        #       starts, even when the pod sets none, so write them the same
+        #       way: an empty value, which Go decodes back into a nil pointer.
         result[pod_uid(pod)] = {
             "ContainerResources": dict(sorted(containers.items())),
-            "PodLevelResources": None,
+            "PodLevelResources": (
+                _resources(spec["resources"]) if spec.get("resources") else {}
+            ),
         }
     return dict(sorted(result.items()))
 

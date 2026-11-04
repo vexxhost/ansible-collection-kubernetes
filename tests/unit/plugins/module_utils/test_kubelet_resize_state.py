@@ -9,22 +9,22 @@ from ansible_collections.vexxhost.kubernetes.plugins.module_utils import (
     kubelet_resize_state as resize_state,
 )
 
-# NOTE: Written by a 1.35.6 kubelet to /var/lib/kubelet/actuated_pods_state.
+# NOTE: Written by a 1.36 kubelet to /var/lib/kubelet/actuated_pods_state.
 KUBELET_CHECKPOINT = {
     "data": (
         '{"entries":{'
         '"2b0b8095b7ced4d3761c67803c003293":{"ContainerResources":'
-        '{"kube-scheduler":{"requests":{"cpu":"100m"}}},"PodLevelResources":null},'
+        '{"kube-scheduler":{"requests":{"cpu":"100m"}}},"PodLevelResources":{}},'
         '"2c5bea55f7881948d9a5a0828be8dad7":{"ContainerResources":'
-        '{"kube-apiserver":{"requests":{"cpu":"250m"}}},"PodLevelResources":null},'
+        '{"kube-apiserver":{"requests":{"cpu":"250m"}}},"PodLevelResources":{}},'
         '"7190a102fb01c7a3b2001815b05616b7":{"ContainerResources":'
-        '{"kube-controller-manager":{"requests":{"cpu":"200m"}}},"PodLevelResources":null},'
+        '{"kube-controller-manager":{"requests":{"cpu":"200m"}}},"PodLevelResources":{}},'
         '"9ba27a9cf7baa882ca6e28dc2f6b2fed":{"ContainerResources":'
-        '{"etcd":{"requests":{"cpu":"100m","memory":"100Mi"}}},"PodLevelResources":null},'
+        '{"etcd":{"requests":{"cpu":"100m","memory":"100Mi"}}},"PodLevelResources":{}},'
         '"eb0a4bfe02d54d93b0e1de2d9db8de7b":{"ContainerResources":'
-        '{"kube-vip":{}},"PodLevelResources":null}}}'
+        '{"kube-vip":{}},"PodLevelResources":{}}}}'
     ),
-    "checksum": 2398840411,
+    "checksum": 1934109606,
 }
 
 
@@ -120,7 +120,7 @@ def test_entries_follow_kubelet_allocation():
                 "plain": {},
                 "sidecar": {"limits": {"memory": "64Mi"}},
             },
-            "PodLevelResources": None,
+            "PodLevelResources": {},
         }
     }
 
@@ -129,3 +129,44 @@ def test_entries_follow_kubelet_allocation():
         '{"entries":{"pod-1":{"ContainerResources":{"main":'
         '{"limits":{"cpu":"1"},"requests":{"cpu":"10m","memory":"16Mi"}}'
     )
+
+
+def test_pod_level_resources_are_recorded():
+    pods = [
+        {
+            "metadata": {"uid": "pod-1"},
+            "spec": {
+                "resources": {"requests": {"cpu": "2"}, "limits": {"memory": "1Gi"}},
+                "containers": [{"name": "main"}],
+            },
+            "status": {"phase": "Running"},
+        }
+    ]
+
+    assert resize_state.entries(pods)["pod-1"]["PodLevelResources"] == {
+        "limits": {"memory": "1Gi"},
+        "requests": {"cpu": "2"},
+    }
+
+
+def test_pods_without_pod_level_resources_are_recorded_empty():
+    # NOTE: The 1.36 kubelet records an empty value for a pod without
+    #       pod-level resources.  Storing null instead leaves the pod out, and
+    #       the kubelet records nothing when it starts the pod, so the next
+    #       sync treats every running container as a resize.
+    pods = [
+        {
+            "metadata": {"uid": "pod-1"},
+            "spec": {
+                "containers": [
+                    {"name": "main", "resources": {"requests": {"cpu": "100m"}}},
+                    {"name": "plain"},
+                ]
+            },
+            "status": {"phase": "Running"},
+        }
+    ]
+
+    entry = resize_state.entries(pods)["pod-1"]
+    assert entry["PodLevelResources"] == {}
+    assert entry["ContainerResources"]["main"] == {"requests": {"cpu": "100m"}}
