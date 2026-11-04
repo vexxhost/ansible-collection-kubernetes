@@ -1,0 +1,875 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      
+      
+      <link rel="icon" href="../../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.4.3, mkdocs-material-9.1.15">
+    
+    
+      
+        <title>Envoy Gateway Role Implementation Plan - Ansible collection for Kubernetes</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.26e3688c.min.css">
+      
+      
+
+    
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&"object"==typeof palette.color)for(var key of Object.keys(palette.color))document.body.setAttribute("data-md-color-"+key,palette.color[key])</script>
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#envoy-gateway-role-implementation-plan" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../../.." title="Ansible collection for Kubernetes" class="md-header__button md-logo" aria-label="Ansible collection for Kubernetes" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Ansible collection for Kubernetes
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Envoy Gateway Role Implementation Plan
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../.." title="Ansible collection for Kubernetes" class="md-nav__button md-logo" aria-label="Ansible collection for Kubernetes" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
+
+    </a>
+    Ansible collection for Kubernetes
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1" >
+      
+      
+      
+        <label class="md-nav__link" for="__nav_1" id="__nav_1_label" tabindex="0">
+          Operations Guide
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_1_label" aria-expanded="false">
+        <label class="md-nav__title" for="__nav_1">
+          <span class="md-nav__icon md-icon"></span>
+          Operations Guide
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../ops/custom-ca/" class="md-nav__link">
+        Configure PKI certificates manually for Kubernetes cluster
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../ops/upgrades/" class="md-nav__link">
+        Upgrades
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#file-structure" class="md-nav__link">
+    File Structure
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#chunk-1-vendor-helm-chart-and-create-role-structure" class="md-nav__link">
+    Chunk 1: Vendor Helm Chart and Create Role Structure
+  </a>
+  
+    <nav class="md-nav" aria-label="Chunk 1: Vendor Helm Chart and Create Role Structure">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#task-1-vendor-the-envoy-gateway-helm-chart" class="md-nav__link">
+    Task 1: Vendor the Envoy Gateway Helm chart
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#task-2-create-role-defaults" class="md-nav__link">
+    Task 2: Create role defaults
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#task-3-create-role-vars-internal-helm-values" class="md-nav__link">
+    Task 3: Create role vars (internal Helm values)
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#task-4-create-role-metadata-metamainyml" class="md-nav__link">
+    Task 4: Create role metadata (meta/main.yml)
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#task-5-create-role-tasks-tasksmainyml-and-gatewayclass-template" class="md-nav__link">
+    Task 5: Create role tasks (tasks/main.yml) and GatewayClass template
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#chunk-2-configuration-documentation-and-verification" class="md-nav__link">
+    Chunk 2: Configuration, Documentation, and Verification
+  </a>
+  
+    <nav class="md-nav" aria-label="Chunk 2: Configuration, Documentation, and Verification">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#task-6-update-chartsyml-and-renovatejson" class="md-nav__link">
+    Task 6: Update .charts.yml and renovate.json
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#task-7-create-role-readme" class="md-nav__link">
+    Task 7: Create role README
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#gateway-api-crds" class="md-nav__link">
+    Gateway API CRDs
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#gateway-api-resources" class="md-nav__link">
+    Gateway API Resources
+  </a>
+  
+    <nav class="md-nav" aria-label="Gateway API Resources">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#task-8-final-verification" class="md-nav__link">
+    Task 8: Final verification
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+<h1 id="envoy-gateway-role-implementation-plan">Envoy Gateway Role Implementation Plan</h1>
+<blockquote>
+<p><strong>For agentic workers:</strong> REQUIRED: Use superpowers:subagent-driven-development (if subagents available) or superpowers:executing-plans to implement this plan. Steps use checkbox (<code>- [ ]</code>) syntax for tracking.</p>
+</blockquote>
+<p><strong>Goal:</strong> Add a reusable <code>envoy_gateway</code> Ansible role that deploys Envoy Gateway and Gateway API CRDs to a Kubernetes cluster, with an optional default GatewayClass.</p>
+<p><strong>Architecture:</strong> Follow the existing Helm-based role pattern (cert_manager, cilium). Vendor the Envoy Gateway Helm chart into <code>roles/envoy_gateway/files/chart/</code>. Deploy via <code>kubernetes.core.helm</code> module with configurable values and image overrides. The Envoy Gateway Helm chart bundles Gateway API CRDs. The role optionally creates a GatewayClass resource. Downstream consumers (e.g., Atmosphere) create their own Gateway, HTTPRoute, and policy resources.</p>
+<p><strong>Tech Stack:</strong> Ansible, Helm, Kubernetes, Envoy Gateway v1.7.0, Gateway API CRDs</p>
+<p><strong>Spec:</strong> <code>docs/superpowers/specs/2026-03-11-envoy-gateway-migration-design.md</code></p>
+<hr />
+<h2 id="file-structure">File Structure</h2>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>roles/envoy_gateway/
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>├── defaults/main.yml          # User-overridable: version, images, chart paths, helm values
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>├── vars/main.yml              # Internal: _envoy_gateway_helm_values (merged with user overrides)
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>├── meta/main.yml              # Role metadata + upload_helm_chart dependency
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>├── tasks/main.yml             # Deploy Helm chart + optional GatewayClass
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>├── templates/
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>│   └── gatewayclass.yml.j2    # Optional GatewayClass resource template
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>├── files/
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>│   └── chart/                 # Vendored Envoy Gateway Helm chart (v1.7.0)
+</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>│       ├── Chart.yaml
+</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>│       ├── values.yaml
+</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>│       └── templates/
+</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>└── README.md                  # Role documentation
+</span></code></pre></div>
+<p>Modified files:
+- <code>.charts.yml</code> — Add envoy-gateway chart entry
+- <code>renovate.json</code> — Add <code>roles/envoy_gateway/files/chart/**</code> to <code>ignorePaths</code></p>
+<blockquote>
+<p><strong>Design note (spec deviation):</strong> The spec lists <code>templates/values.yml.j2</code> in the
+file structure. This plan uses <code>vars/main.yml</code> instead, following the <code>cert_manager</code>
+role pattern which is the newer convention in this repo. The <code>cilium</code> role uses
+<code>templates/values.yml.j2</code> but that's the older pattern. Both work identically.</p>
+</blockquote>
+<hr />
+<h2 id="chunk-1-vendor-helm-chart-and-create-role-structure">Chunk 1: Vendor Helm Chart and Create Role Structure</h2>
+<h3 id="task-1-vendor-the-envoy-gateway-helm-chart">Task 1: Vendor the Envoy Gateway Helm chart</h3>
+<p><strong>Files:</strong>
+- Create: <code>roles/envoy_gateway/files/chart/</code> (entire directory from Helm pull)</p>
+<ul>
+<li>[ ] <strong>Step 1: Pull the Envoy Gateway Helm chart from OCI registry</strong></li>
+</ul>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nb">cd</span><span class="w"> </span>/home/mnaser/src/github.com/vexxhost/ansible-collection-kubernetes
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>mkdir<span class="w"> </span>-p<span class="w"> </span>roles/envoy_gateway/files
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>helm<span class="w"> </span>pull<span class="w"> </span>oci://docker.io/envoyproxy/gateway-helm<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">  </span>--version<span class="w"> </span>v1.7.0<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="w">  </span>--untar<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="w">  </span>--untardir<span class="w"> </span>roles/envoy_gateway/files
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>mv<span class="w"> </span>roles/envoy_gateway/files/gateway-helm<span class="w"> </span>roles/envoy_gateway/files/chart
+</span></code></pre></div>
+<p>Expected: <code>roles/envoy_gateway/files/chart/</code> directory containing <code>Chart.yaml</code>, <code>values.yaml</code>, <code>templates/</code>, etc.</p>
+<ul>
+<li>[ ] <strong>Step 2: Verify the chart structure and CRD bundling</strong></li>
+</ul>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>ls<span class="w"> </span>roles/envoy_gateway/files/chart/
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>cat<span class="w"> </span>roles/envoy_gateway/files/chart/Chart.yaml<span class="w"> </span><span class="p">|</span><span class="w"> </span>head<span class="w"> </span>-20
+</span></code></pre></div>
+<p>Expected: Standard Helm chart with <code>name: gateway-helm</code>.</p>
+<p>Verify Gateway API CRDs are bundled:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>ls<span class="w"> </span>roles/envoy_gateway/files/chart/crds/<span class="w"> </span><span class="m">2</span>&gt;/dev/null<span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">  </span>grep<span class="w"> </span>-r<span class="w"> </span><span class="s1">&#39;gateway.networking.k8s.io&#39;</span><span class="w"> </span>roles/envoy_gateway/files/chart/templates/<span class="w"> </span><span class="p">|</span><span class="w"> </span>head<span class="w"> </span>-5
+</span></code></pre></div>
+<p>The Envoy Gateway chart bundles Gateway API CRDs. If they are NOT bundled, a separate
+CRD installation step must be added (see fallback in Task 5).</p>
+<ul>
+<li>[ ] <strong>Step 3: Record image references from the chart</strong></li>
+</ul>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>grep<span class="w"> </span>-E<span class="w"> </span><span class="s1">&#39;repository:|tag:|image:&#39;</span><span class="w"> </span>roles/envoy_gateway/files/chart/values.yaml
+</span></code></pre></div>
+<p>Save this output — it determines the exact variable names for <code>defaults/main.yml</code>
+and <code>vars/main.yml</code> in the next tasks. The values.yaml structure dictates the
+Helm override keys.</p>
+<ul>
+<li>[ ] <strong>Step 4: Commit the vendored chart</strong></li>
+</ul>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>git<span class="w"> </span>add<span class="w"> </span>roles/envoy_gateway/files/chart/
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>git<span class="w"> </span>commit<span class="w"> </span>-s<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;feat(envoy_gateway): vendor Envoy Gateway Helm chart v1.7.0</span>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="s2">Vendor the official Envoy Gateway Helm chart from</span>
+</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="s2">oci://docker.io/envoyproxy/gateway-helm for use in the</span>
+</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="s2">envoy_gateway role. The chart bundles Gateway API CRDs.</span>
+</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>
+</span><span id="__span-5-8"><a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="s2">Co-authored-by: Copilot &lt;223556219+Copilot@users.noreply.github.com&gt;&quot;</span>
+</span></code></pre></div>
+<hr />
+<h3 id="task-2-create-role-defaults">Task 2: Create role defaults</h3>
+<p><strong>Files:</strong>
+- Create: <code>roles/envoy_gateway/defaults/main.yml</code></p>
+<p><strong>Prerequisite:</strong> Task 1 Step 3 output (image references from chart values.yaml).</p>
+<ul>
+<li>[ ] <strong>Step 1: Create defaults/main.yml</strong></li>
+</ul>
+<p>Follow the pattern from <code>roles/cert_manager/defaults/main.yml</code>. Include:
+- Helm chart path/ref/release config
+- Image tag and image variables (names from Task 1 Step 3)
+- Envoy data plane image (for downstream override even though it's configured via CRD)
+- Node selector
+- GatewayClass configuration variables</p>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="c1"># Copyright (c) 2026 VEXXHOST, Inc.</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="c1"># SPDX-License-Identifier: Apache-2.0</span>
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="nn">---</span>
+</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="nt">envoy_gateway_helm_chart_path</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;chart/&quot;</span>
+</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="nt">envoy_gateway_helm_chart_ref</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/usr/local/src/envoy-gateway</span>
+</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a>
+</span><span id="__span-6-8"><a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a><span class="nt">envoy_gateway_helm_release_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">envoy-gateway</span>
+</span><span id="__span-6-9"><a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a><span class="nt">envoy_gateway_helm_release_namespace</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">envoy-gateway-system</span>
+</span><span id="__span-6-10"><a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a><span class="nt">envoy_gateway_helm_values</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{}</span>
+</span><span id="__span-6-11"><a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a>
+</span><span id="__span-6-12"><a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a><span class="nt">envoy_gateway_node_selector</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{}</span>
+</span><span id="__span-6-13"><a id="__codelineno-6-13" name="__codelineno-6-13" href="#__codelineno-6-13"></a>
+</span><span id="__span-6-14"><a id="__codelineno-6-14" name="__codelineno-6-14" href="#__codelineno-6-14"></a><span class="nt">envoy_gateway_version</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;v1.7.0&quot;</span>
+</span><span id="__span-6-15"><a id="__codelineno-6-15" name="__codelineno-6-15" href="#__codelineno-6-15"></a><span class="nt">envoy_gateway_image</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;docker.io/envoyproxy/gateway:{{</span><span class="nv"> </span><span class="s">envoy_gateway_version</span><span class="nv"> </span><span class="s">}}&quot;</span>
+</span><span id="__span-6-16"><a id="__codelineno-6-16" name="__codelineno-6-16" href="#__codelineno-6-16"></a><span class="nt">envoy_gateway_image_certgen</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;docker.io/envoyproxy/gateway:{{</span><span class="nv"> </span><span class="s">envoy_gateway_version</span><span class="nv"> </span><span class="s">}}&quot;</span>
+</span><span id="__span-6-17"><a id="__codelineno-6-17" name="__codelineno-6-17" href="#__codelineno-6-17"></a>
+</span><span id="__span-6-18"><a id="__codelineno-6-18" name="__codelineno-6-18" href="#__codelineno-6-18"></a><span class="c1"># Data plane Envoy proxy image (used by downstream in EnvoyProxy CRD, not by this chart)</span>
+</span><span id="__span-6-19"><a id="__codelineno-6-19" name="__codelineno-6-19" href="#__codelineno-6-19"></a><span class="nt">envoy_gateway_envoy_image</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;docker.io/envoyproxy/envoy:distroless-v1.33.1&quot;</span>
+</span><span id="__span-6-20"><a id="__codelineno-6-20" name="__codelineno-6-20" href="#__codelineno-6-20"></a>
+</span><span id="__span-6-21"><a id="__codelineno-6-21" name="__codelineno-6-21" href="#__codelineno-6-21"></a><span class="c1"># Optional GatewayClass creation</span>
+</span><span id="__span-6-22"><a id="__codelineno-6-22" name="__codelineno-6-22" href="#__codelineno-6-22"></a><span class="nt">envoy_gateway_gateway_class_name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;&quot;</span>
+</span></code></pre></div>
+<blockquote>
+<p><strong>IMPORTANT:</strong> After vendoring the chart (Task 1), verify image names match
+the chart's <code>values.yaml</code>. Adjust <code>envoy_gateway_image</code> and
+<code>envoy_gateway_image_certgen</code> if the chart uses different image references.
+The <code>envoy_gateway_envoy_image</code> version must match what this Envoy Gateway
+version expects — check the chart's default EnvoyProxy image.</p>
+</blockquote>
+<ul>
+<li>[ ] <strong>Step 2: Commit</strong></li>
+</ul>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>git<span class="w"> </span>add<span class="w"> </span>roles/envoy_gateway/defaults/main.yml
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>git<span class="w"> </span>commit<span class="w"> </span>-s<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;feat(envoy_gateway): add role defaults</span>
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>
+</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="s2">Define user-overridable defaults for Envoy Gateway version, image</span>
+</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="s2">references, Helm release configuration, node selector, and optional</span>
+</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="s2">GatewayClass name.</span>
+</span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a>
+</span><span id="__span-7-8"><a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a><span class="s2">Co-authored-by: Copilot &lt;223556219+Copilot@users.noreply.github.com&gt;&quot;</span>
+</span></code></pre></div>
+<hr />
+<h3 id="task-3-create-role-vars-internal-helm-values">Task 3: Create role vars (internal Helm values)</h3>
+<p><strong>Files:</strong>
+- Create: <code>roles/envoy_gateway/vars/main.yml</code></p>
+<p><strong>Prerequisite:</strong> Task 1 Step 3 output (chart values.yaml structure).</p>
+<ul>
+<li>[ ] <strong>Step 1: Read the vendored chart's values.yaml in full</strong></li>
+</ul>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>cat<span class="w"> </span>roles/envoy_gateway/files/chart/values.yaml
+</span></code></pre></div>
+<p>Identify the EXACT keys for:
+- Control plane image (repository + tag)
+- Certgen job image (repository + tag)
+- Pod nodeSelector
+- Any other image references</p>
+<ul>
+<li>[ ] <strong>Step 2: Create vars/main.yml using EXACT chart keys</strong></li>
+</ul>
+<p>Follow the pattern from <code>roles/cert_manager/vars/main.yml</code>. Use the
+<code>vexxhost.kubernetes.docker_image</code> filter for image references. The
+<code>_envoy_gateway_helm_values</code> variable uses an underscore prefix to indicate
+it's internal and will be merged with user overrides.</p>
+<p>Write the file using the EXACT key paths from Step 1. Example structure
+(adjust to match actual chart values.yaml):</p>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="c1"># Copyright (c) 2026 VEXXHOST, Inc.</span>
+</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="c1"># SPDX-License-Identifier: Apache-2.0</span>
+</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>
+</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="nn">---</span>
+</span><span id="__span-9-5"><a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a><span class="nt">_envoy_gateway_helm_values</span><span class="p">:</span>
+</span><span id="__span-9-6"><a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a><span class="w">  </span><span class="nt">deployment</span><span class="p">:</span>
+</span><span id="__span-9-7"><a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a><span class="w">    </span><span class="nt">envoyGateway</span><span class="p">:</span>
+</span><span id="__span-9-8"><a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a><span class="w">      </span><span class="nt">image</span><span class="p">:</span>
+</span><span id="__span-9-9"><a id="__codelineno-9-9" name="__codelineno-9-9" href="#__codelineno-9-9"></a><span class="w">        </span><span class="nt">repository</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;{{</span><span class="nv"> </span><span class="s">envoy_gateway_image</span><span class="nv"> </span><span class="s">|</span><span class="nv"> </span><span class="s">vexxhost.kubernetes.docker_image(&#39;name&#39;)</span><span class="nv"> </span><span class="s">}}&quot;</span>
+</span><span id="__span-9-10"><a id="__codelineno-9-10" name="__codelineno-9-10" href="#__codelineno-9-10"></a><span class="w">        </span><span class="nt">tag</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;{{</span><span class="nv"> </span><span class="s">envoy_gateway_image</span><span class="nv"> </span><span class="s">|</span><span class="nv"> </span><span class="s">vexxhost.kubernetes.docker_image(&#39;tag&#39;)</span><span class="nv"> </span><span class="s">}}&quot;</span>
+</span><span id="__span-9-11"><a id="__codelineno-9-11" name="__codelineno-9-11" href="#__codelineno-9-11"></a><span class="w">    </span><span class="nt">pod</span><span class="p">:</span>
+</span><span id="__span-9-12"><a id="__codelineno-9-12" name="__codelineno-9-12" href="#__codelineno-9-12"></a><span class="w">      </span><span class="nt">nodeSelector</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;{{</span><span class="nv"> </span><span class="s">envoy_gateway_node_selector</span><span class="nv"> </span><span class="s">}}&quot;</span>
+</span><span id="__span-9-13"><a id="__codelineno-9-13" name="__codelineno-9-13" href="#__codelineno-9-13"></a><span class="w">  </span><span class="nt">certgen</span><span class="p">:</span>
+</span><span id="__span-9-14"><a id="__codelineno-9-14" name="__codelineno-9-14" href="#__codelineno-9-14"></a><span class="w">    </span><span class="nt">job</span><span class="p">:</span>
+</span><span id="__span-9-15"><a id="__codelineno-9-15" name="__codelineno-9-15" href="#__codelineno-9-15"></a><span class="w">      </span><span class="nt">image</span><span class="p">:</span>
+</span><span id="__span-9-16"><a id="__codelineno-9-16" name="__codelineno-9-16" href="#__codelineno-9-16"></a><span class="w">        </span><span class="nt">repository</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;{{</span><span class="nv"> </span><span class="s">envoy_gateway_image_certgen</span><span class="nv"> </span><span class="s">|</span><span class="nv"> </span><span class="s">vexxhost.kubernetes.docker_image(&#39;name&#39;)</span><span class="nv"> </span><span class="s">}}&quot;</span>
+</span><span id="__span-9-17"><a id="__codelineno-9-17" name="__codelineno-9-17" href="#__codelineno-9-17"></a><span class="w">        </span><span class="nt">tag</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;{{</span><span class="nv"> </span><span class="s">envoy_gateway_image_certgen</span><span class="nv"> </span><span class="s">|</span><span class="nv"> </span><span class="s">vexxhost.kubernetes.docker_image(&#39;tag&#39;)</span><span class="nv"> </span><span class="s">}}&quot;</span>
+</span></code></pre></div>
+<blockquote>
+<p>The YAML structure above is a template based on common Envoy Gateway chart
+layouts. You MUST verify each key path matches the vendored chart's
+<code>values.yaml</code> from Step 1. If keys differ, use the chart's actual keys.</p>
+</blockquote>
+<ul>
+<li>[ ] <strong>Step 3: Commit</strong></li>
+</ul>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>git<span class="w"> </span>add<span class="w"> </span>roles/envoy_gateway/vars/main.yml
+</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>git<span class="w"> </span>commit<span class="w"> </span>-s<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;feat(envoy_gateway): add internal Helm values</span>
+</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>
+</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a><span class="s2">Define internal Helm values with image overrides using the</span>
+</span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a><span class="s2">docker_image filter. These are merged with user-provided</span>
+</span><span id="__span-10-6"><a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a><span class="s2">envoy_gateway_helm_values at deploy time.</span>
+</span><span id="__span-10-7"><a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a>
+</span><span id="__span-10-8"><a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a><span class="s2">Co-authored-by: Copilot &lt;223556219+Copilot@users.noreply.github.com&gt;&quot;</span>
+</span></code></pre></div>
+<hr />
+<h3 id="task-4-create-role-metadata-metamainyml">Task 4: Create role metadata (meta/main.yml)</h3>
+<p><strong>Files:</strong>
+- Create: <code>roles/envoy_gateway/meta/main.yml</code></p>
+<ul>
+<li>[ ] <strong>Step 1: Create meta/main.yml</strong></li>
+</ul>
+<p>Follow the pattern from <code>roles/cert_manager/meta/main.yml</code>. Declare the
+<code>upload_helm_chart</code> dependency which syncs the vendored chart to target nodes.</p>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="c1"># Copyright (c) 2026 VEXXHOST, Inc.</span>
+</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="c1"># SPDX-License-Identifier: Apache-2.0</span>
+</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a>
+</span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a><span class="nn">---</span>
+</span><span id="__span-11-5"><a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a><span class="nt">galaxy_info</span><span class="p">:</span>
+</span><span id="__span-11-6"><a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a><span class="w">  </span><span class="nt">author</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">VEXXHOST, Inc.</span>
+</span><span id="__span-11-7"><a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a><span class="w">  </span><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Ansible role for Envoy Gateway</span>
+</span><span id="__span-11-8"><a id="__codelineno-11-8" name="__codelineno-11-8" href="#__codelineno-11-8"></a><span class="w">  </span><span class="nt">license</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Apache-2.0</span>
+</span><span id="__span-11-9"><a id="__codelineno-11-9" name="__codelineno-11-9" href="#__codelineno-11-9"></a><span class="w">  </span><span class="nt">min_ansible_version</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5.5.0</span>
+</span><span id="__span-11-10"><a id="__codelineno-11-10" name="__codelineno-11-10" href="#__codelineno-11-10"></a><span class="w">  </span><span class="nt">standalone</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
+</span><span id="__span-11-11"><a id="__codelineno-11-11" name="__codelineno-11-11" href="#__codelineno-11-11"></a><span class="w">  </span><span class="nt">platforms</span><span class="p">:</span>
+</span><span id="__span-11-12"><a id="__codelineno-11-12" name="__codelineno-11-12" href="#__codelineno-11-12"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">EL</span>
+</span><span id="__span-11-13"><a id="__codelineno-11-13" name="__codelineno-11-13" href="#__codelineno-11-13"></a><span class="w">      </span><span class="nt">versions</span><span class="p">:</span>
+</span><span id="__span-11-14"><a id="__codelineno-11-14" name="__codelineno-11-14" href="#__codelineno-11-14"></a><span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;8&quot;</span>
+</span><span id="__span-11-15"><a id="__codelineno-11-15" name="__codelineno-11-15" href="#__codelineno-11-15"></a><span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;9&quot;</span>
+</span><span id="__span-11-16"><a id="__codelineno-11-16" name="__codelineno-11-16" href="#__codelineno-11-16"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Ubuntu</span>
+</span><span id="__span-11-17"><a id="__codelineno-11-17" name="__codelineno-11-17" href="#__codelineno-11-17"></a><span class="w">      </span><span class="nt">versions</span><span class="p">:</span>
+</span><span id="__span-11-18"><a id="__codelineno-11-18" name="__codelineno-11-18" href="#__codelineno-11-18"></a><span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">focal</span>
+</span><span id="__span-11-19"><a id="__codelineno-11-19" name="__codelineno-11-19" href="#__codelineno-11-19"></a><span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">jammy</span>
+</span><span id="__span-11-20"><a id="__codelineno-11-20" name="__codelineno-11-20" href="#__codelineno-11-20"></a>
+</span><span id="__span-11-21"><a id="__codelineno-11-21" name="__codelineno-11-21" href="#__codelineno-11-21"></a><span class="nt">dependencies</span><span class="p">:</span>
+</span><span id="__span-11-22"><a id="__codelineno-11-22" name="__codelineno-11-22" href="#__codelineno-11-22"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">role</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">vexxhost.kubernetes.upload_helm_chart</span>
+</span><span id="__span-11-23"><a id="__codelineno-11-23" name="__codelineno-11-23" href="#__codelineno-11-23"></a><span class="w">    </span><span class="nt">vars</span><span class="p">:</span>
+</span><span id="__span-11-24"><a id="__codelineno-11-24" name="__codelineno-11-24" href="#__codelineno-11-24"></a><span class="w">      </span><span class="nt">upload_helm_chart_src</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;{{</span><span class="nv"> </span><span class="s">envoy_gateway_helm_chart_path</span><span class="nv"> </span><span class="s">}}&quot;</span>
+</span><span id="__span-11-25"><a id="__codelineno-11-25" name="__codelineno-11-25" href="#__codelineno-11-25"></a><span class="w">      </span><span class="nt">upload_helm_chart_dest</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;{{</span><span class="nv"> </span><span class="s">envoy_gateway_helm_chart_ref</span><span class="nv"> </span><span class="s">}}&quot;</span>
+</span></code></pre></div>
+<ul>
+<li>[ ] <strong>Step 2: Commit</strong></li>
+</ul>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>git<span class="w"> </span>add<span class="w"> </span>roles/envoy_gateway/meta/main.yml
+</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>git<span class="w"> </span>commit<span class="w"> </span>-s<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;feat(envoy_gateway): add role metadata</span>
+</span><span id="__span-12-3"><a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a>
+</span><span id="__span-12-4"><a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a><span class="s2">Declare role metadata and upload_helm_chart dependency for</span>
+</span><span id="__span-12-5"><a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a><span class="s2">syncing the vendored chart to target nodes.</span>
+</span><span id="__span-12-6"><a id="__codelineno-12-6" name="__codelineno-12-6" href="#__codelineno-12-6"></a>
+</span><span id="__span-12-7"><a id="__codelineno-12-7" name="__codelineno-12-7" href="#__codelineno-12-7"></a><span class="s2">Co-authored-by: Copilot &lt;223556219+Copilot@users.noreply.github.com&gt;&quot;</span>
+</span></code></pre></div>
+<hr />
+<h3 id="task-5-create-role-tasks-tasksmainyml-and-gatewayclass-template">Task 5: Create role tasks (tasks/main.yml) and GatewayClass template</h3>
+<p><strong>Files:</strong>
+- Create: <code>roles/envoy_gateway/tasks/main.yml</code>
+- Create: <code>roles/envoy_gateway/templates/gatewayclass.yml.j2</code></p>
+<ul>
+<li>[ ] <strong>Step 1: Create tasks/main.yml</strong></li>
+</ul>
+<p>Follow the pattern from <code>roles/cert_manager/tasks/main.yml</code>. Deploy the Helm
+chart with merged values. Then optionally create a GatewayClass if
+<code>envoy_gateway_gateway_class_name</code> is set.</p>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="c1"># Copyright (c) 2026 VEXXHOST, Inc.</span>
+</span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a><span class="c1"># SPDX-License-Identifier: Apache-2.0</span>
+</span><span id="__span-13-3"><a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a>
+</span><span id="__span-13-4"><a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a><span class="nn">---</span>
+</span><span id="__span-13-5"><a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Deploy Helm chart</span>
+</span><span id="__span-13-6"><a id="__codelineno-13-6" name="__codelineno-13-6" href="#__codelineno-13-6"></a><span class="w">  </span><span class="nt">run_once</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+</span><span id="__span-13-7"><a id="__codelineno-13-7" name="__codelineno-13-7" href="#__codelineno-13-7"></a><span class="w">  </span><span class="nt">kubernetes.core.helm</span><span class="p">:</span>
+</span><span id="__span-13-8"><a id="__codelineno-13-8" name="__codelineno-13-8" href="#__codelineno-13-8"></a><span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;{{</span><span class="nv"> </span><span class="s">envoy_gateway_helm_release_name</span><span class="nv"> </span><span class="s">}}&quot;</span>
+</span><span id="__span-13-9"><a id="__codelineno-13-9" name="__codelineno-13-9" href="#__codelineno-13-9"></a><span class="w">    </span><span class="nt">chart_ref</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;{{</span><span class="nv"> </span><span class="s">envoy_gateway_helm_chart_ref</span><span class="nv"> </span><span class="s">}}&quot;</span>
+</span><span id="__span-13-10"><a id="__codelineno-13-10" name="__codelineno-13-10" href="#__codelineno-13-10"></a><span class="w">    </span><span class="nt">release_namespace</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;{{</span><span class="nv"> </span><span class="s">envoy_gateway_helm_release_namespace</span><span class="nv"> </span><span class="s">}}&quot;</span>
+</span><span id="__span-13-11"><a id="__codelineno-13-11" name="__codelineno-13-11" href="#__codelineno-13-11"></a><span class="w">    </span><span class="nt">create_namespace</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+</span><span id="__span-13-12"><a id="__codelineno-13-12" name="__codelineno-13-12" href="#__codelineno-13-12"></a><span class="w">    </span><span class="nt">kubeconfig</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/etc/kubernetes/admin.conf</span>
+</span><span id="__span-13-13"><a id="__codelineno-13-13" name="__codelineno-13-13" href="#__codelineno-13-13"></a><span class="w">    </span><span class="nt">values</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;{{</span><span class="nv"> </span><span class="s">_envoy_gateway_helm_values</span><span class="nv"> </span><span class="s">|</span><span class="nv"> </span><span class="s">combine(envoy_gateway_helm_values,</span><span class="nv"> </span><span class="s">recursive=True)</span><span class="nv"> </span><span class="s">}}&quot;</span>
+</span><span id="__span-13-14"><a id="__codelineno-13-14" name="__codelineno-13-14" href="#__codelineno-13-14"></a>
+</span><span id="__span-13-15"><a id="__codelineno-13-15" name="__codelineno-13-15" href="#__codelineno-13-15"></a><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Create GatewayClass</span>
+</span><span id="__span-13-16"><a id="__codelineno-13-16" name="__codelineno-13-16" href="#__codelineno-13-16"></a><span class="w">  </span><span class="nt">run_once</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+</span><span id="__span-13-17"><a id="__codelineno-13-17" name="__codelineno-13-17" href="#__codelineno-13-17"></a><span class="w">  </span><span class="nt">kubernetes.core.k8s</span><span class="p">:</span>
+</span><span id="__span-13-18"><a id="__codelineno-13-18" name="__codelineno-13-18" href="#__codelineno-13-18"></a><span class="w">    </span><span class="nt">state</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">present</span>
+</span><span id="__span-13-19"><a id="__codelineno-13-19" name="__codelineno-13-19" href="#__codelineno-13-19"></a><span class="w">    </span><span class="nt">kubeconfig</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/etc/kubernetes/admin.conf</span>
+</span><span id="__span-13-20"><a id="__codelineno-13-20" name="__codelineno-13-20" href="#__codelineno-13-20"></a><span class="w">    </span><span class="nt">definition</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;{{</span><span class="nv"> </span><span class="s">lookup(&#39;ansible.builtin.template&#39;,</span><span class="nv"> </span><span class="s">&#39;gatewayclass.yml.j2&#39;)</span><span class="nv"> </span><span class="s">|</span><span class="nv"> </span><span class="s">from_yaml</span><span class="nv"> </span><span class="s">}}&quot;</span>
+</span><span id="__span-13-21"><a id="__codelineno-13-21" name="__codelineno-13-21" href="#__codelineno-13-21"></a><span class="w">  </span><span class="nt">when</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">envoy_gateway_gateway_class_name | length &gt; 0</span>
+</span></code></pre></div>
+<ul>
+<li>[ ] <strong>Step 2: Create templates/gatewayclass.yml.j2</strong></li>
+</ul>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="nt">apiVersion</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">gateway.networking.k8s.io/v1</span>
+</span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a><span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">GatewayClass</span>
+</span><span id="__span-14-3"><a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a><span class="nt">metadata</span><span class="p">:</span>
+</span><span id="__span-14-4"><a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a><span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;{{</span><span class="nv"> </span><span class="s">envoy_gateway_gateway_class_name</span><span class="nv"> </span><span class="s">}}&quot;</span>
+</span><span id="__span-14-5"><a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a><span class="nt">spec</span><span class="p">:</span>
+</span><span id="__span-14-6"><a id="__codelineno-14-6" name="__codelineno-14-6" href="#__codelineno-14-6"></a><span class="w">  </span><span class="nt">controllerName</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">gateway.envoyproxy.io/gatewayclass-controller</span>
+</span></code></pre></div>
+<ul>
+<li>[ ] <strong>Step 3: Commit</strong></li>
+</ul>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a>git<span class="w"> </span>add<span class="w"> </span>roles/envoy_gateway/tasks/main.yml<span class="w"> </span>roles/envoy_gateway/templates/gatewayclass.yml.j2
+</span><span id="__span-15-2"><a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a>git<span class="w"> </span>commit<span class="w"> </span>-s<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;feat(envoy_gateway): add deployment tasks and GatewayClass template</span>
+</span><span id="__span-15-3"><a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a>
+</span><span id="__span-15-4"><a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a><span class="s2">Deploy Envoy Gateway via Helm chart with merged internal and</span>
+</span><span id="__span-15-5"><a id="__codelineno-15-5" name="__codelineno-15-5" href="#__codelineno-15-5"></a><span class="s2">user-provided values. Optionally create a GatewayClass resource</span>
+</span><span id="__span-15-6"><a id="__codelineno-15-6" name="__codelineno-15-6" href="#__codelineno-15-6"></a><span class="s2">when envoy_gateway_gateway_class_name is set.</span>
+</span><span id="__span-15-7"><a id="__codelineno-15-7" name="__codelineno-15-7" href="#__codelineno-15-7"></a>
+</span><span id="__span-15-8"><a id="__codelineno-15-8" name="__codelineno-15-8" href="#__codelineno-15-8"></a><span class="s2">Co-authored-by: Copilot &lt;223556219+Copilot@users.noreply.github.com&gt;&quot;</span>
+</span></code></pre></div>
+<hr />
+<h2 id="chunk-2-configuration-documentation-and-verification">Chunk 2: Configuration, Documentation, and Verification</h2>
+<h3 id="task-6-update-chartsyml-and-renovatejson">Task 6: Update .charts.yml and renovate.json</h3>
+<p><strong>Files:</strong>
+- Modify: <code>.charts.yml</code>
+- Modify: <code>renovate.json</code></p>
+<ul>
+<li>[ ] <strong>Step 1: Update .charts.yml</strong></li>
+</ul>
+<p><code>.charts.yml</code> is currently orphaned (not consumed by any automation in this repo)
+but serves as documentation of vendored chart sources. Add the Envoy Gateway
+entry for consistency.</p>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="nn">---</span>
+</span><span id="__span-16-2"><a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a><span class="nt">charts</span><span class="p">:</span>
+</span><span id="__span-16-3"><a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">cert-manager</span>
+</span><span id="__span-16-4"><a id="__codelineno-16-4" name="__codelineno-16-4" href="#__codelineno-16-4"></a><span class="w">    </span><span class="nt">directory</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">chart</span>
+</span><span id="__span-16-5"><a id="__codelineno-16-5" name="__codelineno-16-5" href="#__codelineno-16-5"></a><span class="w">    </span><span class="nt">version</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1.11.5</span>
+</span><span id="__span-16-6"><a id="__codelineno-16-6" name="__codelineno-16-6" href="#__codelineno-16-6"></a><span class="w">    </span><span class="nt">repository</span><span class="p">:</span>
+</span><span id="__span-16-7"><a id="__codelineno-16-7" name="__codelineno-16-7" href="#__codelineno-16-7"></a><span class="w">      </span><span class="nt">url</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">https://charts.jetstack.io</span>
+</span><span id="__span-16-8"><a id="__codelineno-16-8" name="__codelineno-16-8" href="#__codelineno-16-8"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">gateway-helm</span>
+</span><span id="__span-16-9"><a id="__codelineno-16-9" name="__codelineno-16-9" href="#__codelineno-16-9"></a><span class="w">    </span><span class="nt">directory</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">chart</span>
+</span><span id="__span-16-10"><a id="__codelineno-16-10" name="__codelineno-16-10" href="#__codelineno-16-10"></a><span class="w">    </span><span class="nt">version</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">v1.7.0</span>
+</span><span id="__span-16-11"><a id="__codelineno-16-11" name="__codelineno-16-11" href="#__codelineno-16-11"></a><span class="w">    </span><span class="nt">repository</span><span class="p">:</span>
+</span><span id="__span-16-12"><a id="__codelineno-16-12" name="__codelineno-16-12" href="#__codelineno-16-12"></a><span class="w">      </span><span class="nt">url</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">oci://docker.io/envoyproxy/gateway-helm</span>
+</span></code></pre></div>
+<ul>
+<li>[ ] <strong>Step 2: Update renovate.json</strong></li>
+</ul>
+<p>Add the vendored chart directory to <code>ignorePaths</code> to prevent Renovate from
+interfering with the vendored chart (same pattern as cilium).</p>
+<div class="language-json highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="p">{</span>
+</span><span id="__span-17-2"><a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a><span class="w">  </span><span class="nt">&quot;$schema&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;https://docs.renovatebot.com/renovate-schema.json&quot;</span><span class="p">,</span>
+</span><span id="__span-17-3"><a id="__codelineno-17-3" name="__codelineno-17-3" href="#__codelineno-17-3"></a><span class="w">  </span><span class="nt">&quot;extends&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+</span><span id="__span-17-4"><a id="__codelineno-17-4" name="__codelineno-17-4" href="#__codelineno-17-4"></a><span class="w">    </span><span class="s2">&quot;local&gt;vexxhost/.github&quot;</span>
+</span><span id="__span-17-5"><a id="__codelineno-17-5" name="__codelineno-17-5" href="#__codelineno-17-5"></a><span class="w">  </span><span class="p">],</span>
+</span><span id="__span-17-6"><a id="__codelineno-17-6" name="__codelineno-17-6" href="#__codelineno-17-6"></a><span class="w">  </span><span class="nt">&quot;ignorePaths&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+</span><span id="__span-17-7"><a id="__codelineno-17-7" name="__codelineno-17-7" href="#__codelineno-17-7"></a><span class="w">    </span><span class="s2">&quot;roles/cilium/files/chart/**&quot;</span><span class="p">,</span>
+</span><span id="__span-17-8"><a id="__codelineno-17-8" name="__codelineno-17-8" href="#__codelineno-17-8"></a><span class="w">    </span><span class="s2">&quot;roles/envoy_gateway/files/chart/**&quot;</span>
+</span><span id="__span-17-9"><a id="__codelineno-17-9" name="__codelineno-17-9" href="#__codelineno-17-9"></a><span class="w">  </span><span class="p">]</span>
+</span><span id="__span-17-10"><a id="__codelineno-17-10" name="__codelineno-17-10" href="#__codelineno-17-10"></a><span class="p">}</span>
+</span></code></pre></div>
+<ul>
+<li>[ ] <strong>Step 3: Commit</strong></li>
+</ul>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-18-1"><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a>git<span class="w"> </span>add<span class="w"> </span>.charts.yml<span class="w"> </span>renovate.json
+</span><span id="__span-18-2"><a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a>git<span class="w"> </span>commit<span class="w"> </span>-s<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;chore(envoy_gateway): add chart tracking and renovate ignore</span>
+</span><span id="__span-18-3"><a id="__codelineno-18-3" name="__codelineno-18-3" href="#__codelineno-18-3"></a>
+</span><span id="__span-18-4"><a id="__codelineno-18-4" name="__codelineno-18-4" href="#__codelineno-18-4"></a><span class="s2">Add Envoy Gateway to .charts.yml for chart source documentation</span>
+</span><span id="__span-18-5"><a id="__codelineno-18-5" name="__codelineno-18-5" href="#__codelineno-18-5"></a><span class="s2">and to renovate.json ignorePaths to prevent interference with</span>
+</span><span id="__span-18-6"><a id="__codelineno-18-6" name="__codelineno-18-6" href="#__codelineno-18-6"></a><span class="s2">the vendored chart directory.</span>
+</span><span id="__span-18-7"><a id="__codelineno-18-7" name="__codelineno-18-7" href="#__codelineno-18-7"></a>
+</span><span id="__span-18-8"><a id="__codelineno-18-8" name="__codelineno-18-8" href="#__codelineno-18-8"></a><span class="s2">Co-authored-by: Copilot &lt;223556219+Copilot@users.noreply.github.com&gt;&quot;</span>
+</span></code></pre></div>
+<hr />
+<h3 id="task-7-create-role-readme">Task 7: Create role README</h3>
+<p><strong>Files:</strong>
+- Create: <code>roles/envoy_gateway/README.md</code></p>
+<ul>
+<li>[ ] <strong>Step 1: Create README.md</strong></li>
+</ul>
+<div class="language-markdown highlight"><pre><span></span><code><span id="__span-19-1"><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a><span class="gh"># Envoy Gateway</span>
+</span><span id="__span-19-2"><a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a>
+</span><span id="__span-19-3"><a id="__codelineno-19-3" name="__codelineno-19-3" href="#__codelineno-19-3"></a>This role deploys [<span class="nt">Envoy Gateway</span>](<span class="na">https://gateway.envoyproxy.io/</span>) to a
+</span><span id="__span-19-4"><a id="__codelineno-19-4" name="__codelineno-19-4" href="#__codelineno-19-4"></a>Kubernetes cluster using the official Helm chart.
+</span><span id="__span-19-5"><a id="__codelineno-19-5" name="__codelineno-19-5" href="#__codelineno-19-5"></a>
+</span><span id="__span-19-6"><a id="__codelineno-19-6" name="__codelineno-19-6" href="#__codelineno-19-6"></a>Envoy Gateway is a Gateway API implementation built on the Envoy proxy.
+</span><span id="__span-19-7"><a id="__codelineno-19-7" name="__codelineno-19-7" href="#__codelineno-19-7"></a>It provides a standardized way to manage ingress traffic using Gateway API
+</span><span id="__span-19-8"><a id="__codelineno-19-8" name="__codelineno-19-8" href="#__codelineno-19-8"></a>resources (Gateway, HTTPRoute, GRPCRoute, TCPRoute, etc.).
+</span><span id="__span-19-9"><a id="__codelineno-19-9" name="__codelineno-19-9" href="#__codelineno-19-9"></a>
+</span><span id="__span-19-10"><a id="__codelineno-19-10" name="__codelineno-19-10" href="#__codelineno-19-10"></a><span class="gu">## Role Variables</span>
+</span><span id="__span-19-11"><a id="__codelineno-19-11" name="__codelineno-19-11" href="#__codelineno-19-11"></a>
+</span><span id="__span-19-12"><a id="__codelineno-19-12" name="__codelineno-19-12" href="#__codelineno-19-12"></a>| Variable | Default | Description |
+</span><span id="__span-19-13"><a id="__codelineno-19-13" name="__codelineno-19-13" href="#__codelineno-19-13"></a>|---|---|---|
+</span><span id="__span-19-14"><a id="__codelineno-19-14" name="__codelineno-19-14" href="#__codelineno-19-14"></a>| <span class="sb">`envoy_gateway_helm_release_name`</span> | <span class="sb">`envoy-gateway`</span> | Helm release name |
+</span><span id="__span-19-15"><a id="__codelineno-19-15" name="__codelineno-19-15" href="#__codelineno-19-15"></a>| <span class="sb">`envoy_gateway_helm_release_namespace`</span> | <span class="sb">`envoy-gateway-system`</span> | Target namespace |
+</span><span id="__span-19-16"><a id="__codelineno-19-16" name="__codelineno-19-16" href="#__codelineno-19-16"></a>| <span class="sb">`envoy_gateway_helm_values`</span> | <span class="sb">`{}`</span> | User-provided Helm value overrides |
+</span><span id="__span-19-17"><a id="__codelineno-19-17" name="__codelineno-19-17" href="#__codelineno-19-17"></a>| <span class="sb">`envoy_gateway_node_selector`</span> | <span class="sb">`{}`</span> | Node selector for control plane pods |
+</span><span id="__span-19-18"><a id="__codelineno-19-18" name="__codelineno-19-18" href="#__codelineno-19-18"></a>| <span class="sb">`envoy_gateway_version`</span> | <span class="sb">`v1.7.0`</span> | Envoy Gateway version |
+</span><span id="__span-19-19"><a id="__codelineno-19-19" name="__codelineno-19-19" href="#__codelineno-19-19"></a>| <span class="sb">`envoy_gateway_envoy_image`</span> | <span class="sb">`docker.io/envoyproxy/envoy:...`</span> | Envoy data plane image (for downstream EnvoyProxy CRD) |
+</span><span id="__span-19-20"><a id="__codelineno-19-20" name="__codelineno-19-20" href="#__codelineno-19-20"></a>| <span class="sb">`envoy_gateway_gateway_class_name`</span> | <span class="sb">`&quot;&quot;`</span> | GatewayClass name to create (empty = skip) |
+</span><span id="__span-19-21"><a id="__codelineno-19-21" name="__codelineno-19-21" href="#__codelineno-19-21"></a>
+</span><span id="__span-19-22"><a id="__codelineno-19-22" name="__codelineno-19-22" href="#__codelineno-19-22"></a><span class="gu">## Usage</span>
+</span><span id="__span-19-23"><a id="__codelineno-19-23" name="__codelineno-19-23" href="#__codelineno-19-23"></a>
+</span><span id="__span-19-24"><a id="__codelineno-19-24" name="__codelineno-19-24" href="#__codelineno-19-24"></a>```yaml
+</span><span id="__span-19-25"><a id="__codelineno-19-25" name="__codelineno-19-25" href="#__codelineno-19-25"></a><span class="k">-</span><span class="w"> </span>hosts: kubernetes_control_plane
+</span><span id="__span-19-26"><a id="__codelineno-19-26" name="__codelineno-19-26" href="#__codelineno-19-26"></a>  roles:
+</span><span id="__span-19-27"><a id="__codelineno-19-27" name="__codelineno-19-27" href="#__codelineno-19-27"></a><span class="w">    </span><span class="k">-</span><span class="w"> </span>role: vexxhost.kubernetes.envoy_gateway
+</span><span id="__span-19-28"><a id="__codelineno-19-28" name="__codelineno-19-28" href="#__codelineno-19-28"></a>      vars:
+</span><span id="__span-19-29"><a id="__codelineno-19-29" name="__codelineno-19-29" href="#__codelineno-19-29"></a>        envoy_gateway_node_selector:
+</span><span id="__span-19-30"><a id="__codelineno-19-30" name="__codelineno-19-30" href="#__codelineno-19-30"></a>          node-role.kubernetes.io/control-plane: &quot;&quot;
+</span><span id="__span-19-31"><a id="__codelineno-19-31" name="__codelineno-19-31" href="#__codelineno-19-31"></a>        envoy_gateway_gateway_class_name: my-gateway
+</span></code></pre></div>
+<h2 id="gateway-api-crds">Gateway API CRDs</h2>
+<p>The Envoy Gateway Helm chart bundles Gateway API CRDs. No separate CRD
+installation is required.</p>
+<h2 id="gateway-api-resources">Gateway API Resources</h2>
+<p>This role deploys the Envoy Gateway control plane and Gateway API CRDs.
+If <code>envoy_gateway_gateway_class_name</code> is set, it also creates a GatewayClass.
+Downstream consumers create their own Gateway API resources:</p>
+<ul>
+<li><code>Gateway</code> — Defines listeners (ports, protocols, TLS)</li>
+<li><code>HTTPRoute</code> — Routes HTTP traffic to backends</li>
+<li><code>TCPRoute</code> / <code>UDPRoute</code> — Routes L4 traffic</li>
+<li><code>BackendTLSPolicy</code> — Backend TLS configuration</li>
+<li><code>SecurityPolicy</code> — CORS, auth, IP allowlisting (Envoy Gateway extension)</li>
+<li><code>BackendTrafficPolicy</code> — Timeouts, body size limits (Envoy Gateway extension)</li>
+<li><code>EnvoyProxy</code> — Data plane deployment configuration (DaemonSet, hostNetwork, etc.)
+<div class="language-text highlight"><pre><span></span><code><span id="__span-20-1"><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a>- [ ] **Step 2: Commit**
+</span><span id="__span-20-2"><a id="__codelineno-20-2" name="__codelineno-20-2" href="#__codelineno-20-2"></a>
+</span><span id="__span-20-3"><a id="__codelineno-20-3" name="__codelineno-20-3" href="#__codelineno-20-3"></a>```bash
+</span><span id="__span-20-4"><a id="__codelineno-20-4" name="__codelineno-20-4" href="#__codelineno-20-4"></a>git add roles/envoy_gateway/README.md
+</span><span id="__span-20-5"><a id="__codelineno-20-5" name="__codelineno-20-5" href="#__codelineno-20-5"></a>git commit -s -m &quot;docs(envoy_gateway): add role README
+</span><span id="__span-20-6"><a id="__codelineno-20-6" name="__codelineno-20-6" href="#__codelineno-20-6"></a>
+</span><span id="__span-20-7"><a id="__codelineno-20-7" name="__codelineno-20-7" href="#__codelineno-20-7"></a>Document role variables, usage example, CRD bundling, and
+</span><span id="__span-20-8"><a id="__codelineno-20-8" name="__codelineno-20-8" href="#__codelineno-20-8"></a>Gateway API resource model for downstream consumers.
+</span><span id="__span-20-9"><a id="__codelineno-20-9" name="__codelineno-20-9" href="#__codelineno-20-9"></a>
+</span><span id="__span-20-10"><a id="__codelineno-20-10" name="__codelineno-20-10" href="#__codelineno-20-10"></a>Co-authored-by: Copilot &lt;223556219+Copilot@users.noreply.github.com&gt;&quot;
+</span></code></pre></div></li>
+</ul>
+<hr />
+<h3 id="task-8-final-verification">Task 8: Final verification</h3>
+<ul>
+<li>[ ] <strong>Step 1: Verify role file structure</strong></li>
+</ul>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-21-1"><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a>find<span class="w"> </span>roles/envoy_gateway<span class="w"> </span>-type<span class="w"> </span>f<span class="w"> </span>-not<span class="w"> </span>-path<span class="w"> </span><span class="s1">&#39;*/chart/*&#39;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>sort
+</span></code></pre></div>
+<p>Expected output:
+<div class="language-text highlight"><pre><span></span><code><span id="__span-22-1"><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a>roles/envoy_gateway/README.md
+</span><span id="__span-22-2"><a id="__codelineno-22-2" name="__codelineno-22-2" href="#__codelineno-22-2"></a>roles/envoy_gateway/defaults/main.yml
+</span><span id="__span-22-3"><a id="__codelineno-22-3" name="__codelineno-22-3" href="#__codelineno-22-3"></a>roles/envoy_gateway/meta/main.yml
+</span><span id="__span-22-4"><a id="__codelineno-22-4" name="__codelineno-22-4" href="#__codelineno-22-4"></a>roles/envoy_gateway/tasks/main.yml
+</span><span id="__span-22-5"><a id="__codelineno-22-5" name="__codelineno-22-5" href="#__codelineno-22-5"></a>roles/envoy_gateway/templates/gatewayclass.yml.j2
+</span><span id="__span-22-6"><a id="__codelineno-22-6" name="__codelineno-22-6" href="#__codelineno-22-6"></a>roles/envoy_gateway/vars/main.yml
+</span></code></pre></div></p>
+<ul>
+<li>[ ] <strong>Step 2: Verify chart directory exists</strong></li>
+</ul>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-23-1"><a id="__codelineno-23-1" name="__codelineno-23-1" href="#__codelineno-23-1"></a><span class="nb">test</span><span class="w"> </span>-f<span class="w"> </span>roles/envoy_gateway/files/chart/Chart.yaml<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;OK&quot;</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;MISSING&quot;</span>
+</span><span id="__span-23-2"><a id="__codelineno-23-2" name="__codelineno-23-2" href="#__codelineno-23-2"></a><span class="nb">test</span><span class="w"> </span>-f<span class="w"> </span>roles/envoy_gateway/files/chart/values.yaml<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;OK&quot;</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;MISSING&quot;</span>
+</span></code></pre></div>
+<p>Expected: Both OK.</p>
+<ul>
+<li>[ ] <strong>Step 3: Verify Ansible can parse all YAML files</strong></li>
+</ul>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-24-1"><a id="__codelineno-24-1" name="__codelineno-24-1" href="#__codelineno-24-1"></a><span class="nb">cd</span><span class="w"> </span>/home/mnaser/src/github.com/vexxhost/ansible-collection-kubernetes
+</span><span id="__span-24-2"><a id="__codelineno-24-2" name="__codelineno-24-2" href="#__codelineno-24-2"></a>python<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;import yaml; yaml.safe_load(open(&#39;roles/envoy_gateway/defaults/main.yml&#39;))&quot;</span>
+</span><span id="__span-24-3"><a id="__codelineno-24-3" name="__codelineno-24-3" href="#__codelineno-24-3"></a>python<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;import yaml; yaml.safe_load(open(&#39;roles/envoy_gateway/vars/main.yml&#39;))&quot;</span>
+</span><span id="__span-24-4"><a id="__codelineno-24-4" name="__codelineno-24-4" href="#__codelineno-24-4"></a>python<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;import yaml; yaml.safe_load(open(&#39;roles/envoy_gateway/meta/main.yml&#39;))&quot;</span>
+</span><span id="__span-24-5"><a id="__codelineno-24-5" name="__codelineno-24-5" href="#__codelineno-24-5"></a>python<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;import yaml; yaml.safe_load(open(&#39;roles/envoy_gateway/tasks/main.yml&#39;))&quot;</span>
+</span></code></pre></div>
+<p>Expected: No errors (all valid YAML).</p>
+<ul>
+<li>[ ] <strong>Step 4: Consistency checks</strong></li>
+</ul>
+<p>Verify these match:
+- <code>envoy_gateway_version</code> in <code>defaults/main.yml</code> matches vendored <code>Chart.yaml</code> appVersion
+- <code>_envoy_gateway_helm_values</code> keys in <code>vars/main.yml</code> match the chart's <code>values.yaml</code> structure
+- <code>upload_helm_chart</code> vars in <code>meta/main.yml</code> reference the correct defaults variables
+- <code>envoy_gateway_envoy_image</code> tag is compatible with the vendored Envoy Gateway version</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-25-1"><a id="__codelineno-25-1" name="__codelineno-25-1" href="#__codelineno-25-1"></a><span class="c1"># Check version consistency</span>
+</span><span id="__span-25-2"><a id="__codelineno-25-2" name="__codelineno-25-2" href="#__codelineno-25-2"></a>grep<span class="w"> </span><span class="s1">&#39;version&#39;</span><span class="w"> </span>roles/envoy_gateway/defaults/main.yml
+</span><span id="__span-25-3"><a id="__codelineno-25-3" name="__codelineno-25-3" href="#__codelineno-25-3"></a>grep<span class="w"> </span>-i<span class="w"> </span><span class="s1">&#39;version\|appVersion&#39;</span><span class="w"> </span>roles/envoy_gateway/files/chart/Chart.yaml
+</span><span id="__span-25-4"><a id="__codelineno-25-4" name="__codelineno-25-4" href="#__codelineno-25-4"></a>
+</span><span id="__span-25-5"><a id="__codelineno-25-5" name="__codelineno-25-5" href="#__codelineno-25-5"></a><span class="c1"># Check helm value keys exist in chart</span>
+</span><span id="__span-25-6"><a id="__codelineno-25-6" name="__codelineno-25-6" href="#__codelineno-25-6"></a><span class="nv">KEYS</span><span class="o">=</span><span class="k">$(</span>grep<span class="w"> </span>-oP<span class="w"> </span><span class="s1">&#39;^\s+\w+:&#39;</span><span class="w"> </span>roles/envoy_gateway/vars/main.yml<span class="w"> </span><span class="p">|</span><span class="w"> </span>tr<span class="w"> </span>-d<span class="w"> </span><span class="s1">&#39; :&#39;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>head<span class="w"> </span>-5<span class="k">)</span>
+</span><span id="__span-25-7"><a id="__codelineno-25-7" name="__codelineno-25-7" href="#__codelineno-25-7"></a><span class="k">for</span><span class="w"> </span>key<span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="nv">$KEYS</span><span class="p">;</span><span class="w"> </span><span class="k">do</span>
+</span><span id="__span-25-8"><a id="__codelineno-25-8" name="__codelineno-25-8" href="#__codelineno-25-8"></a><span class="w">  </span>grep<span class="w"> </span>-q<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$key</span><span class="s2">&quot;</span><span class="w"> </span>roles/envoy_gateway/files/chart/values.yaml<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-25-9"><a id="__codelineno-25-9" name="__codelineno-25-9" href="#__codelineno-25-9"></a><span class="w">    </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;OK: </span><span class="nv">$key</span><span class="s2"> found in chart values&quot;</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-25-10"><a id="__codelineno-25-10" name="__codelineno-25-10" href="#__codelineno-25-10"></a><span class="w">    </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;WARN: </span><span class="nv">$key</span><span class="s2"> NOT found in chart values&quot;</span>
+</span><span id="__span-25-11"><a id="__codelineno-25-11" name="__codelineno-25-11" href="#__codelineno-25-11"></a><span class="k">done</span>
+</span></code></pre></div>
+<ul>
+<li>[ ] <strong>Step 5: Verify git log</strong></li>
+</ul>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-26-1"><a id="__codelineno-26-1" name="__codelineno-26-1" href="#__codelineno-26-1"></a>git<span class="w"> </span>--no-pager<span class="w"> </span>log<span class="w"> </span>--oneline<span class="w"> </span>feat/envoy-gateway<span class="w"> </span>--not<span class="w"> </span>main<span class="w"> </span><span class="p">|</span><span class="w"> </span>head<span class="w"> </span>-15
+</span></code></pre></div>
+<p>Expected: All commits from this implementation on the <code>feat/envoy-gateway</code> branch.</p>
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var tab,labels=set.querySelector(".tabbed-labels");for(tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    <script id="__config" type="application/json">{"base": "../../..", "features": ["content.code.copy", "content.tabs.link", "navigation.tracking"], "search": "../../../assets/javascripts/workers/search.208ed371.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.b4d07000.min.js"></script>
+      
+    
+  </body>
+</html>
