@@ -13,6 +13,95 @@
 # under the License.
 
 ---
+# NOTE: Some kubelet versions crash on nodes without pod QoS cgroups (see
+#       kubernetes_upgrade_check_cgroups_per_qos_denylist), so refuse them
+#       before anything changes on any node.
+- name: Check the kubelet version against nodes without pod QoS cgroups
+  when: kubernetes_upgrade_check_cgroups_per_qos_denied_by | length > 0
+  block:
+    - name: Read the kubelet flags and configuration
+      ansible.builtin.slurp:
+        path: "{{ item }}"
+      loop:
+        - /var/lib/kubelet/kubeadm-flags.env
+        - /etc/default/kubelet
+        - /var/lib/kubelet/config.yaml
+      register: kubernetes_upgrade_check_kubelet_files
+      failed_when: false
+
+    # NOTE: kubeadm writes kubeadm-flags.env when the node joins, with the
+    #       kubelet arguments from kubernetes_kubeadm_extra_args, and keeps it
+    #       on upgrades.  config.yaml is written again on joins and upgrades,
+    #       with the kubeletconfiguration patch applied.
+    - name: Check whether the kubelet runs pods in QoS cgroups
+      vars:
+        kubernetes_upgrade_check_kubelet_file_contents: >-
+          {{
+            kubernetes_upgrade_check_kubelet_files.results
+            | selectattr('content', 'defined')
+            | items2dict(key_name='item', value_name='content')
+          }}
+        kubernetes_upgrade_check_kubelet_extra_args: >-
+          {{ (kubernetes_kubeadm_extra_args | default({})).kubelet | default({}, true) }}
+        kubernetes_upgrade_check_kubelet_flags: >-
+          {{
+            [
+              kubernetes_upgrade_check_kubelet_file_contents['/var/lib/kubelet/kubeadm-flags.env'] | b64decode
+              if '/var/lib/kubelet/kubeadm-flags.env' in kubernetes_upgrade_check_kubelet_file_contents
+              else (
+                '--cgroups-per-qos=' ~ (kubernetes_upgrade_check_kubelet_extra_args['cgroups-per-qos'] | string | lower)
+                if kubernetes_upgrade_check_kubelet_extra_args['cgroups-per-qos'] | default(none) is not none
+                else ''
+              ),
+              kubernetes_upgrade_check_kubelet_file_contents['/etc/default/kubelet'] | default('') | b64decode,
+            ]
+          }}
+        kubernetes_upgrade_check_kubelet_config: >-
+          {{
+            (
+              kubernetes_upgrade_check_kubelet_file_contents['/var/lib/kubelet/config.yaml'] | b64decode | from_yaml
+              if '/var/lib/kubelet/config.yaml' in kubernetes_upgrade_check_kubelet_file_contents
+              else {}
+            )
+            | combine((kubernetes_kubeadm_patches | default({})).kubeletconfiguration | default({}, true))
+          }}
+      ansible.builtin.set_fact:
+        kubernetes_upgrade_check_cgroups_per_qos: >-
+          {{
+            kubernetes_upgrade_check_kubelet_flags
+            | vexxhost.kubernetes.kubelet_cgroups_per_qos(kubernetes_upgrade_check_kubelet_config)
+          }}
+
+    - name: Fail if the kubelet version crashes without pod QoS cgroups
+      vars:
+        kubernetes_upgrade_check_cgroups_per_qos_disabled_hosts: >-
+          {{
+            ansible_play_hosts
+            | map('extract', hostvars)
+            | selectattr('kubernetes_upgrade_check_cgroups_per_qos', 'defined')
+            | rejectattr('kubernetes_upgrade_check_cgroups_per_qos')
+            | map(attribute='inventory_hostname')
+            | list
+          }}
+      when: kubernetes_upgrade_check_cgroups_per_qos_disabled_hosts | length > 0
+      ansible.builtin.fail:
+        msg: |
+          Refusing to deploy Kubernetes {{ kubernetes_version }}: its kubelet
+          crashes on nodes that run pods without QoS cgroups
+          (--cgroups-per-qos=false), and these nodes do:
+          {{ kubernetes_upgrade_check_cgroups_per_qos_disabled_hosts | join(', ') }}
+
+          Kubernetes 1.35.9 and 1.36.4 made the kubelet resize a pod when a
+          container starts without a record of the resources applied to it.
+          Without QoS cgroups the kubelet never records them for new pods, and
+          the resize dereferences a nil pod cgroup configuration
+          (kubernetes/kubernetes#137993, fixed by the unmerged
+          kubernetes/kubernetes#137999).
+
+          Use a version outside kubernetes_upgrade_check_cgroups_per_qos_denylist
+          (for example 1.35.8 or 1.36.3), or move these nodes to QoS cgroups
+          first, which restarts their pods.
+
 - name: Retrieve the "kubeadm-config" ConfigMap
   run_once: true
   delegate_to: "{{ groups[kubernetes_control_plane_group | default('controllers')][0] }}"
