@@ -35,14 +35,14 @@ def denied_by(version, denylist=None):
 
 @pytest.mark.parametrize(
     "version",
-    ["1.28.13", "1.34.12", "1.35.0", "1.35.6", "1.35.8", "1.36.0", "1.36.2", "1.36.3"],
+    ["1.28.13", "1.34.12", "1.35.0", "1.35.6", "1.35.8", "1.36.0", "1.36.1", "1.36.3"],
 )
 def test_allowed(version):
     assert denied_by(version) == []
 
 
 @pytest.mark.parametrize(
-    "version", ["1.35.9", "1.35.10", "1.36.4", "1.36.6", "1.37.0", "1.37.2"]
+    "version", ["1.35.9", "1.35.10", "1.36.2", "1.36.4", "1.36.6", "1.37.0", "1.37.2"]
 )
 def test_denied(version):
     assert len(denied_by(version)) == 1
@@ -53,6 +53,7 @@ def test_denied(version):
     [
         ("1.35.11", True),
         ("1.35.12", False),
+        ("1.36.2", True),
         ("1.36.7", True),
         ("1.36.8", False),
         ("1.37.3", True),
@@ -63,6 +64,7 @@ def test_denied(version):
 def test_branches_are_lifted_separately(version, denied):
     denylist = [
         {"min": "1.35.9", "max": "1.35.12"},
+        {"min": "1.36.2", "max": "1.36.3"},
         {"min": "1.36.4", "max": "1.36.8"},
         {"min": "1.37.0", "max": "1.37.4"},
     ]

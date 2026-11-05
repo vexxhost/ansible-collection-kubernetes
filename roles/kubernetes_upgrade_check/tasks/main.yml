@@ -91,16 +91,17 @@
           (--cgroups-per-qos=false), and these nodes do:
           {{ kubernetes_upgrade_check_cgroups_per_qos_disabled_hosts | join(', ') }}
 
-          Kubernetes 1.35.9 and 1.36.4 made the kubelet resize a pod when a
-          container starts without a record of the resources applied to it.
-          Without QoS cgroups the kubelet never records them for new pods, and
-          the resize dereferences a nil pod cgroup configuration
-          (kubernetes/kubernetes#137993, fixed by the unmerged
-          kubernetes/kubernetes#137999).
+          Without QoS cgroups, resizing can dereference a nil pod cgroup
+          configuration (kubernetes/kubernetes#137993, addressed by
+          kubernetes/kubernetes#137999). This was reproduced with an explicit
+          in-place resize on stock 1.36.2. Kubernetes 1.35.9 and 1.36.4 also
+          trigger the resize path when a container starts without a record of
+          the resources applied to it.
 
-          Use a version outside kubernetes_upgrade_check_cgroups_per_qos_denylist
-          (for example 1.35.8 or 1.36.3), or move these nodes to QoS cgroups
-          first, which restarts their pods.
+          Use a kubelet release verified to include the fix, or move these
+          nodes to QoS cgroups first, which restarts their pods. A version
+          outside kubernetes_upgrade_check_cgroups_per_qos_denylist is not
+          necessarily unaffected by the underlying resize bug.
 
 - name: Retrieve the "kubeadm-config" ConfigMap
   run_once: true

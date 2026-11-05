@@ -16,13 +16,19 @@
 # requests or limits finish, the kubelet resizes the pod and dereferences the
 # nil pod cgroup configuration in doPodResizeAction, then crashes
 # (kubernetes/kubernetes#137993).  kubernetes/kubernetes#137999 fixes the
-# crash.  There is one entry per minor version because the fix will ship in a
-# different patch release on each branch: when a branch gets it, set "max" on
-# that branch's entry to the first fixed patch release.  The last entry stays
-# open-ended until a release from master includes the fix.
+# crash.  Keep the startup regression ranges separate per minor version so
+# each branch's "max" can be set to its first fixed patch release.  The last
+# entry stays open-ended until a release from master includes the fix.
+#
+# Stock 1.36.2 also panics in doPodResizeAction during an explicit in-place
+# resize with QoS cgroups disabled, even after a successful upgrade and pod
+# startup.  Record that reproduced release separately; versions outside the
+# denylist are not necessarily unaffected by the underlying resize bug.
 kubernetes_upgrade_check_cgroups_per_qos_denylist:
   - min: "1.35.9"
     max: "1.36.0"
+  - min: "1.36.2"
+    max: "1.36.3"
   - min: "1.36.4"
     max: "1.37.0"
   - min: "1.37.0"
