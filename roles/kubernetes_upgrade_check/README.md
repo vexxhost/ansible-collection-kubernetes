@@ -55,27 +55,37 @@ updates continue to work.  The policy is installed after the control plane is
 upgraded and before any existing kubelet is switched to 1.35+, and is removed
 when every node uses QoS cgroups, or when both the target version and every
 installed kubelet on a legacy node are outside the affected range.  An unknown
-installed kubelet version conservatively keeps the guard.  Like the hard
-denylist, the guard has one range per Kubernetes minor so fixed branches can be
-opened independently.
+installed kubelet version or QoS-cgroup state conservatively keeps the guard.
+A VPA using `InPlaceOrRecreate` can fall back to eviction and recreation while
+the guard rejects in-place resize. Like the hard denylist, the guard has one
+range per Kubernetes minor so fixed branches can be opened independently.
+
+When upgrading from an affected release to the first fixed release, the
+preflight sees the old kubelets and deliberately retains the guard during the
+upgrade. Run the Kubernetes role again for the full inventory after every
+kubelet is fixed so the role can remove the now-unneeded policy.
 
 The admission policy cannot protect against kubelet-initiated resize.  That is
 why the automatic-trigger releases remain hard-denied by
 `kubernetes_upgrade_check_cgroups_per_qos_denylist` until the upstream panic is
 fixed.
 
-Whether a node runs pods in QoS cgroups is read from
-`/var/lib/kubelet/kubeadm-flags.env`, `/etc/default/kubelet` and
-`/var/lib/kubelet/config.yaml`, and the installed kubelet version, together
-with `kubernetes_kubeadm_extra_args`
-(for nodes that have not joined yet) and the `kubeletconfiguration` patch in
-`kubernetes_kubeadm_patches`.  Nodes can be moved to QoS cgroups with a drain
-and rejoin, which restarts their pods. Follow the supported
+For joined nodes, the role reads the running version from
+`status.nodeInfo.kubeletVersion` and the effective QoS-cgroup setting from the
+kubelet `configz` endpoint through the Kubernetes API. This includes
+command-line flag overrides without opening an Ansible connection to each
+node. For a play host that has no Node object yet, the role falls back to its
+local `/var/lib/kubelet/kubeadm-flags.env`, `/etc/default/kubelet` and
+`/var/lib/kubelet/config.yaml`, plus that host's
+`kubernetes_kubeadm_extra_args` and `kubernetes_kubeadm_patches` inventory
+values. Nodes can be moved to QoS cgroups with a drain and rejoin, which
+restarts their pods. Follow the supported
 [legacy-node migration procedure](../../docs/ops/qos-cgroups.md) to preserve
 workload and control-plane quorum and to let the collection remove the resize
 admission guard safely.
 
 The role inspects every host in `kubernetes_upgrade_check_group` (which defaults
-to `kubernetes_group`, or `all`) even when Ansible runs with `--limit`.  It will
-not remove the cluster-wide policy if any of those hosts is unreachable or its
-state cannot be determined.
+to `kubernetes_group`, or `all`) even when Ansible runs with `--limit`. A
+missing or unavailable kubelet is recorded as unknown: the admission guard is
+retained and denylisted targets are refused, but the unavailable inventory host
+does not fail recovery or replacement runs.

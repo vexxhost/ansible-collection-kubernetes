@@ -8,6 +8,9 @@ from pathlib import Path
 import pytest
 import yaml
 from ansible.plugins.test.core import version_compare
+from ansible_collections.vexxhost.kubernetes.plugins.filter.version_ranges import (
+    version_matching_ranges,
+)
 from jinja2 import StrictUndefined
 from jinja2.nativetypes import NativeEnvironment
 
@@ -19,6 +22,7 @@ def matching_ranges(version, variable, ranges=None):
     role_vars = yaml.safe_load((ROLE / "vars/main.yml").read_text())
     env = NativeEnvironment(undefined=StrictUndefined)
     env.tests["ansible.builtin.version"] = version_compare
+    env.filters["vexxhost.kubernetes.version_matching_ranges"] = version_matching_ranges
     template = env.from_string(role_vars[variable])
     range_variable = {
         "kubernetes_upgrade_check_cgroups_per_qos_denied_by": (
@@ -66,6 +70,14 @@ def resize_guard_required(target_guarded_by, disabled_hosts, installed_guard_hos
         kubernetes_upgrade_check_detected_disabled_hosts=disabled_hosts,
         kubernetes_upgrade_check_detected_resize_guard_hosts=installed_guard_hosts,
     )
+
+
+def test_check_mode_reads_the_installed_kubelet_version():
+    tasks = yaml.safe_load((ROLE / "tasks/cgroups-per-qos-node.yml").read_text())
+    task = next(
+        task for task in tasks if task["name"] == "Read the installed kubelet version"
+    )
+    assert task["check_mode"] is False
 
 
 @pytest.mark.parametrize(

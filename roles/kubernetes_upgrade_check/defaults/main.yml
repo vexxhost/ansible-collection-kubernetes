@@ -39,8 +39,6 @@ kubernetes_upgrade_check_cgroups_per_qos_denylist:
 # with a ValidatingAdmissionPolicy.  Keep one range per minor so each branch can
 # be closed independently at the first release containing
 # kubernetes/kubernetes#137999.
-kubernetes_upgrade_check_cgroups_per_qos_resize_guard_min_version: "1.35.0"
-
 kubernetes_upgrade_check_cgroups_per_qos_resize_guard_versions:
   - min: "1.35.0"
     max: "1.36.0"

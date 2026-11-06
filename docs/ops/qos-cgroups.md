@@ -92,6 +92,37 @@ ansible-playbook -i inventory/hosts.ini deployment.yml \
   --check --diff --tags kubernetes
 ```
 
+Apply the playbook at the current Kubernetes version before resetting any
+node. This renders the collection's current `KubeletConfiguration`, including
+`kubernetes_kubelet_cgroup_driver`, on the control-plane hosts:
+
+```bash
+ansible-playbook -i inventory/hosts.ini deployment.yml \
+  --tags kubernetes
+```
+
+Kubeadm join downloads the shared `kubelet-config` ConfigMap. That ConfigMap
+can predate the rendered files on disk, because the collection normally
+refreshes it during an upgrade and this procedure deliberately does not
+upgrade Kubernetes. Refresh it from the first control-plane host before the
+first reset/rejoin:
+
+```bash
+ansible -i inventory/hosts.ini 'controllers[0]' --become \
+  -m ansible.builtin.command \
+  -a 'kubeadm init phase upload-config kubelet --config /etc/kubernetes/kubeadm.yaml'
+
+kubectl -n kube-system get configmap kubelet-config \
+  -o jsonpath='{.data.kubelet}'
+```
+
+Use the actual `kubernetes_control_plane_group` instead of `controllers` when
+it differs. In the ConfigMap output, `cgroupDriver` must equal
+`kubernetes_kubelet_cgroup_driver` and must match the container runtime before
+any node is reset. A stale `cgroupDriver: systemd` with runc using cgroupfs can
+make static control-plane pods fail after a rejoin, costing an etcd member
+during the migration.
+
 The commands in this guide assume the deployment playbook tags the
 `vexxhost.kubernetes.kubernetes` role with `kubernetes`, as the collection
 playbook does. Omit `--tags kubernetes` when the deployment playbook does not
@@ -177,6 +208,29 @@ contains `cgroupsPerQOS`, it must be `true`. Confirm that replacement workload
 pods become Ready and that the kubelet has not entered a restart loop before
 moving to the next node.
 
+Check the effective kubelet configuration through the API after every rejoin:
+
+```bash
+kubectl get --raw="/api/v1/nodes/$NODE_NAME/proxy/configz" \
+  | jq '.kubeletconfig | {cgroupsPerQOS, cgroupDriver}'
+```
+
+`cgroupsPerQOS` must be `true`. Then inspect the containerd runtime selected
+for pods on the rejoined host:
+
+```bash
+ansible -i inventory/hosts.ini "$INVENTORY_HOST" --become \
+  -m ansible.builtin.command \
+  -a 'crictl info -o json'
+```
+
+In that JSON, find
+`config.containerd.runtimes[config.containerd.defaultRuntimeName].options.SystemdCgroup`.
+It must be `true` when the kubelet reports `cgroupDriver: systemd`, and `false`
+when the kubelet reports `cgroupDriver: cgroupfs`. Stop before uncordoning the
+node if they disagree. Do not rely on a newer container runtime overriding a
+stale kubelet ConfigMap; the migration must also be safe on containerd 1.7.
+
 For each control-plane node, additionally check the API and local etcd pod after
 the rejoin:
 
@@ -212,6 +266,9 @@ kubectl get validatingadmissionpolicy,validatingadmissionpolicybinding \
 
 The final command must return no guard resources. Kubernetes upgrades that were
 previously refused by the QoS-cgroup preflight can now be performed normally.
+A VPA configured with `InPlaceOrRecreate` can fall back to evicting and
+recreating pods while the guard is installed; after the guard is removed,
+eligible pods can use in-place resize again.
 
 ## Recover a failed node
 

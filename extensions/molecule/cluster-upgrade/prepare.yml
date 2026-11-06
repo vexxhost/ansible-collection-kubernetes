@@ -17,13 +17,19 @@
 - ansible.builtin.import_playbook: ../kubernetes/converge.yml
   vars:
     kubernetes_version: "{{ old_kubernetes_version }}"
-    # Reproduce nodes created by older collection releases.  kubeadm keeps
-    # these flags across upgrades, which is the legacy state protected by the
-    # resize admission guard.
-    kubernetes_kubeadm_extra_args:
-      kubelet:
-        cgroups-per-qos: "false"
-        enforce-node-allocatable: ""
+    # Only the resize-guard job reproduces nodes created by older collection
+    # releases. Other upgrade jobs keep the default QoS-enabled path covered.
+    kubernetes_kubeadm_extra_args: >-
+      {{
+        {
+          'kubelet': {
+            'cgroups-per-qos': 'false',
+            'enforce-node-allocatable': '',
+          }
+        }
+        if cluster_upgrade_legacy_qos_cgroups | default(false) | bool
+        else {}
+      }}
 
 # NOTE: Clusters created before the role set bind-address for the scheduler
 #       and controller manager don't have it in the stored configuration, so

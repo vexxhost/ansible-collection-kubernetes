@@ -6,36 +6,20 @@
 # kubernetes_version
 kubernetes_upgrade_check_cgroups_per_qos_denied_by: >-
   {{
-    (
-      kubernetes_upgrade_check_cgroups_per_qos_denylist
-      | selectattr('min', 'ansible.builtin.version', kubernetes_version, '<=')
-      | selectattr('max', 'undefined')
-      | list
-    ) + (
-      kubernetes_upgrade_check_cgroups_per_qos_denylist
-      | selectattr('min', 'ansible.builtin.version', kubernetes_version, '<=')
-      | selectattr('max', 'defined')
-      | selectattr('max', 'ansible.builtin.version', kubernetes_version, '>')
-      | list
-    )
+    kubernetes_version
+    | vexxhost.kubernetes.version_matching_ranges(
+        kubernetes_upgrade_check_cgroups_per_qos_denylist
+      )
   }}
 
 # Entries of kubernetes_upgrade_check_cgroups_per_qos_resize_guard_versions that
 # contain kubernetes_version
 kubernetes_upgrade_check_cgroups_per_qos_resize_guarded_by: >-
   {{
-    (
-      kubernetes_upgrade_check_cgroups_per_qos_resize_guard_versions
-      | selectattr('min', 'ansible.builtin.version', kubernetes_version, '<=')
-      | selectattr('max', 'undefined')
-      | list
-    ) + (
-      kubernetes_upgrade_check_cgroups_per_qos_resize_guard_versions
-      | selectattr('min', 'ansible.builtin.version', kubernetes_version, '<=')
-      | selectattr('max', 'defined')
-      | selectattr('max', 'ansible.builtin.version', kubernetes_version, '>')
-      | list
-    )
+    kubernetes_version
+    | vexxhost.kubernetes.version_matching_ranges(
+        kubernetes_upgrade_check_cgroups_per_qos_resize_guard_versions
+      )
   }}
 
 # Inspect actual kubelet versions even when the target release is fixed.  A
@@ -44,7 +28,8 @@ kubernetes_upgrade_check_cgroups_per_qos_resize_guarded_by: >-
 kubernetes_upgrade_check_cgroups_per_qos_inspection_required: >-
   {{
     kubernetes_upgrade_check_cgroups_per_qos_denied_by | length > 0
-    or kubernetes_version is ansible.builtin.version(
-      kubernetes_upgrade_check_cgroups_per_qos_resize_guard_min_version, '>='
-    )
+    or kubernetes_upgrade_check_cgroups_per_qos_resize_guard_versions
+       | selectattr('min', 'ansible.builtin.version', kubernetes_version, '<=')
+       | list
+       | length > 0
   }}

@@ -4,6 +4,8 @@
 ---
 - name: Check which kubelet files exist
   delegate_to: "{{ kubernetes_upgrade_check_cgroups_per_qos_host }}"
+  ignore_unreachable: true
+  failed_when: false
   ansible.builtin.stat:
     path: "{{ item }}"
   loop:
@@ -13,12 +15,21 @@
   register: kubernetes_upgrade_check_kubelet_file_stats
 
 - name: Read the existing kubelet flags and configuration
+  when: >-
+    kubernetes_upgrade_check_kubelet_file_stats.results | default([])
+    | selectattr('unreachable', 'defined')
+    | selectattr('unreachable')
+    | list
+    | length == 0
   delegate_to: "{{ kubernetes_upgrade_check_cgroups_per_qos_host }}"
+  ignore_unreachable: true
+  failed_when: false
   ansible.builtin.slurp:
     path: "{{ item }}"
   loop: >-
     {{
-      kubernetes_upgrade_check_kubelet_file_stats.results
+      kubernetes_upgrade_check_kubelet_file_stats.results | default([])
+      | selectattr('stat', 'defined')
       | selectattr('stat.exists')
       | map(attribute='item')
       | list
@@ -26,7 +37,15 @@
   register: kubernetes_upgrade_check_kubelet_files
 
 - name: Read the installed kubelet version
+  when: >-
+    kubernetes_upgrade_check_kubelet_file_stats.results | default([])
+    | selectattr('unreachable', 'defined')
+    | selectattr('unreachable')
+    | list
+    | length == 0
   delegate_to: "{{ kubernetes_upgrade_check_cgroups_per_qos_host }}"
+  check_mode: false
+  ignore_unreachable: true
   changed_when: false
   failed_when: false
   ansible.builtin.command:
@@ -34,7 +53,7 @@
       - >-
         {{
           hostvars[kubernetes_upgrade_check_cgroups_per_qos_host].kubernetes_kubelet_live_binary_dest
-          | default(kubernetes_kubelet_live_binary_dest | default('/usr/bin/kubelet'))
+          | default('/usr/bin/kubelet')
         }}
       - --version
   register: kubernetes_upgrade_check_kubelet_version_command
@@ -46,18 +65,19 @@
   vars:
     kubernetes_upgrade_check_kubelet_file_contents: >-
       {{
-        kubernetes_upgrade_check_kubelet_files.results
+        kubernetes_upgrade_check_kubelet_files.results | default([])
+        | selectattr('content', 'defined')
         | items2dict(key_name='item', value_name='content')
       }}
     kubernetes_upgrade_check_host_extra_args: >-
       {{
         hostvars[kubernetes_upgrade_check_cgroups_per_qos_host].kubernetes_kubeadm_extra_args
-        | default(kubernetes_kubeadm_extra_args | default({}))
+        | default({})
       }}
     kubernetes_upgrade_check_host_patches: >-
       {{
         hostvars[kubernetes_upgrade_check_cgroups_per_qos_host].kubernetes_kubeadm_patches
-        | default(kubernetes_kubeadm_patches | default({}))
+        | default({})
       }}
     kubernetes_upgrade_check_kubelet_extra_args: >-
       {{ kubernetes_upgrade_check_host_extra_args.kubelet | default({}, true) }}
@@ -83,21 +103,62 @@
         )
         | combine(kubernetes_upgrade_check_host_patches.kubeletconfiguration | default({}, true))
       }}
-  delegate_to: "{{ kubernetes_upgrade_check_cgroups_per_qos_host }}"
-  delegate_facts: true
-  ansible.builtin.set_fact:
-    kubernetes_upgrade_check_cgroups_per_qos: >-
+    kubernetes_upgrade_check_fallback_reachable: >-
+      {{
+        (
+          kubernetes_upgrade_check_kubelet_file_stats.results | default([])
+          | selectattr('unreachable', 'defined')
+          | selectattr('unreachable')
+          | list
+          | length == 0
+        )
+        and (
+          kubernetes_upgrade_check_kubelet_files.results | default([])
+          | selectattr('unreachable', 'defined')
+          | selectattr('unreachable')
+          | list
+          | length == 0
+        )
+        and not (kubernetes_upgrade_check_kubelet_version_command.unreachable | default(false))
+      }}
+    kubernetes_upgrade_check_fallback_cgroups_per_qos: >-
       {{
         kubernetes_upgrade_check_kubelet_flags
         | vexxhost.kubernetes.kubelet_cgroups_per_qos(kubernetes_upgrade_check_kubelet_config)
+        if kubernetes_upgrade_check_fallback_reachable
+        else none
       }}
-    kubernetes_upgrade_check_kubelet_version: >-
+    kubernetes_upgrade_check_fallback_kubelet_version: >-
       {{
         kubernetes_upgrade_check_kubelet_version_command.stdout
+        | default('')
         | regex_replace('^Kubernetes v', '')
         | trim
         if kubernetes_upgrade_check_kubelet_version_command.rc | default(1) == 0
         else ''
+      }}
+    kubernetes_upgrade_check_fallback_cgroups_state: >-
+      {{
+        'enabled'
+        if kubernetes_upgrade_check_fallback_cgroups_per_qos is sameas true
+        else (
+          'disabled'
+          if kubernetes_upgrade_check_fallback_cgroups_per_qos is sameas false
+          else 'unknown'
+        )
+      }}
+  delegate_to: "{{ kubernetes_upgrade_check_cgroups_per_qos_host }}"
+  delegate_facts: true
+  ansible.builtin.set_fact:
+    kubernetes_upgrade_check_cgroups_per_qos_state: >-
+      {{ kubernetes_upgrade_check_fallback_cgroups_state }}
+    kubernetes_upgrade_check_kubelet_version: >-
+      {{ kubernetes_upgrade_check_fallback_kubelet_version }}
+    kubernetes_upgrade_check_inspection_error: >-
+      {{
+        ''
+        if kubernetes_upgrade_check_fallback_reachable
+        else 'Inventory host is unreachable'
       }}
 
 # NOTE: An unknown version is treated as affected.  This may retain the policy
@@ -109,40 +170,25 @@
       {{
         hostvars[kubernetes_upgrade_check_cgroups_per_qos_host].kubernetes_upgrade_check_kubelet_version
       }}
-    kubernetes_upgrade_check_host_resize_guarded_by: >-
+    kubernetes_upgrade_check_host_cgroups_state: >-
       {{
-        (
-          kubernetes_upgrade_check_cgroups_per_qos_resize_guard_versions
-          | selectattr(
-              'min', 'ansible.builtin.version',
-              kubernetes_upgrade_check_host_kubelet_version, '<='
-            )
-          | selectattr('max', 'undefined')
-          | list
-        ) + (
-          kubernetes_upgrade_check_cgroups_per_qos_resize_guard_versions
-          | selectattr(
-              'min', 'ansible.builtin.version',
-              kubernetes_upgrade_check_host_kubelet_version, '<='
-            )
-          | selectattr('max', 'defined')
-          | selectattr(
-              'max', 'ansible.builtin.version',
-              kubernetes_upgrade_check_host_kubelet_version, '>'
-            )
-          | list
-        )
-        if kubernetes_upgrade_check_host_kubelet_version | length > 0
-        else []
+        hostvars[kubernetes_upgrade_check_cgroups_per_qos_host].kubernetes_upgrade_check_cgroups_per_qos_state
       }}
   delegate_to: "{{ kubernetes_upgrade_check_cgroups_per_qos_host }}"
   delegate_facts: true
   ansible.builtin.set_fact:
     kubernetes_upgrade_check_kubelet_resize_guard_required: >-
       {{
-        not hostvars[kubernetes_upgrade_check_cgroups_per_qos_host].kubernetes_upgrade_check_cgroups_per_qos
-        and (
-          kubernetes_upgrade_check_host_kubelet_version | length == 0
-          or kubernetes_upgrade_check_host_resize_guarded_by | length > 0
+        kubernetes_upgrade_check_host_cgroups_state == 'unknown'
+        or (
+          kubernetes_upgrade_check_host_cgroups_state == 'disabled'
+          and (
+            kubernetes_upgrade_check_host_kubelet_version | length == 0
+            or kubernetes_upgrade_check_host_kubelet_version
+               | vexxhost.kubernetes.version_matching_ranges(
+                   kubernetes_upgrade_check_cgroups_per_qos_resize_guard_versions
+                 )
+               | length > 0
+          )
         )
       }}

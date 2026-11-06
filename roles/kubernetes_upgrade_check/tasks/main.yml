@@ -13,15 +13,105 @@
 # under the License.
 
 ---
-# NOTE: Both the hard-denied kubelet versions and the admission guard depend on
-#       the state of every node.  Inspect the full inventory group even under
-#       --limit; an unreachable node fails the play rather than allowing a
-#       cluster-wide guard to be removed from incomplete evidence.
-- name: Inspect pod QoS cgroup configuration on every Kubernetes node
+# NOTE: The guard depends on the full cluster even under --limit. Query through
+#       the API so an unavailable inventory host does not block replacement or
+#       recovery work. configz contains the effective value after flags have
+#       been applied, and Node status contains the running kubelet version.
+- name: Record Kubernetes Node names for hosts in the play
+  when: kubernetes_upgrade_check_cgroups_per_qos_inspection_required | bool
+  ansible.builtin.set_fact:
+    kubernetes_upgrade_check_node_name: >-
+      {{ kubelet_hostname | default(inventory_hostname_short) }}
+
+- name: Initialize the Kubernetes inventory node map
   when: kubernetes_upgrade_check_cgroups_per_qos_inspection_required | bool
   run_once: true
-  ansible.builtin.include_tasks: cgroups-per-qos-node.yml
+  ansible.builtin.set_fact:
+    kubernetes_upgrade_check_inventory_nodes: {}
+
+- name: Map inventory hosts to Kubernetes Node names
+  when: kubernetes_upgrade_check_cgroups_per_qos_inspection_required | bool
+  run_once: true
+  ansible.builtin.set_fact:
+    kubernetes_upgrade_check_inventory_nodes: >-
+      {{
+        kubernetes_upgrade_check_inventory_nodes
+        | combine({
+            item: hostvars[item].kubernetes_upgrade_check_node_name
+                  | default(hostvars[item].kubelet_hostname)
+                  | default(hostvars[item].inventory_hostname_short)
+          })
+      }}
   loop: "{{ groups[kubernetes_upgrade_check_group] }}"
+
+- name: Inspect kubelets through the Kubernetes API
+  when: kubernetes_upgrade_check_cgroups_per_qos_inspection_required | bool
+  run_once: true
+  delegate_to: "{{ groups[kubernetes_control_plane_group | default('controllers')][0] }}"
+  vexxhost.kubernetes.kubelet_configz:
+    kubeconfig: /etc/kubernetes/admin.conf
+    node_names: "{{ kubernetes_upgrade_check_inventory_nodes.values() | list }}"
+  register: kubernetes_upgrade_check_api_inspection
+
+- name: Record API kubelet inspection results
+  when: kubernetes_upgrade_check_cgroups_per_qos_inspection_required | bool
+  run_once: true
+  vars:
+    kubernetes_upgrade_check_api_node: >-
+      {{ kubernetes_upgrade_check_api_inspection.nodes[item.value] }}
+    kubernetes_upgrade_check_api_cgroups_state: >-
+      {{
+        'enabled'
+        if kubernetes_upgrade_check_api_node.cgroups_per_qos is sameas true
+        else (
+          'disabled'
+          if kubernetes_upgrade_check_api_node.cgroups_per_qos is sameas false
+          else 'unknown'
+        )
+      }}
+    kubernetes_upgrade_check_api_kubelet_version: >-
+      {{ kubernetes_upgrade_check_api_node.kubelet_version | default('') }}
+  delegate_to: "{{ item.key }}"
+  delegate_facts: true
+  ansible.builtin.set_fact:
+    kubernetes_upgrade_check_node_exists: >-
+      {{ kubernetes_upgrade_check_api_node.exists }}
+    kubernetes_upgrade_check_cgroups_per_qos_state: >-
+      {{ kubernetes_upgrade_check_api_cgroups_state }}
+    kubernetes_upgrade_check_kubelet_version: >-
+      {{ kubernetes_upgrade_check_api_kubelet_version }}
+    kubernetes_upgrade_check_inspection_error: >-
+      {{ kubernetes_upgrade_check_api_node.error | default('') }}
+    kubernetes_upgrade_check_kubelet_resize_guard_required: >-
+      {{
+        kubernetes_upgrade_check_api_cgroups_state == 'unknown'
+        or (
+          kubernetes_upgrade_check_api_cgroups_state == 'disabled'
+          and (
+            kubernetes_upgrade_check_api_kubelet_version | length == 0
+            or kubernetes_upgrade_check_api_kubelet_version
+               | vexxhost.kubernetes.version_matching_ranges(
+                   kubernetes_upgrade_check_cgroups_per_qos_resize_guard_versions
+                 )
+               | length > 0
+          )
+        )
+      }}
+  loop: "{{ kubernetes_upgrade_check_inventory_nodes | dict2items }}"
+
+# A play host missing from the API is being bootstrapped or rejoined. When the
+# whole API is unavailable (including initial bootstrap), local files are also
+# the best available evidence. Hosts omitted by --limit remain unknown; do not
+# open SSH connections to them.
+- name: Inspect play hosts unavailable through the Kubernetes API
+  when:
+    - kubernetes_upgrade_check_cgroups_per_qos_inspection_required | bool
+    - >-
+      hostvars[kubernetes_upgrade_check_cgroups_per_qos_host].kubernetes_upgrade_check_node_exists
+      is not sameas true
+  run_once: true
+  ansible.builtin.include_tasks: cgroups-per-qos-node.yml
+  loop: "{{ ansible_play_hosts_all }}"
   loop_control:
     loop_var: kubernetes_upgrade_check_cgroups_per_qos_host
 
@@ -31,7 +121,8 @@
       {{
         groups[kubernetes_upgrade_check_group]
         | map('extract', hostvars)
-        | selectattr('kubernetes_upgrade_check_cgroups_per_qos', 'defined')
+        | selectattr('kubernetes_upgrade_check_cgroups_per_qos_state', 'defined')
+        | rejectattr('kubernetes_upgrade_check_cgroups_per_qos_state', 'equalto', 'unknown')
         | map(attribute='inventory_hostname')
         | list
       }}
@@ -39,8 +130,17 @@
       {{
         groups[kubernetes_upgrade_check_group]
         | map('extract', hostvars)
-        | selectattr('kubernetes_upgrade_check_cgroups_per_qos', 'defined')
-        | rejectattr('kubernetes_upgrade_check_cgroups_per_qos')
+        | selectattr('kubernetes_upgrade_check_cgroups_per_qos_state', 'defined')
+        | selectattr('kubernetes_upgrade_check_cgroups_per_qos_state', 'equalto', 'disabled')
+        | map(attribute='inventory_hostname')
+        | list
+      }}
+    kubernetes_upgrade_check_detected_unknown_hosts: >-
+      {{
+        groups[kubernetes_upgrade_check_group]
+        | map('extract', hostvars)
+        | selectattr('kubernetes_upgrade_check_cgroups_per_qos_state', 'defined')
+        | selectattr('kubernetes_upgrade_check_cgroups_per_qos_state', 'equalto', 'unknown')
         | map(attribute='inventory_hostname')
         | list
       }}
@@ -72,6 +172,12 @@
         if kubernetes_upgrade_check_cgroups_per_qos_inspection_required | bool
         else []
       }}
+    kubernetes_upgrade_check_cgroups_per_qos_unknown_hosts: >-
+      {{
+        kubernetes_upgrade_check_detected_unknown_hosts
+        if kubernetes_upgrade_check_cgroups_per_qos_inspection_required | bool
+        else []
+      }}
     kubernetes_upgrade_check_resize_admission_guard_required: >-
       {{
         (
@@ -81,29 +187,32 @@
         or kubernetes_upgrade_check_detected_resize_guard_hosts | length > 0
       }}
 
-- name: Verify every Kubernetes node was inspected
-  when: kubernetes_upgrade_check_cgroups_per_qos_inspection_required | bool
-  ansible.builtin.assert:
-    that:
-      - >-
-        groups[kubernetes_upgrade_check_group]
-        | difference(kubernetes_upgrade_check_cgroups_per_qos_inspected_hosts)
-        | length == 0
-    fail_msg: >-
-      Could not determine the pod QoS cgroup state of every host in
-      {{ kubernetes_upgrade_check_group }}. Refusing to change the cluster-wide
-      resize admission guard from incomplete evidence.
+- name: Report nodes with unknown pod QoS cgroup state
+  when: kubernetes_upgrade_check_cgroups_per_qos_unknown_hosts | length > 0
+  run_once: true
+  ansible.builtin.debug:
+    msg: >-
+      Could not determine the effective pod QoS cgroup state of:
+      {{ kubernetes_upgrade_check_cgroups_per_qos_unknown_hosts | join(', ') }}.
+      The resize admission guard will remain installed. Targets in
+      kubernetes_upgrade_check_cgroups_per_qos_denylist remain blocked, but
+      unavailable nodes do not prevent recovery or replacement runs.
 
 - name: Fail if the kubelet version crashes without pod QoS cgroups
   when:
     - kubernetes_upgrade_check_cgroups_per_qos_denied_by | length > 0
-    - kubernetes_upgrade_check_cgroups_per_qos_disabled_hosts | length > 0
+    - >-
+      kubernetes_upgrade_check_cgroups_per_qos_disabled_hosts
+      | union(kubernetes_upgrade_check_cgroups_per_qos_unknown_hosts)
+      | length > 0
   ansible.builtin.fail:
     msg: |
       Refusing to deploy Kubernetes {{ kubernetes_version }}: its kubelet
       crashes on nodes that run pods without QoS cgroups
-      (--cgroups-per-qos=false), and these nodes do:
-      {{ kubernetes_upgrade_check_cgroups_per_qos_disabled_hosts | join(', ') }}
+      (--cgroups-per-qos=false). These nodes have it disabled:
+      {{ kubernetes_upgrade_check_cgroups_per_qos_disabled_hosts | join(', ') | default('none', true) }}
+      These nodes could not be inspected safely:
+      {{ kubernetes_upgrade_check_cgroups_per_qos_unknown_hosts | join(', ') | default('none', true) }}
 
       Kubernetes 1.35.9 and 1.36.4 made the kubelet resize a pod when a
       container starts without a record of the resources applied to it.
@@ -114,7 +223,7 @@
 
       Use a version outside kubernetes_upgrade_check_cgroups_per_qos_denylist
       (for example 1.35.8 or 1.36.3), or move these nodes to QoS cgroups
-      first, which restarts their pods.
+      first, which restarts their pods. See docs/ops/qos-cgroups.md.
 
 - name: Retrieve the "kubeadm-config" ConfigMap
   run_once: true

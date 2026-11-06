@@ -5,9 +5,17 @@
 - name: Verify the resize admission guard
   hosts: all
   become: true
+  vars:
+    resize_guard_name: >-
+      {{
+        kubernetes_resize_admission_guard_name
+        | default('vexxhost-kubelet-resize-guard')
+      }}
   tasks:
     - name: Exercise the resize admission guard
-      when: kubernetes_version is version('1.35.0', '>=')
+      when:
+        - kubernetes_version is version('1.35.0', '>=')
+        - cluster_upgrade_legacy_qos_cgroups | default(false) | bool
       block:
         - name: Read the kubelet restart count before the resize probe
           ansible.builtin.command:
@@ -25,7 +33,7 @@
           kubernetes.core.k8s_info:
             api_version: admissionregistration.k8s.io/v1
             kind: ValidatingAdmissionPolicy
-            name: vexxhost-kubelet-resize-guard
+            name: "{{ resize_guard_name }}"
           register: resize_guard_policy
 
         - name: Get the resize admission policy binding # noqa: run-once[task]
@@ -33,7 +41,7 @@
           kubernetes.core.k8s_info:
             api_version: admissionregistration.k8s.io/v1
             kind: ValidatingAdmissionPolicyBinding
-            name: vexxhost-kubelet-resize-guard
+            name: "{{ resize_guard_name }}"
           register: resize_guard_binding
 
         - name: Verify the resize admission guard is installed # noqa: run-once[task]
@@ -99,7 +107,7 @@
               ansible.builtin.assert:
                 that:
                   - resize_guard_patch.rc != 0
-                  - "'vexxhost-kubelet-resize-guard' in resize_guard_patch.stderr"
+                  - "resize_guard_name in resize_guard_patch.stderr"
 
             - name: Get the probe pod after the rejected resize
               kubernetes.core.k8s_info:
@@ -136,3 +144,29 @@
           ansible.builtin.assert:
             that:
               - resize_guard_kubelet_restarts_after.stdout == resize_guard_kubelet_restarts_before.stdout
+
+    - name: Verify the resize guard is absent with pod QoS cgroups # noqa: run-once[task]
+      when:
+        - kubernetes_version is version('1.35.0', '>=')
+        - not (cluster_upgrade_legacy_qos_cgroups | default(false) | bool)
+      run_once: true
+      block:
+        - name: Get the resize admission policy
+          kubernetes.core.k8s_info:
+            api_version: admissionregistration.k8s.io/v1
+            kind: ValidatingAdmissionPolicy
+            name: "{{ resize_guard_name }}"
+          register: resize_guard_qos_policy
+
+        - name: Get the resize admission policy binding
+          kubernetes.core.k8s_info:
+            api_version: admissionregistration.k8s.io/v1
+            kind: ValidatingAdmissionPolicyBinding
+            name: "{{ resize_guard_name }}"
+          register: resize_guard_qos_binding
+
+        - name: Verify no resize admission guard is installed
+          ansible.builtin.assert:
+            that:
+              - resize_guard_qos_policy.resources | length == 0
+              - resize_guard_qos_binding.resources | length == 0

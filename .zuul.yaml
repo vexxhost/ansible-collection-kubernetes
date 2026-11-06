@@ -148,8 +148,8 @@
     nodeset: debian-trixie-triple-node
     vars:
       molecule_scenario: cluster-upgrade
-      old_kubernetes_version: 1.33.4
-      kubernetes_version: 1.34.0
+      old_kubernetes_version: 1.34.9
+      kubernetes_version: 1.35.6
     group-vars:
       controllers:
         # NOTE(mnaser): Since we're running in clouds, we use the first controller IP
@@ -178,6 +178,7 @@
     vars:
       old_kubernetes_version: 1.34.9
       kubernetes_version: 1.35.6
+      cluster_upgrade_legacy_qos_cgroups: true
     voting: false
 
 - job:
