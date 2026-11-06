@@ -78,9 +78,18 @@ kubelet `configz` endpoint through the Kubernetes API. This includes
 command-line flag overrides without opening an Ansible connection to each
 node. The API query tries `kubernetes_bootstrap_node` first when it is
 explicitly set, then each host in `kubernetes_control_plane_group` until one
-answers. If no controller can perform the query, play hosts use local fallback
-evidence and hosts outside the play remain unknown. For a play host that has no
-Node object yet, the role falls back to its local
+returns usable API data. A delegate that cannot load its kubeconfig or list
+Nodes is skipped even though the module reports that evidence gap without
+failing. If no controller can perform the query, play hosts use local fallback
+evidence and hosts outside the play remain unknown.
+
+Every Node object returned by the API is inspected, including Nodes whose host
+is absent from `kubernetes_upgrade_check_group`. These untracked Nodes are
+reported and their state participates in denylist and admission-guard
+decisions. Shut down a removed host and delete its Node API object before
+removing it from inventory; an inaccessible untracked Node conservatively keeps
+the guard installed. For a play host that has no Node object yet, the role falls
+back to its local
 `/var/lib/kubelet/kubeadm-flags.env`, `/etc/default/kubelet` and
 `/var/lib/kubelet/config.yaml`, plus that host's
 `kubernetes_kubeadm_extra_args` and `kubernetes_kubeadm_patches` inventory

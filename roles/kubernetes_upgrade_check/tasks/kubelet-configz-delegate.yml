@@ -10,6 +10,7 @@
   vexxhost.kubernetes.kubelet_configz:
     kubeconfig: /etc/kubernetes/admin.conf
     node_names: "{{ kubernetes_upgrade_check_inventory_nodes.values() | list }}"
+    include_all_nodes: true
   register: kubernetes_upgrade_check_api_attempt
 
 - name: Select successful Kubernetes API inspection
@@ -18,6 +19,7 @@
     - kubernetes_upgrade_check_api_attempt is defined
     - not (kubernetes_upgrade_check_api_attempt.unreachable | default(false) | bool)
     - not (kubernetes_upgrade_check_api_attempt.failed | default(false) | bool)
+    - kubernetes_upgrade_check_api_attempt.api_error is not defined
     - kubernetes_upgrade_check_api_attempt.nodes is defined
   ansible.builtin.set_fact:
     kubernetes_upgrade_check_api_inspection: >-

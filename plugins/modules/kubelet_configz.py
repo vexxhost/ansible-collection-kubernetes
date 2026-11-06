@@ -25,6 +25,13 @@ options:
     type: list
     elements: str
     required: true
+  include_all_nodes:
+    description:
+      - Inspect every Node returned by the Kubernetes API in addition to
+        C(node_names).
+      - This detects running Nodes that are no longer represented in inventory.
+    type: bool
+    default: false
   kubeconfig:
     description:
       - Path to a kubeconfig with permission to list and proxy nodes.
@@ -51,7 +58,9 @@ EXAMPLES = r"""
 
 RETURN = r"""
 nodes:
-  description: Inspection result keyed by Kubernetes Node name.
+  description:
+    - Inspection result keyed by Kubernetes Node name.
+    - Includes unrequested API Nodes when C(include_all_nodes=true).
   returned: always
   type: dict
   contains:
@@ -101,6 +110,7 @@ def main():
     module = AnsibleModule(
         argument_spec=dict(
             node_names=dict(type="list", elements="str", required=True),
+            include_all_nodes=dict(type="bool", default=False),
             kubeconfig=dict(type="path", default="/etc/kubernetes/admin.conf"),
             request_timeout=dict(type="int", default=10),
         ),
@@ -127,7 +137,11 @@ def main():
         )
         api_client = client.ApiClient(
             configuration=configuration,
-            pool_threads=max(1, min(len(node_names), 32)),
+            pool_threads=(
+                32
+                if module.params["include_all_nodes"]
+                else max(1, min(len(node_names), 32))
+            ),
         )
         api = client.CoreV1Api(api_client)
         try:
@@ -135,6 +149,7 @@ def main():
                 api,
                 node_names,
                 request_timeout=module.params["request_timeout"],
+                include_all_nodes=module.params["include_all_nodes"],
             )
         finally:
             api_client.close()

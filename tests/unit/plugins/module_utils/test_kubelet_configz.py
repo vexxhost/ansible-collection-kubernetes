@@ -62,6 +62,14 @@ def test_inspect_returns_effective_state_and_node_local_errors():
     assert result["new"]["exists"] is False
 
 
+def test_inspect_includes_nodes_not_requested_by_inventory():
+    result = kubelet_configz.inspect(API(), ["enabled"], include_all_nodes=True)
+
+    assert set(result) == {"enabled", "down"}
+    assert result["down"]["exists"] is True
+    assert result["down"]["kubelet_version"] == "1.35.6"
+
+
 def test_configz_uses_kubelet_default_when_field_is_omitted():
     assert kubelet_configz._cgroups_per_qos({"kubeletconfig": {}}) is True
 

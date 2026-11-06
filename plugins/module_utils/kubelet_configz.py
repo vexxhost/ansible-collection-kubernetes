@@ -25,7 +25,7 @@ def _cgroups_per_qos(response):
     return value
 
 
-def inspect(api, node_names, request_timeout=10):
+def inspect(api, node_names, request_timeout=10, include_all_nodes=False):
     """Return Node versions and effective cgroupsPerQOS values.
 
     Node objects are listed once. The caller supplies an API client configured
@@ -38,7 +38,11 @@ def inspect(api, node_names, request_timeout=10):
     result = {}
     requests = {}
 
-    for name in node_names:
+    names_to_inspect = list(dict.fromkeys(node_names))
+    if include_all_nodes:
+        names_to_inspect.extend(name for name in nodes if name not in names_to_inspect)
+
+    for name in names_to_inspect:
         node = nodes.get(name)
         if node is None:
             result[name] = {

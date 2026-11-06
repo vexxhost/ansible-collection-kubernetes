@@ -44,6 +44,13 @@
       }}
   loop: "{{ groups[kubernetes_upgrade_check_group] }}"
 
+- name: Initialize Kubernetes Nodes absent from inventory
+  ansible.builtin.set_fact:
+    kubernetes_upgrade_check_untracked_api_nodes: []
+    kubernetes_upgrade_check_untracked_disabled_nodes: []
+    kubernetes_upgrade_check_untracked_unknown_nodes: []
+    kubernetes_upgrade_check_untracked_resize_guard_nodes: []
+
 - name: Initialize Kubernetes API inspection
   when: kubernetes_upgrade_check_cgroups_per_qos_inspection_required | bool
   run_once: true
@@ -131,6 +138,63 @@
       }}
   loop: "{{ kubernetes_upgrade_check_inventory_nodes | dict2items }}"
 
+- name: Record Kubernetes Nodes absent from inventory # noqa: jinja[invalid]
+  when: kubernetes_upgrade_check_cgroups_per_qos_inspection_required | bool
+  vars:
+    kubernetes_upgrade_check_untracked_api_node: >-
+      {{ kubernetes_upgrade_check_api_inspection.nodes[item] }}
+    kubernetes_upgrade_check_untracked_cgroups_state: >-
+      {{
+        'enabled'
+        if kubernetes_upgrade_check_untracked_api_node.cgroups_per_qos is sameas true
+        else (
+          'disabled'
+          if kubernetes_upgrade_check_untracked_api_node.cgroups_per_qos is sameas false
+          else 'unknown'
+        )
+      }}
+    kubernetes_upgrade_check_untracked_kubelet_version: >-
+      {{ kubernetes_upgrade_check_untracked_api_node.kubelet_version | default('') }}
+    kubernetes_upgrade_check_untracked_guard_required: >-
+      {{
+        kubernetes_upgrade_check_untracked_cgroups_state == 'unknown'
+        or (
+          kubernetes_upgrade_check_untracked_cgroups_state == 'disabled'
+          and (
+            kubernetes_upgrade_check_untracked_kubelet_version | length == 0
+            or kubernetes_upgrade_check_untracked_kubelet_version
+               | vexxhost.kubernetes.version_matching_ranges(
+                   kubernetes_upgrade_check_cgroups_per_qos_resize_guard_versions
+                 )
+               | length > 0
+          )
+        )
+      }}
+  ansible.builtin.set_fact:
+    kubernetes_upgrade_check_untracked_api_nodes: >-
+      {{ kubernetes_upgrade_check_untracked_api_nodes + [item] }}
+    kubernetes_upgrade_check_untracked_disabled_nodes: >-
+      {{
+        kubernetes_upgrade_check_untracked_disabled_nodes
+        + ([item] if kubernetes_upgrade_check_untracked_cgroups_state == 'disabled' else [])
+      }}
+    kubernetes_upgrade_check_untracked_unknown_nodes: >-
+      {{
+        kubernetes_upgrade_check_untracked_unknown_nodes
+        + ([item] if kubernetes_upgrade_check_untracked_cgroups_state == 'unknown' else [])
+      }}
+    kubernetes_upgrade_check_untracked_resize_guard_nodes: >-
+      {{
+        kubernetes_upgrade_check_untracked_resize_guard_nodes
+        + ([item] if kubernetes_upgrade_check_untracked_guard_required else [])
+      }}
+  loop: >-
+    {{
+      (kubernetes_upgrade_check_api_inspection.nodes | default({})).keys() | list
+      | difference(kubernetes_upgrade_check_inventory_nodes.values() | list)
+      | sort
+    }}
+
 # A play host missing from the API is being bootstrapped or rejoined. When the
 # whole API is unavailable (including initial bootstrap), local files are also
 # the best available evidence. Hosts omitted by --limit remain unknown; do not
@@ -210,14 +274,54 @@
         if kubernetes_upgrade_check_cgroups_per_qos_inspection_required | bool
         else []
       }}
+    kubernetes_upgrade_check_cgroups_per_qos_untracked_nodes: >-
+      {{
+        kubernetes_upgrade_check_untracked_api_nodes
+        if kubernetes_upgrade_check_cgroups_per_qos_inspection_required | bool
+        else []
+      }}
+    kubernetes_upgrade_check_cgroups_per_qos_untracked_disabled_nodes: >-
+      {{
+        kubernetes_upgrade_check_untracked_disabled_nodes
+        if kubernetes_upgrade_check_cgroups_per_qos_inspection_required | bool
+        else []
+      }}
+    kubernetes_upgrade_check_cgroups_per_qos_untracked_unknown_nodes: >-
+      {{
+        kubernetes_upgrade_check_untracked_unknown_nodes
+        if kubernetes_upgrade_check_cgroups_per_qos_inspection_required | bool
+        else []
+      }}
     kubernetes_upgrade_check_resize_admission_guard_required: >-
       {{
         (
           kubernetes_upgrade_check_cgroups_per_qos_resize_guarded_by | length > 0
-          and kubernetes_upgrade_check_detected_disabled_hosts | length > 0
+          and (
+            (
+              kubernetes_upgrade_check_detected_disabled_hosts
+              + kubernetes_upgrade_check_untracked_disabled_nodes
+            )
+            | length > 0
+          )
         )
-        or kubernetes_upgrade_check_detected_resize_guard_hosts | length > 0
+        or (
+          (
+            kubernetes_upgrade_check_detected_resize_guard_hosts
+            + kubernetes_upgrade_check_untracked_resize_guard_nodes
+          )
+          | length > 0
+        )
       }}
+
+- name: Report Kubernetes Nodes absent from inventory
+  when: kubernetes_upgrade_check_cgroups_per_qos_untracked_nodes | length > 0
+  run_once: true
+  ansible.builtin.debug:
+    msg: >-
+      Kubernetes API Nodes absent from kubernetes_upgrade_check_group:
+      {{ kubernetes_upgrade_check_cgroups_per_qos_untracked_nodes | join(', ') }}.
+      Their effective kubelet state is included in resize safety decisions.
+      Delete stale Node API objects only after their kubelets are shut down.
 
 - name: Report nodes with unknown pod QoS cgroup state
   when: kubernetes_upgrade_check_cgroups_per_qos_unknown_hosts | length > 0
@@ -236,6 +340,8 @@
     - >-
       kubernetes_upgrade_check_cgroups_per_qos_disabled_hosts
       | union(kubernetes_upgrade_check_cgroups_per_qos_unknown_hosts)
+      | union(kubernetes_upgrade_check_cgroups_per_qos_untracked_disabled_nodes)
+      | union(kubernetes_upgrade_check_cgroups_per_qos_untracked_unknown_nodes)
       | length > 0
   ansible.builtin.fail:
     msg: |
@@ -245,6 +351,10 @@
       {{ kubernetes_upgrade_check_cgroups_per_qos_disabled_hosts | join(', ') | default('none', true) }}
       These nodes could not be inspected safely:
       {{ kubernetes_upgrade_check_cgroups_per_qos_unknown_hosts | join(', ') | default('none', true) }}
+      Kubernetes API Nodes absent from inventory with QoS cgroups disabled:
+      {{ kubernetes_upgrade_check_cgroups_per_qos_untracked_disabled_nodes | join(', ') | default('none', true) }}
+      Kubernetes API Nodes absent from inventory that could not be inspected safely:
+      {{ kubernetes_upgrade_check_cgroups_per_qos_untracked_unknown_nodes | join(', ') | default('none', true) }}
 
       Kubernetes 1.35.9 and 1.36.4 made the kubelet resize a pod when a
       container starts without a record of the resources applied to it.

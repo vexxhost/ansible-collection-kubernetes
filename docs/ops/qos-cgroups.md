@@ -36,6 +36,9 @@ edit `kubeadm-flags.env` and restart a node in place.
 - Keep the normal deployment inventory and variables available. The collection
   creates fresh join credentials and renders the node's kubeadm configuration
   when it rejoins.
+- Do not remove a host from inventory while its Kubernetes Node still exists.
+  The preflight inspects and reports such untracked Node objects, but inventory
+  is still required to perform the drain, reset and rejoin procedure.
 - Migrate only one node at a time and wait for it to become healthy before
   starting the next node.
 - For a stacked-etcd control plane, keep an etcd quorum throughout the

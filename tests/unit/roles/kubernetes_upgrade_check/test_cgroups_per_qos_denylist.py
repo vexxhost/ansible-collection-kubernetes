@@ -54,7 +54,13 @@ def resize_guarded_by(version, ranges=None):
     )
 
 
-def resize_guard_required(target_guarded_by, disabled_hosts, installed_guard_hosts):
+def resize_guard_required(
+    target_guarded_by,
+    disabled_hosts,
+    installed_guard_hosts,
+    untracked_disabled_nodes=None,
+    untracked_guard_nodes=None,
+):
     tasks = yaml.safe_load((ROLE / "tasks/main.yml").read_text())
     task = next(
         task
@@ -69,7 +75,42 @@ def resize_guard_required(target_guarded_by, disabled_hosts, installed_guard_hos
         kubernetes_upgrade_check_cgroups_per_qos_resize_guarded_by=target_guarded_by,
         kubernetes_upgrade_check_detected_disabled_hosts=disabled_hosts,
         kubernetes_upgrade_check_detected_resize_guard_hosts=installed_guard_hosts,
+        kubernetes_upgrade_check_untracked_disabled_nodes=(
+            untracked_disabled_nodes or []
+        ),
+        kubernetes_upgrade_check_untracked_resize_guard_nodes=(
+            untracked_guard_nodes or []
+        ),
     )
+
+
+def classify_untracked_node(node):
+    tasks = yaml.safe_load((ROLE / "tasks/main.yml").read_text())
+    task = next(
+        task
+        for task in tasks
+        if task["name"] == "Record Kubernetes Nodes absent from inventory"
+    )
+    env = NativeEnvironment(undefined=StrictUndefined)
+    env.filters["vexxhost.kubernetes.version_matching_ranges"] = version_matching_ranges
+    context = {
+        "item": "stale-node",
+        "kubernetes_upgrade_check_api_inspection": {"nodes": {"stale-node": node}},
+        "kubernetes_upgrade_check_cgroups_per_qos_resize_guard_versions": [
+            {"min": "1.35.0"}
+        ],
+        "kubernetes_upgrade_check_untracked_api_nodes": [],
+        "kubernetes_upgrade_check_untracked_disabled_nodes": [],
+        "kubernetes_upgrade_check_untracked_unknown_nodes": [],
+        "kubernetes_upgrade_check_untracked_resize_guard_nodes": [],
+    }
+    for variable, expression in task["vars"].items():
+        context[variable] = env.from_string(expression).render(**context)
+
+    return {
+        fact: env.from_string(expression).render(**context)
+        for fact, expression in task["ansible.builtin.set_fact"].items()
+    }
 
 
 def test_check_mode_reads_the_installed_kubelet_version():
@@ -150,6 +191,37 @@ def test_api_inspection_retries_unreachable_controllers():
         "kubernetes_upgrade_check_api_attempt.nodes is defined" in condition
         for condition in select["when"]
     )
+
+
+def test_api_inspection_retries_after_api_error():
+    delegate_tasks = yaml.safe_load(
+        (ROLE / "tasks/kubelet-configz-delegate.yml").read_text()
+    )
+    conditions = delegate_tasks[1]["when"]
+    env = NativeEnvironment(undefined=StrictUndefined)
+    env.filters["bool"] = bool
+    attempts = [
+        {
+            "nodes": {"worker": {"cgroups_per_qos": None}},
+            "api_error": "admin.conf does not exist",
+        },
+        {"nodes": {"worker": {"cgroups_per_qos": True}}},
+    ]
+    inspection = {}
+
+    for attempt in attempts:
+        context = {
+            "kubernetes_upgrade_check_api_inspection": inspection,
+            "kubernetes_upgrade_check_api_attempt": attempt,
+        }
+        selected = all(
+            env.from_string("{{ %s }}" % condition).render(**context)
+            for condition in conditions
+        )
+        if selected:
+            inspection = attempt
+
+    assert inspection == attempts[1]
 
 
 def test_unavailable_api_inspection_records_unknown_nodes():
@@ -262,3 +334,53 @@ def test_fixed_target_removes_guard_after_installed_kubelets_are_fixed():
 
 def test_qos_cgroups_do_not_require_guard():
     assert resize_guard_required([{"min": "1.35.0"}], [], []) is False
+
+
+def test_untracked_vulnerable_api_node_requires_guard():
+    assert (
+        resize_guard_required(
+            [{"min": "1.35.0"}],
+            [],
+            [],
+            untracked_disabled_nodes=["stale-worker"],
+            untracked_guard_nodes=["stale-worker"],
+        )
+        is True
+    )
+
+
+def test_untracked_qos_enabled_api_node_does_not_require_guard():
+    classified = classify_untracked_node(
+        {"cgroups_per_qos": True, "kubelet_version": "1.36.2"}
+    )
+
+    assert classified["kubernetes_upgrade_check_untracked_api_nodes"] == ["stale-node"]
+    assert classified["kubernetes_upgrade_check_untracked_disabled_nodes"] == []
+    assert classified["kubernetes_upgrade_check_untracked_unknown_nodes"] == []
+    assert classified["kubernetes_upgrade_check_untracked_resize_guard_nodes"] == []
+
+
+def test_untracked_disabled_api_node_is_guarded():
+    classified = classify_untracked_node(
+        {"cgroups_per_qos": False, "kubelet_version": "1.36.2"}
+    )
+
+    assert classified["kubernetes_upgrade_check_untracked_disabled_nodes"] == [
+        "stale-node"
+    ]
+    assert classified["kubernetes_upgrade_check_untracked_resize_guard_nodes"] == [
+        "stale-node"
+    ]
+
+
+def test_untracked_unavailable_api_node_is_guarded_as_unknown():
+    classified = classify_untracked_node(
+        {"cgroups_per_qos": None, "kubelet_version": ""}
+    )
+
+    assert classified["kubernetes_upgrade_check_untracked_unknown_nodes"] == [
+        "stale-node"
+    ]
+    assert classified["kubernetes_upgrade_check_untracked_resize_guard_nodes"] == [
+        "stale-node"
+    ]
