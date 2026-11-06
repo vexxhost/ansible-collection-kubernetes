@@ -39,6 +39,24 @@ def test_extra_args_can_restore_legacy_qos_flags(render_kubeadm):
     assert args["enforce-node-allocatable"] == ""
 
 
+@pytest.mark.parametrize("version", ["1.20.15", "1.30.14", "1.36.2"])
+def test_node_registration_taints_apply_to_init_and_join(render_kubeadm, version):
+    taints = [
+        {
+            "key": "vexxhost.com/qos-cgroups-migration",
+            "value": "pending",
+            "effect": "NoSchedule",
+        }
+    ]
+    documents = render_kubeadm(
+        kubernetes_version=version,
+        kubernetes_kubeadm_node_registration_taints=taints,
+    )
+
+    assert documents["InitConfiguration"]["nodeRegistration"]["taints"] == taints
+    assert documents["JoinConfiguration"]["nodeRegistration"]["taints"] == taints
+
+
 @pytest.mark.parametrize("version", ["1.30.14", "1.31.14"])
 def test_extra_args_add_change_and_remove(render_kubeadm, version):
     documents = render_kubeadm(

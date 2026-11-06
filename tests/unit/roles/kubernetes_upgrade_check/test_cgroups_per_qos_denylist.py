@@ -119,6 +119,60 @@ def test_failed_fallback_file_reads_remain_unknown():
     )
 
 
+def test_api_inspection_retries_unreachable_controllers():
+    tasks = yaml.safe_load((ROLE / "tasks/main.yml").read_text())
+    tasks_by_name = {task["name"]: task for task in tasks}
+    initialize = tasks_by_name["Initialize Kubernetes API inspection"]
+    inspect = tasks_by_name[
+        "Inspect kubelets through a reachable Kubernetes API delegate"
+    ]
+
+    assert (
+        initialize["ansible.builtin.set_fact"][
+            "kubernetes_upgrade_check_api_inspection"
+        ]
+        == {}
+    )
+    assert inspect["loop"] == "{{ kubernetes_upgrade_check_api_delegates }}"
+    assert (
+        inspect["loop_control"]["loop_var"] == "kubernetes_upgrade_check_api_delegate"
+    )
+
+    delegate_tasks = yaml.safe_load(
+        (ROLE / "tasks/kubelet-configz-delegate.yml").read_text()
+    )
+    query = delegate_tasks[0]
+    select = delegate_tasks[1]
+    assert query["delegate_to"] == "{{ kubernetes_upgrade_check_api_delegate }}"
+    assert query["ignore_unreachable"] is True
+    assert query["failed_when"] is False
+    assert any(
+        "kubernetes_upgrade_check_api_attempt.nodes is defined" in condition
+        for condition in select["when"]
+    )
+
+
+def test_unavailable_api_inspection_records_unknown_nodes():
+    tasks = yaml.safe_load((ROLE / "tasks/main.yml").read_text())
+    task = next(
+        task
+        for task in tasks
+        if task["name"] == "Record API kubelet inspection results"
+    )
+    expression = task["vars"]["kubernetes_upgrade_check_api_node"]
+    env = NativeEnvironment(undefined=StrictUndefined)
+
+    result = env.from_string(expression).render(
+        kubernetes_upgrade_check_api_inspection={},
+        item={"value": "missing-node"},
+    )
+
+    assert result["exists"] is False
+    assert result["cgroups_per_qos"] is None
+    assert result["kubelet_version"] == ""
+    assert "unavailable" in result["error"]
+
+
 @pytest.mark.parametrize(
     "version",
     ["1.28.13", "1.34.12", "1.35.0", "1.35.6", "1.35.8", "1.36.0", "1.36.2", "1.36.3"],

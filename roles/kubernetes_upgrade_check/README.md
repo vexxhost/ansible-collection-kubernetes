@@ -76,9 +76,11 @@ For joined nodes, the role reads the running version from
 `status.nodeInfo.kubeletVersion` and the effective QoS-cgroup setting from the
 kubelet `configz` endpoint through the Kubernetes API. This includes
 command-line flag overrides without opening an Ansible connection to each
-node. The API query uses `kubernetes_bootstrap_node` when it is explicitly set,
-otherwise it uses the first host in `kubernetes_control_plane_group`. For a
-play host that has no Node object yet, the role falls back to its local
+node. The API query tries `kubernetes_bootstrap_node` first when it is
+explicitly set, then each host in `kubernetes_control_plane_group` until one
+answers. If no controller can perform the query, play hosts use local fallback
+evidence and hosts outside the play remain unknown. For a play host that has no
+Node object yet, the role falls back to its local
 `/var/lib/kubelet/kubeadm-flags.env`, `/etc/default/kubelet` and
 `/var/lib/kubelet/config.yaml`, plus that host's
 `kubernetes_kubeadm_extra_args` and `kubernetes_kubeadm_patches` inventory

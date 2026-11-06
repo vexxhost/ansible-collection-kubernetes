@@ -1,0 +1,24 @@
+# Copyright (c) 2026 VEXXHOST, Inc.
+# SPDX-License-Identifier: Apache-2.0
+
+---
+- name: Query kubelet configuration through API delegate
+  when: kubernetes_upgrade_check_api_inspection.nodes is not defined
+  delegate_to: "{{ kubernetes_upgrade_check_api_delegate }}"
+  ignore_unreachable: true
+  failed_when: false
+  vexxhost.kubernetes.kubelet_configz:
+    kubeconfig: /etc/kubernetes/admin.conf
+    node_names: "{{ kubernetes_upgrade_check_inventory_nodes.values() | list }}"
+  register: kubernetes_upgrade_check_api_attempt
+
+- name: Select successful Kubernetes API inspection
+  when:
+    - kubernetes_upgrade_check_api_inspection.nodes is not defined
+    - kubernetes_upgrade_check_api_attempt is defined
+    - not (kubernetes_upgrade_check_api_attempt.unreachable | default(false) | bool)
+    - not (kubernetes_upgrade_check_api_attempt.failed | default(false) | bool)
+    - kubernetes_upgrade_check_api_attempt.nodes is defined
+  ansible.builtin.set_fact:
+    kubernetes_upgrade_check_api_inspection: >-
+      {{ kubernetes_upgrade_check_api_attempt }}

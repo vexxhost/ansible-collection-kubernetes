@@ -54,6 +54,11 @@ kubernetes_kubeadm_extra_args:
   controllerManager: {}
   scheduler: {}
 
+# Taints applied by kubeadm when a new Node object is registered. Leave this
+# null to preserve kubeadm's defaults. This can be set per host for workflows
+# that must keep a replacement node unschedulable from its first registration.
+kubernetes_kubeadm_node_registration_taints: null
+
 # Kubelet feature gates rendered into the KubeletConfiguration. These are
 # merged on top of the role-managed gates (kubernetes_kubelet_managed_feature_gates).
 kubernetes_kubelet_feature_gates: {}

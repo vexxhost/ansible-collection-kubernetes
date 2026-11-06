@@ -181,6 +181,17 @@
       cluster_upgrade_legacy_qos_cgroups: true
     voting: true
 
+# Exercise stale guard removal on a QoS-enabled cluster in a voting job. Skip
+# only the unrelated Cilium restart assertion that keeps the base job
+# non-voting.
+- job:
+    name: ansible-collection-kubernetes-molecule-cluster-upgrade-resize-cleanup
+    parent: ansible-collection-kubernetes-molecule-cluster-upgrade
+    vars:
+      cluster_upgrade_seed_resize_guard: true
+      cluster_upgrade_verify_cilium_restarts: false
+    voting: true
+
 - job:
     name: ansible-collection-kubernetes-molecule-download-binaries
     parent: ansible-collection-kubernetes-molecule
@@ -245,6 +256,7 @@
         - ansible-collection-kubernetes-molecule-cluster-api
         - ansible-collection-kubernetes-molecule-cluster-upgrade
         - ansible-collection-kubernetes-molecule-cluster-upgrade-1-31
+        - ansible-collection-kubernetes-molecule-cluster-upgrade-resize-cleanup
         - ansible-collection-kubernetes-molecule-cluster-upgrade-resize-guard
         - ansible-collection-kubernetes-molecule-download-binaries
         - ansible-collection-kubernetes-molecule-ha
@@ -263,6 +275,7 @@
         - ansible-collection-kubernetes-molecule-bgp
         - ansible-collection-kubernetes-molecule-cluster-api
         - ansible-collection-kubernetes-molecule-cluster-upgrade
+        - ansible-collection-kubernetes-molecule-cluster-upgrade-resize-cleanup
         - ansible-collection-kubernetes-molecule-cluster-upgrade-resize-guard
         - ansible-collection-kubernetes-molecule-download-binaries
         - ansible-collection-kubernetes-molecule-ha

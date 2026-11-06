@@ -145,6 +145,22 @@ export INVENTORY_HOST=k8s-w1.example.com
 export NODE_NAME=k8s-w1.example.com
 ```
 
+Before resetting the node, set a temporary registration taint in that host's
+inventory. This taint is part of the kubeadm `JoinConfiguration`, so the
+replacement Node is unschedulable from its first API registration rather than
+only after the deployment play returns:
+
+```yaml
+kubernetes_kubeadm_node_registration_taints:
+  - key: vexxhost.com/qos-cgroups-migration
+    value: pending
+    effect: NoSchedule
+```
+
+Set this only for `INVENTORY_HOST`. Required node infrastructure must tolerate
+the temporary taint; ordinary workloads must not. Leave the variable in place
+until validation finishes so a repeated reset and rejoin remains protected.
+
 Drain the node. Resolve any PodDisruptionBudget failure instead of bypassing
 eviction protection without reviewing the workload impact:
 
@@ -185,13 +201,13 @@ ansible-playbook -i inventory/hosts.ini deployment.yml \
   --limit "$INVENTORY_HOST"
 ```
 
-Cordon the replacement Node immediately after the limited play returns, then
-wait for it to become Ready. A newly created Node object is normally
-schedulable, so do not leave it available to workloads while validating the
-rejoin:
+Confirm the replacement Node retained the temporary `NoSchedule` taint, then
+wait for it to become Ready. Stop immediately if the taint is absent; do not
+continue validation with a schedulable replacement:
 
 ```bash
-kubectl cordon "$NODE_NAME"
+kubectl get node "$NODE_NAME" \
+  -o jsonpath='{.spec.taints[?(@.key=="vexxhost.com/qos-cgroups-migration")]}{"\n"}'
 kubectl wait --for=condition=Ready "node/$NODE_NAME" --timeout=10m
 kubectl get node "$NODE_NAME" -o wide
 ```
@@ -229,7 +245,7 @@ ansible -i inventory/hosts.ini "$INVENTORY_HOST" --become \
 In that JSON, find
 `config.containerd.runtimes[config.containerd.defaultRuntimeName].options.SystemdCgroup`.
 It must be `true` when the kubelet reports `cgroupDriver: systemd`, and `false`
-when the kubelet reports `cgroupDriver: cgroupfs`. Keep the node cordoned and
+when the kubelet reports `cgroupDriver: cgroupfs`. Keep the node tainted and
 stop if they disagree. Do not rely on a newer container runtime overriding a
 stale kubelet ConfigMap; the migration must also be safe on containerd 1.7.
 
@@ -246,12 +262,14 @@ infrastructure and control-plane checks pass, make the node schedulable and
 confirm its workloads become Ready:
 
 ```bash
-kubectl uncordon "$NODE_NAME"
+# First remove kubernetes_kubeadm_node_registration_taints from this host's
+# inventory, then remove the temporary taint from the live Node.
+kubectl taint node "$NODE_NAME" vexxhost.com/qos-cgroups-migration-
 kubectl get node "$NODE_NAME" -o wide
 kubectl get pods --all-namespaces -o wide --field-selector spec.nodeName="$NODE_NAME"
 ```
 
-Keep the node cordoned and investigate if any validation fails. Do not proceed
+Keep the node tainted and investigate if any validation fails. Do not proceed
 to the next node until the current node and the rest of the cluster are healthy.
 
 ## Finish the migration
@@ -294,6 +312,7 @@ Node deletion.
 
 To return a node to its previous configuration, restore both legacy kubelet
 arguments in that host's inventory, reset it again and rerun the limited rejoin.
-Do not uncordon it until it is Ready and its previous kubelet behavior has been
-verified. For a failed control-plane rejoin, verify etcd membership and restore
-from the pre-migration backup when the member cannot be added safely.
+Keep the temporary registration taint until it is Ready and its previous
+kubelet behavior has been verified. For a failed control-plane rejoin, verify
+etcd membership and restore from the pre-migration backup when the member
+cannot be added safely.

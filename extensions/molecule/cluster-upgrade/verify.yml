@@ -27,6 +27,7 @@
 
     - name: Verify Cilium operator pods have not been restarted # noqa: run-once[task]
       run_once: true
+      when: cluster_upgrade_verify_cilium_restarts | default(true) | bool
       ansible.builtin.assert:
         that:
           - item.status.containerStatuses[0].restartCount == 0

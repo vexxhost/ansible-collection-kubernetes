@@ -31,9 +31,9 @@
         else {}
       }}
 
-# Seed both resources on the QoS-enabled upgrade path. The target-version run
-# must remove them, proving cleanup rather than only proving a fresh cluster
-# leaves the guard absent.
+# The voting cleanup job seeds both resources on its QoS-enabled old cluster.
+# The target-version run must remove them, proving cleanup rather than only
+# proving a fresh cluster leaves the guard absent.
 - name: Seed a stale resize admission guard for the removal test
   hosts: controllers[0]
   become: true
@@ -47,7 +47,7 @@
     - name: Seed the resize admission policy
       when:
         - kubernetes_version is version('1.35.0', '>=')
-        - not (cluster_upgrade_legacy_qos_cgroups | default(false) | bool)
+        - cluster_upgrade_seed_resize_guard | default(false) | bool
       kubernetes.core.k8s:
         definition:
           apiVersion: admissionregistration.k8s.io/v1
@@ -76,7 +76,7 @@
     - name: Seed the resize admission policy binding
       when:
         - kubernetes_version is version('1.35.0', '>=')
-        - not (cluster_upgrade_legacy_qos_cgroups | default(false) | bool)
+        - cluster_upgrade_seed_resize_guard | default(false) | bool
       kubernetes.core.k8s:
         definition:
           apiVersion: admissionregistration.k8s.io/v1

@@ -44,25 +44,50 @@
       }}
   loop: "{{ groups[kubernetes_upgrade_check_group] }}"
 
-- name: Inspect kubelets through the Kubernetes API
+- name: Initialize Kubernetes API inspection
   when: kubernetes_upgrade_check_cgroups_per_qos_inspection_required | bool
   run_once: true
-  delegate_to: >-
-    {{
-      kubernetes_bootstrap_node
-      | default(groups[kubernetes_control_plane_group | default('controllers')][0])
-    }}
-  vexxhost.kubernetes.kubelet_configz:
-    kubeconfig: /etc/kubernetes/admin.conf
-    node_names: "{{ kubernetes_upgrade_check_inventory_nodes.values() | list }}"
-  register: kubernetes_upgrade_check_api_inspection
+  ansible.builtin.set_fact:
+    kubernetes_upgrade_check_api_inspection: {}
+    kubernetes_upgrade_check_api_delegates: >-
+      {{
+        (
+          ([kubernetes_bootstrap_node] if kubernetes_bootstrap_node is defined else [])
+          + groups[kubernetes_control_plane_group | default('controllers')]
+        )
+        | unique
+      }}
+
+# Try an explicitly selected bootstrap node first, then every control-plane
+# host. A transport or module failure leaves this attempt unavailable and the
+# next candidate is tried. If none work, play hosts use local fallback evidence
+# and hosts outside the play remain conservatively unknown.
+- name: Inspect kubelets through a reachable Kubernetes API delegate
+  when: kubernetes_upgrade_check_cgroups_per_qos_inspection_required | bool
+  run_once: true
+  ansible.builtin.include_tasks: kubelet-configz-delegate.yml
+  loop: "{{ kubernetes_upgrade_check_api_delegates }}"
+  loop_control:
+    loop_var: kubernetes_upgrade_check_api_delegate
 
 - name: Record API kubelet inspection results # noqa: jinja[invalid]
   when: kubernetes_upgrade_check_cgroups_per_qos_inspection_required | bool
   run_once: true
   vars:
     kubernetes_upgrade_check_api_node: >-
-      {{ kubernetes_upgrade_check_api_inspection.nodes[item.value] }}
+      {{
+        kubernetes_upgrade_check_api_inspection.nodes[item.value]
+        if (
+          kubernetes_upgrade_check_api_inspection.nodes is defined
+          and item.value in kubernetes_upgrade_check_api_inspection.nodes
+        )
+        else {
+          'exists': false,
+          'cgroups_per_qos': none,
+          'kubelet_version': '',
+          'error': 'Kubernetes API inspection was unavailable through every control-plane delegate',
+        }
+      }}
     kubernetes_upgrade_check_api_cgroups_state: >-
       {{
         'enabled'
