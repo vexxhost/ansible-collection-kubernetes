@@ -19,3 +19,21 @@ kubernetes_upgrade_check_cgroups_per_qos_denied_by: >-
       | list
     )
   }}
+
+# Entries of kubernetes_upgrade_check_cgroups_per_qos_resize_guard_versions that
+# contain kubernetes_version
+kubernetes_upgrade_check_cgroups_per_qos_resize_guarded_by: >-
+  {{
+    (
+      kubernetes_upgrade_check_cgroups_per_qos_resize_guard_versions
+      | selectattr('min', 'ansible.builtin.version', kubernetes_version, '<=')
+      | selectattr('max', 'undefined')
+      | list
+    ) + (
+      kubernetes_upgrade_check_cgroups_per_qos_resize_guard_versions
+      | selectattr('min', 'ansible.builtin.version', kubernetes_version, '<=')
+      | selectattr('max', 'defined')
+      | selectattr('max', 'ansible.builtin.version', kubernetes_version, '>')
+      | list
+    )
+  }}

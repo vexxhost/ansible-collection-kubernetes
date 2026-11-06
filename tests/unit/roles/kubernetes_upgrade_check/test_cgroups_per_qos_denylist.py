@@ -1,8 +1,7 @@
 # Copyright (c) 2026 VEXXHOST, Inc.
 # SPDX-License-Identifier: Apache-2.0
 
-"""Check which versions the kubernetes_upgrade_check role denies on nodes
-without pod QoS cgroups."""
+"""Check the version ranges used for kubelets without pod QoS cgroups."""
 
 from pathlib import Path
 
@@ -15,21 +14,39 @@ from jinja2.nativetypes import NativeEnvironment
 ROLE = Path(__file__).resolve().parents[4] / "roles" / "kubernetes_upgrade_check"
 
 
-def denied_by(version, denylist=None):
+def matching_ranges(version, variable, ranges=None):
     defaults = yaml.safe_load((ROLE / "defaults/main.yml").read_text())
     role_vars = yaml.safe_load((ROLE / "vars/main.yml").read_text())
     env = NativeEnvironment(undefined=StrictUndefined)
     env.tests["ansible.builtin.version"] = version_compare
-    template = env.from_string(
-        role_vars["kubernetes_upgrade_check_cgroups_per_qos_denied_by"]
-    )
+    template = env.from_string(role_vars[variable])
+    range_variable = {
+        "kubernetes_upgrade_check_cgroups_per_qos_denied_by": (
+            "kubernetes_upgrade_check_cgroups_per_qos_denylist"
+        ),
+        "kubernetes_upgrade_check_cgroups_per_qos_resize_guarded_by": (
+            "kubernetes_upgrade_check_cgroups_per_qos_resize_guard_versions"
+        ),
+    }[variable]
     return template.render(
         kubernetes_version=version,
-        kubernetes_upgrade_check_cgroups_per_qos_denylist=(
-            defaults["kubernetes_upgrade_check_cgroups_per_qos_denylist"]
-            if denylist is None
-            else denylist
-        ),
+        **{range_variable: defaults[range_variable] if ranges is None else ranges},
+    )
+
+
+def denied_by(version, denylist=None):
+    return matching_ranges(
+        version,
+        "kubernetes_upgrade_check_cgroups_per_qos_denied_by",
+        denylist,
+    )
+
+
+def resize_guarded_by(version, ranges=None):
+    return matching_ranges(
+        version,
+        "kubernetes_upgrade_check_cgroups_per_qos_resize_guarded_by",
+        ranges,
     )
 
 
@@ -73,3 +90,36 @@ def test_max_is_exclusive():
     denylist = [{"min": "1.36.4", "max": "1.36.8"}]
     assert len(denied_by("1.36.7", denylist)) == 1
     assert denied_by("1.36.8", denylist) == []
+
+
+@pytest.mark.parametrize("version", ["1.34.12", "1.34.99"])
+def test_resize_guard_not_required_before_1_35(version):
+    assert resize_guarded_by(version) == []
+
+
+@pytest.mark.parametrize(
+    "version", ["1.35.0", "1.35.6", "1.35.9", "1.36.0", "1.36.4", "1.37.0"]
+)
+def test_resize_guard_required_until_upstream_fix(version):
+    assert len(resize_guarded_by(version)) == 1
+
+
+@pytest.mark.parametrize(
+    "version,guarded",
+    [
+        ("1.35.11", True),
+        ("1.35.12", False),
+        ("1.36.7", True),
+        ("1.36.8", False),
+        ("1.37.3", True),
+        ("1.37.4", False),
+        ("1.38.0", False),
+    ],
+)
+def test_resize_guard_branches_are_lifted_separately(version, guarded):
+    ranges = [
+        {"min": "1.35.0", "max": "1.35.12"},
+        {"min": "1.36.0", "max": "1.36.8"},
+        {"min": "1.37.0", "max": "1.37.4"},
+    ]
+    assert bool(resize_guarded_by(version, ranges)) is guarded

@@ -169,6 +169,17 @@
       kubernetes_version: 1.31.14
     voting: false
 
+# NOTE: Kubernetes 1.35 makes in-place pod resize GA.  Legacy nodes without pod
+#       QoS cgroups must reject the pods/resize subresource before their
+#       kubelets are upgraded, or an explicit resize can panic the kubelet.
+- job:
+    name: ansible-collection-kubernetes-molecule-cluster-upgrade-resize-guard
+    parent: ansible-collection-kubernetes-molecule-cluster-upgrade
+    vars:
+      old_kubernetes_version: 1.34.9
+      kubernetes_version: 1.35.6
+    voting: false
+
 - job:
     name: ansible-collection-kubernetes-molecule-download-binaries
     parent: ansible-collection-kubernetes-molecule
@@ -233,6 +244,7 @@
         - ansible-collection-kubernetes-molecule-cluster-api
         - ansible-collection-kubernetes-molecule-cluster-upgrade
         - ansible-collection-kubernetes-molecule-cluster-upgrade-1-31
+        - ansible-collection-kubernetes-molecule-cluster-upgrade-resize-guard
         - ansible-collection-kubernetes-molecule-download-binaries
         - ansible-collection-kubernetes-molecule-ha
         - ansible-collection-kubernetes-molecule-helm

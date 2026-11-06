@@ -2,11 +2,17 @@
 # SPDX-License-Identifier: Apache-2.0
 
 ---
+# Inventory group containing every Kubernetes node.  The preflight deliberately
+# inspects the full group even when the play uses --limit: removing a
+# cluster-wide admission guard based only on the limited hosts would expose the
+# nodes omitted from the play.
+kubernetes_upgrade_check_group: "{{ kubernetes_group | default('all') }}"
+
 # Kubernetes versions whose kubelet crashes on nodes that run pods without QoS
 # cgroups (--cgroups-per-qos=false, which nodes deployed by older releases of
 # this collection keep).  Each entry denies versions from "min" (inclusive) up
 # to "max" (exclusive, or every later version if unset).  The role refuses to
-# deploy or upgrade to a denied version while any node in the play runs
+# deploy or upgrade to a denied version while any node in the inventory group runs
 # without QoS cgroups; nodes with QoS cgroups are not affected.
 #
 # Kubernetes 1.35.9 and 1.36.4 backported kubernetes/kubernetes#140387, which
@@ -24,5 +30,18 @@ kubernetes_upgrade_check_cgroups_per_qos_denylist:
   - min: "1.35.9"
     max: "1.36.0"
   - min: "1.36.4"
+    max: "1.37.0"
+  - min: "1.37.0"
+
+# Kubernetes versions whose kubelet can hit the same nil pod-cgroup panic when
+# an API client explicitly updates the pods/resize subresource.  Unlike the
+# automatic trigger covered by the denylist above, this path can be made safe
+# with a ValidatingAdmissionPolicy.  Keep one range per minor so each branch can
+# be closed independently at the first release containing
+# kubernetes/kubernetes#137999.
+kubernetes_upgrade_check_cgroups_per_qos_resize_guard_versions:
+  - min: "1.35.0"
+    max: "1.36.0"
+  - min: "1.36.0"
     max: "1.37.0"
   - min: "1.37.0"

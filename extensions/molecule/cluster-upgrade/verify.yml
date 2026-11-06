@@ -74,6 +74,9 @@
           After: {{ upgrade_canary_after }}.
         success_msg: The upgrade kept all {{ upgrade_canary_before | length }} canary containers running
 
+- name: Verify resize admission guard behavior
+  ansible.builtin.import_playbook: verify-resize-admission-guard.yml
+
 # NOTE: prepare.yml removed bind-address from the stored configuration, so
 #       this checks the upgrade put it back on every control plane node.
 - name: Verify control plane endpoints

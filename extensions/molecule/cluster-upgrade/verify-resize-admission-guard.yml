@@ -1,0 +1,138 @@
+# Copyright (c) 2026 VEXXHOST, Inc.
+# SPDX-License-Identifier: Apache-2.0
+
+---
+- name: Verify the resize admission guard
+  hosts: all
+  become: true
+  tasks:
+    - name: Exercise the resize admission guard
+      when: kubernetes_version is version('1.35.0', '>=')
+      block:
+        - name: Read the kubelet restart count before the resize probe
+          ansible.builtin.command:
+            argv:
+              - systemctl
+              - show
+              - kubelet
+              - --property=NRestarts
+              - --value
+          changed_when: false
+          register: resize_guard_kubelet_restarts_before
+
+        - name: Get the resize admission policy # noqa: run-once[task]
+          run_once: true
+          kubernetes.core.k8s_info:
+            api_version: admissionregistration.k8s.io/v1
+            kind: ValidatingAdmissionPolicy
+            name: vexxhost-kubelet-resize-guard
+          register: resize_guard_policy
+
+        - name: Get the resize admission policy binding # noqa: run-once[task]
+          run_once: true
+          kubernetes.core.k8s_info:
+            api_version: admissionregistration.k8s.io/v1
+            kind: ValidatingAdmissionPolicyBinding
+            name: vexxhost-kubelet-resize-guard
+          register: resize_guard_binding
+
+        - name: Verify the resize admission guard is installed # noqa: run-once[task]
+          run_once: true
+          ansible.builtin.assert:
+            that:
+              - resize_guard_policy.resources | length == 1
+              - resize_guard_binding.resources | length == 1
+
+        - name: Attempt an ordinary update and an in-place resize # noqa: run-once[task]
+          run_once: true
+          block:
+            - name: Create the resize admission probe
+              kubernetes.core.k8s:
+                definition:
+                  - apiVersion: v1
+                    kind: Namespace
+                    metadata:
+                      name: resize-admission-probe
+                  - apiVersion: v1
+                    kind: Pod
+                    metadata:
+                      name: resize-admission-probe
+                      namespace: resize-admission-probe
+                    spec:
+                      containers:
+                        - name: pause
+                          image: registry.k8s.io/pause:3.10
+                          resources:
+                            requests:
+                              cpu: 10m
+                              memory: 16Mi
+
+            - name: Verify a normal pod update remains allowed
+              kubernetes.core.k8s:
+                definition:
+                  apiVersion: v1
+                  kind: Pod
+                  metadata:
+                    name: resize-admission-probe
+                    namespace: resize-admission-probe
+                    annotations:
+                      resize-admission-probe: allowed
+
+            - name: Attempt to resize the probe pod
+              ansible.builtin.command:
+                argv:
+                  - kubectl
+                  - --kubeconfig=/etc/kubernetes/admin.conf
+                  - --namespace=resize-admission-probe
+                  - patch
+                  - pod
+                  - resize-admission-probe
+                  - --subresource=resize
+                  - --type=merge
+                  - >-
+                    --patch={"spec":{"containers":[{"name":"pause","resources":{"requests":{"cpu":"20m","memory":"16Mi"}}}]}}
+              changed_when: false
+              failed_when: false
+              register: resize_guard_patch
+
+            - name: Verify the resize request was rejected
+              ansible.builtin.assert:
+                that:
+                  - resize_guard_patch.rc != 0
+                  - "'vexxhost-kubelet-resize-guard' in resize_guard_patch.stderr"
+
+            - name: Get the probe pod after the rejected resize
+              kubernetes.core.k8s_info:
+                kind: Pod
+                namespace: resize-admission-probe
+                name: resize-admission-probe
+              register: resize_guard_probe
+
+            - name: Verify the rejected resize did not change the pod
+              ansible.builtin.assert:
+                that:
+                  - resize_guard_probe.resources[0].spec.containers[0].resources.requests.cpu == '10m'
+          always:
+            - name: Remove the resize admission probe
+              kubernetes.core.k8s:
+                state: absent
+                api_version: v1
+                kind: Namespace
+                name: resize-admission-probe
+                wait: true
+
+        - name: Read the kubelet restart count after the resize probe
+          ansible.builtin.command:
+            argv:
+              - systemctl
+              - show
+              - kubelet
+              - --property=NRestarts
+              - --value
+          changed_when: false
+          register: resize_guard_kubelet_restarts_after
+
+        - name: Verify the resize probe did not restart a kubelet
+          ansible.builtin.assert:
+            that:
+              - resize_guard_kubelet_restarts_after.stdout == resize_guard_kubelet_restarts_before.stdout

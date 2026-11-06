@@ -1,0 +1,79 @@
+# Copyright (c) 2026 VEXXHOST, Inc.
+# SPDX-License-Identifier: Apache-2.0
+
+---
+- name: Check which kubelet files exist
+  delegate_to: "{{ kubernetes_upgrade_check_cgroups_per_qos_host }}"
+  ansible.builtin.stat:
+    path: "{{ item }}"
+  loop:
+    - /var/lib/kubelet/kubeadm-flags.env
+    - /etc/default/kubelet
+    - /var/lib/kubelet/config.yaml
+  register: kubernetes_upgrade_check_kubelet_file_stats
+
+- name: Read the existing kubelet flags and configuration
+  delegate_to: "{{ kubernetes_upgrade_check_cgroups_per_qos_host }}"
+  ansible.builtin.slurp:
+    path: "{{ item }}"
+  loop: >-
+    {{
+      kubernetes_upgrade_check_kubelet_file_stats.results
+      | selectattr('stat.exists')
+      | map(attribute='item')
+      | list
+    }}
+  register: kubernetes_upgrade_check_kubelet_files
+
+# NOTE: Existing flags take precedence because kubeadm does not rewrite
+#       kubeadm-flags.env during an upgrade.  Inventory values are the fallback
+#       for a node that has not joined yet.
+- name: Record whether the node runs pods in QoS cgroups
+  vars:
+    kubernetes_upgrade_check_kubelet_file_contents: >-
+      {{
+        kubernetes_upgrade_check_kubelet_files.results
+        | items2dict(key_name='item', value_name='content')
+      }}
+    kubernetes_upgrade_check_host_extra_args: >-
+      {{
+        hostvars[kubernetes_upgrade_check_cgroups_per_qos_host].kubernetes_kubeadm_extra_args
+        | default(kubernetes_kubeadm_extra_args | default({}))
+      }}
+    kubernetes_upgrade_check_host_patches: >-
+      {{
+        hostvars[kubernetes_upgrade_check_cgroups_per_qos_host].kubernetes_kubeadm_patches
+        | default(kubernetes_kubeadm_patches | default({}))
+      }}
+    kubernetes_upgrade_check_kubelet_extra_args: >-
+      {{ kubernetes_upgrade_check_host_extra_args.kubelet | default({}, true) }}
+    kubernetes_upgrade_check_kubelet_flags: >-
+      {{
+        [
+          kubernetes_upgrade_check_kubelet_file_contents['/var/lib/kubelet/kubeadm-flags.env'] | b64decode
+          if '/var/lib/kubelet/kubeadm-flags.env' in kubernetes_upgrade_check_kubelet_file_contents
+          else (
+            '--cgroups-per-qos=' ~ (kubernetes_upgrade_check_kubelet_extra_args['cgroups-per-qos'] | string | lower)
+            if kubernetes_upgrade_check_kubelet_extra_args['cgroups-per-qos'] | default(none) is not none
+            else ''
+          ),
+          kubernetes_upgrade_check_kubelet_file_contents['/etc/default/kubelet'] | default('') | b64decode,
+        ]
+      }}
+    kubernetes_upgrade_check_kubelet_config: >-
+      {{
+        (
+          kubernetes_upgrade_check_kubelet_file_contents['/var/lib/kubelet/config.yaml'] | b64decode | from_yaml
+          if '/var/lib/kubelet/config.yaml' in kubernetes_upgrade_check_kubelet_file_contents
+          else {}
+        )
+        | combine(kubernetes_upgrade_check_host_patches.kubeletconfiguration | default({}, true))
+      }}
+  delegate_to: "{{ kubernetes_upgrade_check_cgroups_per_qos_host }}"
+  delegate_facts: true
+  ansible.builtin.set_fact:
+    kubernetes_upgrade_check_cgroups_per_qos: >-
+      {{
+        kubernetes_upgrade_check_kubelet_flags
+        | vexxhost.kubernetes.kubelet_cgroups_per_qos(kubernetes_upgrade_check_kubelet_config)
+      }}

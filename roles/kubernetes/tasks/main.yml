@@ -19,6 +19,14 @@
   when: inventory_hostname not in groups[kubernetes_control_plane_group]
   ansible.builtin.include_tasks: nodes.yml
 
+# NOTE: The control plane is now at kubernetes_version, but no existing kubelet
+#       has been switched yet.  Install the API guard at this point so there is
+#       no window in which an explicit resize can reach a vulnerable kubelet.
+- name: Guard in-place pod resize on kubelets without pod QoS cgroups
+  when: kubernetes_version is version('1.35.0', '>=')
+  run_once: true
+  ansible.builtin.include_tasks: resize-admission-guard.yml
+
 - name: Record the node name for kubelet upgrades
   ansible.builtin.set_fact:
     kubernetes_kubelet_node_name: "{{ kubelet_hostname }}"

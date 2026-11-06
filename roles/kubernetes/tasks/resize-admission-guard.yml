@@ -1,0 +1,76 @@
+# Copyright (c) 2026 VEXXHOST, Inc.
+# SPDX-License-Identifier: Apache-2.0
+
+---
+# NOTE: Create the policy before its binding and remove the binding before the
+#       policy.  failurePolicy=Fail keeps resize denied if policy evaluation
+#       itself fails; unrelated pod updates do not match pods/resize.
+- name: Create the kubelet resize admission policy
+  when: kubernetes_upgrade_check_resize_admission_guard_required | bool
+  delegate_to: "{{ kubernetes_bootstrap_node | default(groups[kubernetes_control_plane_group][0]) }}"
+  kubernetes.core.k8s:
+    kubeconfig: /etc/kubernetes/admin.conf
+    definition:
+      apiVersion: admissionregistration.k8s.io/v1
+      kind: ValidatingAdmissionPolicy
+      metadata:
+        name: "{{ kubernetes_resize_admission_guard_name }}"
+        annotations:
+          kubernetes.io/description: >-
+            Blocks pods/resize while a kubelet without pod QoS cgroups is
+            vulnerable to kubernetes/kubernetes#137993.
+      spec:
+        failurePolicy: Fail
+        matchConstraints:
+          matchPolicy: Exact
+          resourceRules:
+            - apiGroups:
+                - ""
+              apiVersions:
+                - v1
+              operations:
+                - UPDATE
+              resources:
+                - pods/resize
+              scope: "*"
+        validations:
+          - expression: "false"
+            message: >-
+              In-place pod resize is disabled because a kubelet without pod
+              QoS cgroups is vulnerable to kubernetes/kubernetes#137993.
+            reason: Forbidden
+
+- name: Bind the kubelet resize admission policy
+  when: kubernetes_upgrade_check_resize_admission_guard_required | bool
+  delegate_to: "{{ kubernetes_bootstrap_node | default(groups[kubernetes_control_plane_group][0]) }}"
+  kubernetes.core.k8s:
+    kubeconfig: /etc/kubernetes/admin.conf
+    definition:
+      apiVersion: admissionregistration.k8s.io/v1
+      kind: ValidatingAdmissionPolicyBinding
+      metadata:
+        name: "{{ kubernetes_resize_admission_guard_name }}"
+      spec:
+        policyName: "{{ kubernetes_resize_admission_guard_name }}"
+        validationActions:
+          - Deny
+
+- name: Remove the kubelet resize admission policy binding
+  when: not (kubernetes_upgrade_check_resize_admission_guard_required | bool)
+  delegate_to: "{{ kubernetes_bootstrap_node | default(groups[kubernetes_control_plane_group][0]) }}"
+  kubernetes.core.k8s:
+    kubeconfig: /etc/kubernetes/admin.conf
+    state: absent
+    api_version: admissionregistration.k8s.io/v1
+    kind: ValidatingAdmissionPolicyBinding
+    name: "{{ kubernetes_resize_admission_guard_name }}"
+
+- name: Remove the kubelet resize admission policy
+  when: not (kubernetes_upgrade_check_resize_admission_guard_required | bool)
+  delegate_to: "{{ kubernetes_bootstrap_node | default(groups[kubernetes_control_plane_group][0]) }}"
+  kubernetes.core.k8s:
+    kubeconfig: /etc/kubernetes/admin.conf
+    state: absent
+    api_version: admissionregistration.k8s.io/v1
+    kind: ValidatingAdmissionPolicy
+    name: "{{ kubernetes_resize_admission_guard_name }}"
