@@ -12,8 +12,8 @@ kubernetes_upgrade_check_group: "{{ kubernetes_group | default('all') }}"
 # cgroups (--cgroups-per-qos=false, which nodes deployed by older releases of
 # this collection keep).  Each entry denies versions from "min" (inclusive) up
 # to "max" (exclusive, or every later version if unset).  The role refuses to
-# deploy or upgrade to a denied version while any node in the inventory group runs
-# without QoS cgroups; nodes with QoS cgroups are not affected.
+# deploy or upgrade to a denied version while any node in the inventory group
+# runs without QoS cgroups; nodes with QoS cgroups are not affected.
 #
 # Kubernetes 1.35.9 and 1.36.4 backported kubernetes/kubernetes#140387, which
 # makes the kubelet resize the pod when a container that is starting has no
@@ -39,6 +39,8 @@ kubernetes_upgrade_check_cgroups_per_qos_denylist:
 # with a ValidatingAdmissionPolicy.  Keep one range per minor so each branch can
 # be closed independently at the first release containing
 # kubernetes/kubernetes#137999.
+kubernetes_upgrade_check_cgroups_per_qos_resize_guard_min_version: "1.35.0"
+
 kubernetes_upgrade_check_cgroups_per_qos_resize_guard_versions:
   - min: "1.35.0"
     max: "1.36.0"

@@ -37,3 +37,14 @@ kubernetes_upgrade_check_cgroups_per_qos_resize_guarded_by: >-
       | list
     )
   }}
+
+# Inspect actual kubelet versions even when the target release is fixed.  A
+# control-plane-only or interrupted upgrade can leave an older affected kubelet
+# running after kubernetes_version has moved beyond its guarded range.
+kubernetes_upgrade_check_cgroups_per_qos_inspection_required: >-
+  {{
+    kubernetes_upgrade_check_cgroups_per_qos_denied_by | length > 0
+    or kubernetes_version is ansible.builtin.version(
+      kubernetes_upgrade_check_cgroups_per_qos_resize_guard_min_version, '>='
+    )
+  }}

@@ -53,9 +53,11 @@ updates the `pods/resize` subresource.  For versions selected by
 only that subresource when at least one node lacks QoS cgroups.  Ordinary pod
 updates continue to work.  The policy is installed after the control plane is
 upgraded and before any existing kubelet is switched to 1.35+, and is removed
-when every node uses QoS cgroups or the target version is outside the affected
-range.  Like the hard denylist, the guard has one range per Kubernetes minor so
-fixed branches can be opened independently.
+when every node uses QoS cgroups, or when both the target version and every
+installed kubelet on a legacy node are outside the affected range.  An unknown
+installed kubelet version conservatively keeps the guard.  Like the hard
+denylist, the guard has one range per Kubernetes minor so fixed branches can be
+opened independently.
 
 The admission policy cannot protect against kubelet-initiated resize.  That is
 why the automatic-trigger releases remain hard-denied by
@@ -64,7 +66,8 @@ fixed.
 
 Whether a node runs pods in QoS cgroups is read from
 `/var/lib/kubelet/kubeadm-flags.env`, `/etc/default/kubelet` and
-`/var/lib/kubelet/config.yaml`, together with `kubernetes_kubeadm_extra_args`
+`/var/lib/kubelet/config.yaml`, and the installed kubelet version, together
+with `kubernetes_kubeadm_extra_args`
 (for nodes that have not joined yet) and the `kubeletconfiguration` patch in
 `kubernetes_kubeadm_patches`.  Nodes can be moved to QoS cgroups with a drain
 and rejoin, which restarts their pods. Follow the supported

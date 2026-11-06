@@ -50,6 +50,24 @@ def resize_guarded_by(version, ranges=None):
     )
 
 
+def resize_guard_required(target_guarded_by, disabled_hosts, installed_guard_hosts):
+    tasks = yaml.safe_load((ROLE / "tasks/main.yml").read_text())
+    task = next(
+        task
+        for task in tasks
+        if task["name"] == "Record the cluster pod QoS cgroup state"
+    )
+    expression = task["ansible.builtin.set_fact"][
+        "kubernetes_upgrade_check_resize_admission_guard_required"
+    ]
+    env = NativeEnvironment(undefined=StrictUndefined)
+    return env.from_string(expression).render(
+        kubernetes_upgrade_check_cgroups_per_qos_resize_guarded_by=target_guarded_by,
+        kubernetes_upgrade_check_detected_disabled_hosts=disabled_hosts,
+        kubernetes_upgrade_check_detected_resize_guard_hosts=installed_guard_hosts,
+    )
+
+
 @pytest.mark.parametrize(
     "version",
     ["1.28.13", "1.34.12", "1.35.0", "1.35.6", "1.35.8", "1.36.0", "1.36.2", "1.36.3"],
@@ -123,3 +141,19 @@ def test_resize_guard_branches_are_lifted_separately(version, guarded):
         {"min": "1.37.0", "max": "1.37.4"},
     ]
     assert bool(resize_guarded_by(version, ranges)) is guarded
+
+
+def test_affected_target_requires_guard_before_kubelet_upgrade():
+    assert resize_guard_required([{"min": "1.35.0"}], ["worker"], []) is True
+
+
+def test_affected_installed_kubelet_keeps_guard_after_target_is_fixed():
+    assert resize_guard_required([], ["worker"], ["worker"]) is True
+
+
+def test_fixed_target_removes_guard_after_installed_kubelets_are_fixed():
+    assert resize_guard_required([], ["worker"], []) is False
+
+
+def test_qos_cgroups_do_not_require_guard():
+    assert resize_guard_required([{"min": "1.35.0"}], [], []) is False

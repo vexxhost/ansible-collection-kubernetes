@@ -18,9 +18,7 @@
 #       --limit; an unreachable node fails the play rather than allowing a
 #       cluster-wide guard to be removed from incomplete evidence.
 - name: Inspect pod QoS cgroup configuration on every Kubernetes node
-  when: >-
-    kubernetes_upgrade_check_cgroups_per_qos_denied_by | length > 0
-    or kubernetes_upgrade_check_cgroups_per_qos_resize_guarded_by | length > 0
+  when: kubernetes_upgrade_check_cgroups_per_qos_inspection_required | bool
   run_once: true
   ansible.builtin.include_tasks: cgroups-per-qos-node.yml
   loop: "{{ groups[kubernetes_upgrade_check_group] }}"
@@ -46,31 +44,45 @@
         | map(attribute='inventory_hostname')
         | list
       }}
+    kubernetes_upgrade_check_detected_resize_guard_hosts: >-
+      {{
+        groups[kubernetes_upgrade_check_group]
+        | map('extract', hostvars)
+        | selectattr('kubernetes_upgrade_check_kubelet_resize_guard_required', 'defined')
+        | selectattr('kubernetes_upgrade_check_kubelet_resize_guard_required')
+        | map(attribute='inventory_hostname')
+        | list
+      }}
   ansible.builtin.set_fact:
     kubernetes_upgrade_check_cgroups_per_qos_inspected_hosts: >-
       {{
         kubernetes_upgrade_check_detected_inspected_hosts
-        if kubernetes_upgrade_check_cgroups_per_qos_denied_by | length > 0
-        or kubernetes_upgrade_check_cgroups_per_qos_resize_guarded_by | length > 0
+        if kubernetes_upgrade_check_cgroups_per_qos_inspection_required | bool
         else []
       }}
     kubernetes_upgrade_check_cgroups_per_qos_disabled_hosts: >-
       {{
         kubernetes_upgrade_check_detected_disabled_hosts
-        if kubernetes_upgrade_check_cgroups_per_qos_denied_by | length > 0
-        or kubernetes_upgrade_check_cgroups_per_qos_resize_guarded_by | length > 0
+        if kubernetes_upgrade_check_cgroups_per_qos_inspection_required | bool
+        else []
+      }}
+    kubernetes_upgrade_check_cgroups_per_qos_resize_guard_hosts: >-
+      {{
+        kubernetes_upgrade_check_detected_resize_guard_hosts
+        if kubernetes_upgrade_check_cgroups_per_qos_inspection_required | bool
         else []
       }}
     kubernetes_upgrade_check_resize_admission_guard_required: >-
       {{
-        kubernetes_upgrade_check_cgroups_per_qos_resize_guarded_by | length > 0
-        and kubernetes_upgrade_check_detected_disabled_hosts | length > 0
+        (
+          kubernetes_upgrade_check_cgroups_per_qos_resize_guarded_by | length > 0
+          and kubernetes_upgrade_check_detected_disabled_hosts | length > 0
+        )
+        or kubernetes_upgrade_check_detected_resize_guard_hosts | length > 0
       }}
 
 - name: Verify every Kubernetes node was inspected
-  when: >-
-    kubernetes_upgrade_check_cgroups_per_qos_denied_by | length > 0
-    or kubernetes_upgrade_check_cgroups_per_qos_resize_guarded_by | length > 0
+  when: kubernetes_upgrade_check_cgroups_per_qos_inspection_required | bool
   ansible.builtin.assert:
     that:
       - >-
