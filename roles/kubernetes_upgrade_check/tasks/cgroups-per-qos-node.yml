@@ -5,7 +5,7 @@
 - name: Check which kubelet files exist
   delegate_to: "{{ kubernetes_upgrade_check_cgroups_per_qos_host }}"
   ignore_unreachable: true
-  failed_when: false
+  ignore_errors: true
   ansible.builtin.stat:
     path: "{{ item }}"
   loop:
@@ -21,9 +21,14 @@
     | selectattr('unreachable')
     | list
     | length == 0
+    and kubernetes_upgrade_check_kubelet_file_stats.results | default([])
+    | selectattr('failed', 'defined')
+    | selectattr('failed')
+    | list
+    | length == 0
   delegate_to: "{{ kubernetes_upgrade_check_cgroups_per_qos_host }}"
   ignore_unreachable: true
-  failed_when: false
+  ignore_errors: true
   ansible.builtin.slurp:
     path: "{{ item }}"
   loop: >-
@@ -103,12 +108,19 @@
         )
         | combine(kubernetes_upgrade_check_host_patches.kubeletconfiguration | default({}, true))
       }}
-    kubernetes_upgrade_check_fallback_reachable: >-
+    kubernetes_upgrade_check_fallback_file_reads_succeeded: >-
       {{
         (
           kubernetes_upgrade_check_kubelet_file_stats.results | default([])
           | selectattr('unreachable', 'defined')
           | selectattr('unreachable')
+          | list
+          | length == 0
+        )
+        and (
+          kubernetes_upgrade_check_kubelet_file_stats.results | default([])
+          | selectattr('failed', 'defined')
+          | selectattr('failed')
           | list
           | length == 0
         )
@@ -119,13 +131,19 @@
           | list
           | length == 0
         )
-        and not (kubernetes_upgrade_check_kubelet_version_command.unreachable | default(false))
+        and (
+          kubernetes_upgrade_check_kubelet_files.results | default([])
+          | selectattr('failed', 'defined')
+          | selectattr('failed')
+          | list
+          | length == 0
+        )
       }}
     kubernetes_upgrade_check_fallback_cgroups_per_qos: >-
       {{
         kubernetes_upgrade_check_kubelet_flags
         | vexxhost.kubernetes.kubelet_cgroups_per_qos(kubernetes_upgrade_check_kubelet_config)
-        if kubernetes_upgrade_check_fallback_reachable
+        if kubernetes_upgrade_check_fallback_file_reads_succeeded
         else none
       }}
     kubernetes_upgrade_check_fallback_kubelet_version: >-
@@ -157,8 +175,8 @@
     kubernetes_upgrade_check_inspection_error: >-
       {{
         ''
-        if kubernetes_upgrade_check_fallback_reachable
-        else 'Inventory host is unreachable'
+        if kubernetes_upgrade_check_fallback_file_reads_succeeded
+        else 'Could not read kubelet flags or configuration from the inventory host'
       }}
 
 # NOTE: An unknown version is treated as affected.  This may retain the policy

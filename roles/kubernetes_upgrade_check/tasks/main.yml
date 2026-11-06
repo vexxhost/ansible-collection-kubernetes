@@ -47,7 +47,11 @@
 - name: Inspect kubelets through the Kubernetes API
   when: kubernetes_upgrade_check_cgroups_per_qos_inspection_required | bool
   run_once: true
-  delegate_to: "{{ groups[kubernetes_control_plane_group | default('controllers')][0] }}"
+  delegate_to: >-
+    {{
+      kubernetes_bootstrap_node
+      | default(groups[kubernetes_control_plane_group | default('controllers')][0])
+    }}
   vexxhost.kubernetes.kubelet_configz:
     kubeconfig: /etc/kubernetes/admin.conf
     node_names: "{{ kubernetes_upgrade_check_inventory_nodes.values() | list }}"

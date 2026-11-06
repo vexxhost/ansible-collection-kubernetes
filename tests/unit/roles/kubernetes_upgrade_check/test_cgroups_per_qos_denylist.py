@@ -80,6 +80,45 @@ def test_check_mode_reads_the_installed_kubelet_version():
     assert task["check_mode"] is False
 
 
+def test_failed_fallback_file_reads_remain_unknown():
+    tasks = yaml.safe_load((ROLE / "tasks/cgroups-per-qos-node.yml").read_text())
+    tasks_by_name = {task["name"]: task for task in tasks}
+
+    for name in (
+        "Check which kubelet files exist",
+        "Read the existing kubelet flags and configuration",
+    ):
+        task = tasks_by_name[name]
+        assert task["ignore_errors"] is True
+        assert "failed_when" not in task
+
+    state_task = tasks_by_name["Record whether the node runs pods in QoS cgroups"]
+    evidence_expression = state_task["vars"][
+        "kubernetes_upgrade_check_fallback_file_reads_succeeded"
+    ]
+    env = NativeEnvironment(undefined=StrictUndefined)
+    template = env.from_string(evidence_expression)
+
+    assert (
+        template.render(
+            kubernetes_upgrade_check_kubelet_file_stats={
+                "results": [{"failed": True, "msg": "permission denied"}]
+            },
+            kubernetes_upgrade_check_kubelet_files={"results": []},
+        )
+        is False
+    )
+    assert (
+        template.render(
+            kubernetes_upgrade_check_kubelet_file_stats={
+                "results": [{"failed": False, "stat": {"exists": False}}]
+            },
+            kubernetes_upgrade_check_kubelet_files={"results": []},
+        )
+        is True
+    )
+
+
 @pytest.mark.parametrize(
     "version",
     ["1.28.13", "1.34.12", "1.35.0", "1.35.6", "1.35.8", "1.36.0", "1.36.2", "1.36.3"],

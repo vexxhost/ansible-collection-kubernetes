@@ -51,14 +51,16 @@ updates the `pods/resize` subresource.  For versions selected by
 `kubernetes_upgrade_check_cgroups_per_qos_resize_guard_versions`, the
 `kubernetes` role creates a `ValidatingAdmissionPolicy` and binding that deny
 only that subresource when at least one node lacks QoS cgroups.  Ordinary pod
-updates continue to work.  The policy is installed after the control plane is
-upgraded and before any existing kubelet is switched to 1.35+, and is removed
-when every node uses QoS cgroups, or when both the target version and every
-installed kubelet on a legacy node are outside the affected range.  An unknown
-installed kubelet version or QoS-cgroup state conservatively keeps the guard.
-A VPA using `InPlaceOrRecreate` can fall back to eviction and recreation while
-the guard rejects in-place resize. Like the hard denylist, the guard has one
-range per Kubernetes minor so fixed branches can be opened independently.
+updates continue to work.  On a new cluster, the policy is installed as soon
+as the first API server is available and before additional control-plane or
+worker nodes join. On an existing cluster, it is installed before new nodes
+join or any kubelet is switched to 1.35+. It is removed when every node uses
+QoS cgroups, or when both the target version and every installed kubelet on a
+legacy node are outside the affected range. An unknown installed kubelet
+version or QoS-cgroup state conservatively keeps the guard. A VPA using
+`InPlaceOrRecreate` can fall back to eviction and recreation while the guard
+rejects in-place resize. Like the hard denylist, the guard has one range per
+Kubernetes minor so fixed branches can be opened independently.
 
 When upgrading from an affected release to the first fixed release, the
 preflight sees the old kubelets and deliberately retains the guard during the
@@ -74,12 +76,15 @@ For joined nodes, the role reads the running version from
 `status.nodeInfo.kubeletVersion` and the effective QoS-cgroup setting from the
 kubelet `configz` endpoint through the Kubernetes API. This includes
 command-line flag overrides without opening an Ansible connection to each
-node. For a play host that has no Node object yet, the role falls back to its
-local `/var/lib/kubelet/kubeadm-flags.env`, `/etc/default/kubelet` and
+node. The API query uses `kubernetes_bootstrap_node` when it is explicitly set,
+otherwise it uses the first host in `kubernetes_control_plane_group`. For a
+play host that has no Node object yet, the role falls back to its local
+`/var/lib/kubelet/kubeadm-flags.env`, `/etc/default/kubelet` and
 `/var/lib/kubelet/config.yaml`, plus that host's
 `kubernetes_kubeadm_extra_args` and `kubernetes_kubeadm_patches` inventory
-values. Nodes can be moved to QoS cgroups with a drain and rejoin, which
-restarts their pods. Follow the supported
+values. A failed local read is unknown; only a successful `stat` proving that a
+file is absent permits inventory/default evidence. Nodes can be moved to QoS
+cgroups with a drain and rejoin, which restarts their pods. Follow the supported
 [legacy-node migration procedure](../../docs/ops/qos-cgroups.md) to preserve
 workload and control-plane quorum and to let the collection remove the resize
 admission guard safely.

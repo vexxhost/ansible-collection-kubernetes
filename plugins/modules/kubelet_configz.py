@@ -32,7 +32,7 @@ options:
     default: /etc/kubernetes/admin.conf
   request_timeout:
     description:
-      - Timeout in seconds for each kubelet C(configz) request.
+      - Positive timeout in seconds for each kubelet C(configz) request.
     type: int
     default: 10
 notes:
@@ -106,6 +106,9 @@ def main():
         ),
         supports_check_mode=True,
     )
+
+    if module.params["request_timeout"] < 1:
+        module.fail_json(msg="request_timeout must be a positive integer")
 
     if KUBERNETES_IMP_ERR:
         error = "The Kubernetes Python client is unavailable: %s" % KUBERNETES_IMP_ERR

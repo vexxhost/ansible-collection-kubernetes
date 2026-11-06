@@ -31,6 +31,63 @@
         else {}
       }}
 
+# Seed both resources on the QoS-enabled upgrade path. The target-version run
+# must remove them, proving cleanup rather than only proving a fresh cluster
+# leaves the guard absent.
+- name: Seed a stale resize admission guard for the removal test
+  hosts: controllers[0]
+  become: true
+  vars:
+    resize_guard_name: >-
+      {{
+        kubernetes_resize_admission_guard_name
+        | default('vexxhost-kubelet-resize-guard')
+      }}
+  tasks:
+    - name: Seed the resize admission policy
+      when:
+        - kubernetes_version is version('1.35.0', '>=')
+        - not (cluster_upgrade_legacy_qos_cgroups | default(false) | bool)
+      kubernetes.core.k8s:
+        definition:
+          apiVersion: admissionregistration.k8s.io/v1
+          kind: ValidatingAdmissionPolicy
+          metadata:
+            name: "{{ resize_guard_name }}"
+          spec:
+            failurePolicy: Fail
+            matchConstraints:
+              matchPolicy: Exact
+              resourceRules:
+                - apiGroups:
+                    - ""
+                  apiVersions:
+                    - v1
+                  operations:
+                    - UPDATE
+                  resources:
+                    - pods/resize
+                  scope: "*"
+            validations:
+              - expression: "false"
+                message: Seeded by the QoS-cgroup guard removal test.
+                reason: Forbidden
+
+    - name: Seed the resize admission policy binding
+      when:
+        - kubernetes_version is version('1.35.0', '>=')
+        - not (cluster_upgrade_legacy_qos_cgroups | default(false) | bool)
+      kubernetes.core.k8s:
+        definition:
+          apiVersion: admissionregistration.k8s.io/v1
+          kind: ValidatingAdmissionPolicyBinding
+          metadata:
+            name: "{{ resize_guard_name }}"
+          spec:
+            policyName: "{{ resize_guard_name }}"
+            validationActions:
+              - Deny
+
 # NOTE: Clusters created before the role set bind-address for the scheduler
 #       and controller manager don't have it in the stored configuration, so
 #       kubeadm used to drop it on upgrade. Remove it so the upgrade has to

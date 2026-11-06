@@ -185,12 +185,14 @@ ansible-playbook -i inventory/hosts.ini deployment.yml \
   --limit "$INVENTORY_HOST"
 ```
 
-Wait for the node and uncordon it. A newly created Node object is normally
-already schedulable, so `uncordon` may report that it was not cordoned:
+Cordon the replacement Node immediately after the limited play returns, then
+wait for it to become Ready. A newly created Node object is normally
+schedulable, so do not leave it available to workloads while validating the
+rejoin:
 
 ```bash
+kubectl cordon "$NODE_NAME"
 kubectl wait --for=condition=Ready "node/$NODE_NAME" --timeout=10m
-kubectl uncordon "$NODE_NAME"
 kubectl get node "$NODE_NAME" -o wide
 ```
 
@@ -205,8 +207,8 @@ ansible -i inventory/hosts.ini "$INVENTORY_HOST" --become \
 The output must not contain `--cgroups-per-qos=false` or
 `--enforce-node-allocatable=`. If `/var/lib/kubelet/config.yaml` explicitly
 contains `cgroupsPerQOS`, it must be `true`. Confirm that replacement workload
-pods become Ready and that the kubelet has not entered a restart loop before
-moving to the next node.
+infrastructure, including DaemonSets, becomes Ready and that the kubelet has
+not entered a restart loop before continuing.
 
 Check the effective kubelet configuration through the API after every rejoin:
 
@@ -227,8 +229,8 @@ ansible -i inventory/hosts.ini "$INVENTORY_HOST" --become \
 In that JSON, find
 `config.containerd.runtimes[config.containerd.defaultRuntimeName].options.SystemdCgroup`.
 It must be `true` when the kubelet reports `cgroupDriver: systemd`, and `false`
-when the kubelet reports `cgroupDriver: cgroupfs`. Stop before uncordoning the
-node if they disagree. Do not rely on a newer container runtime overriding a
+when the kubelet reports `cgroupDriver: cgroupfs`. Keep the node cordoned and
+stop if they disagree. Do not rely on a newer container runtime overriding a
 stale kubelet ConfigMap; the migration must also be safe on containerd 1.7.
 
 For each control-plane node, additionally check the API and local etcd pod after
@@ -238,6 +240,19 @@ the rejoin:
 kubectl get --raw=/readyz
 kubectl -n kube-system get pods -l component=etcd -o wide
 ```
+
+Only after all applicable flag, `configz`, runtime-driver, workload
+infrastructure and control-plane checks pass, make the node schedulable and
+confirm its workloads become Ready:
+
+```bash
+kubectl uncordon "$NODE_NAME"
+kubectl get node "$NODE_NAME" -o wide
+kubectl get pods --all-namespaces -o wide --field-selector spec.nodeName="$NODE_NAME"
+```
+
+Keep the node cordoned and investigate if any validation fails. Do not proceed
+to the next node until the current node and the rest of the cluster are healthy.
 
 ## Finish the migration
 

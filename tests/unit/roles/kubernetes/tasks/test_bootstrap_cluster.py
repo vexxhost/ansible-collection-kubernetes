@@ -9,6 +9,23 @@ import yaml
 from jinja2 import Environment
 
 
+def task_names(filename):
+    task_path = os.path.join(
+        os.path.dirname(__file__),
+        "..",
+        "..",
+        "..",
+        "..",
+        "..",
+        "roles",
+        "kubernetes",
+        "tasks",
+        filename,
+    )
+    with open(task_path) as task_file:
+        return [task["name"] for task in yaml.safe_load(task_file)]
+
+
 class TestKubeadmInitCommand:
     """Test the kubeadm init command rendering."""
 
@@ -86,3 +103,17 @@ class TestKubeadmInitCommand:
         )
 
         assert rendered == expected
+
+
+def test_resize_guard_precedes_additional_control_plane_joins():
+    names = task_names("bootstrap-cluster.yml")
+    assert names.index(
+        "Guard in-place pod resize before additional control planes join"
+    ) < names.index("Join cluster")
+
+
+def test_resize_guard_precedes_worker_setup():
+    names = task_names("main.yml")
+    assert names.index(
+        "Guard in-place pod resize on kubelets without pod QoS cgroups"
+    ) < names.index("Setup nodes")
