@@ -53,7 +53,7 @@
     node_names: "{{ kubernetes_upgrade_check_inventory_nodes.values() | list }}"
   register: kubernetes_upgrade_check_api_inspection
 
-- name: Record API kubelet inspection results
+- name: Record API kubelet inspection results # noqa: jinja[invalid]
   when: kubernetes_upgrade_check_cgroups_per_qos_inspection_required | bool
   run_once: true
   vars:
@@ -71,7 +71,10 @@
       }}
     kubernetes_upgrade_check_api_kubelet_version: >-
       {{ kubernetes_upgrade_check_api_node.kubelet_version | default('') }}
-  delegate_to: "{{ item.key }}"
+  # Some Ansible versions template delegate_to before evaluating the task's
+  # when expression. Keep the skipped bootstrap path valid before an item
+  # exists.
+  delegate_to: "{{ item.key | default(inventory_hostname) }}"
   delegate_facts: true
   ansible.builtin.set_fact:
     kubernetes_upgrade_check_node_exists: >-

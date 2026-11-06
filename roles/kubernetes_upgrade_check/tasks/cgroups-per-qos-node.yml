@@ -61,7 +61,7 @@
 # NOTE: Existing flags take precedence because kubeadm does not rewrite
 #       kubeadm-flags.env during an upgrade.  Inventory values are the fallback
 #       for a node that has not joined yet.
-- name: Record whether the node runs pods in QoS cgroups
+- name: Record whether the node runs pods in QoS cgroups # noqa: jinja[invalid]
   vars:
     kubernetes_upgrade_check_kubelet_file_contents: >-
       {{
@@ -164,7 +164,7 @@
 # NOTE: An unknown version is treated as affected.  This may retain the policy
 #       unnecessarily, but it can never remove cluster-wide protection from
 #       incomplete evidence.
-- name: Record whether the installed kubelet requires the resize guard
+- name: Record whether the installed kubelet requires the resize guard # noqa: jinja[invalid]
   vars:
     kubernetes_upgrade_check_host_kubelet_version: >-
       {{
