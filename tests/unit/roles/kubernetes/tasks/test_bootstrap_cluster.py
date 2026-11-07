@@ -4,6 +4,7 @@
 import os
 import textwrap
 
+import jmespath
 import pytest
 import yaml
 from jinja2 import Environment
@@ -135,6 +136,7 @@ def test_resize_guard_waits_for_every_api_server_to_enforce_it():
         if task["name"] == "Wait for the kubelet resize admission guard to be enforced"
     )
     barrier_tasks = {task["name"]: task for task in barrier["block"]}
+    generate = barrier_tasks["Generate the resize admission enforcement probe name"]
     create = barrier_tasks["Create the resize admission enforcement probe"]
     visibility = barrier_tasks[
         "Wait for every API server to observe the enforcement probe"
@@ -147,9 +149,13 @@ def test_resize_guard_waits_for_every_api_server_to_enforce_it():
     assert names.index("Bind the kubelet resize admission policy") < names.index(
         "Wait for the kubelet resize admission guard to be enforced"
     )
-    assert "name" not in metadata
-    assert metadata["generateName"] == "vexxhost-resize-admission-probe-"
-    assert create["register"] == "kubernetes_resize_admission_guard_probe_create"
+    generated_name = generate["ansible.builtin.set_fact"][
+        "kubernetes_resize_admission_guard_probe_name"
+    ]
+    assert "ansible.builtin.password" in generated_name
+    assert "'/dev/null'" in generated_name
+    assert metadata["name"] == "{{ kubernetes_resize_admission_guard_probe_name }}"
+    assert "register" not in create
     assert visibility["loop"] == (
         "{{ kubernetes_resize_admission_guard_api_endpoints }}"
     )
@@ -157,10 +163,7 @@ def test_resize_guard_waits_for_every_api_server_to_enforce_it():
     assert "--server=https://{{ item }}" in argv
     assert "--subresource=resize" in argv
     assert "--dry-run=server" in argv
-    assert (
-        "{{ kubernetes_resize_admission_guard_probe_create.result.metadata.name }}"
-        in argv
-    )
+    assert "{{ kubernetes_resize_admission_guard_probe_name }}" in argv
     assert probe["loop"] == "{{ kubernetes_resize_admission_guard_api_endpoints }}"
     assert probe["failed_when"] is not False
     assert any(
@@ -173,9 +176,77 @@ def test_resize_guard_waits_for_every_api_server_to_enforce_it():
     )
     assert cleanup["name"] == "Remove the resize admission enforcement probe"
     assert cleanup["kubernetes.core.k8s"]["name"] == (
-        "{{ kubernetes_resize_admission_guard_probe_create.result.metadata.name }}"
+        "{{ kubernetes_resize_admission_guard_probe_name }}"
     )
-    assert cleanup["when"]
+    assert cleanup["when"] == (
+        "kubernetes_resize_admission_guard_probe_name is defined"
+    )
+
+
+@pytest.mark.parametrize(
+    "resources,expected",
+    [
+        ([], False),
+        ([{"ports": [], "endpoints": []}], False),
+        (
+            [
+                {
+                    "ports": [{"name": "https", "port": 6443}],
+                    "endpoints": [
+                        {"addresses": ["192.0.2.1"], "conditions": {"ready": False}}
+                    ],
+                }
+            ],
+            False,
+        ),
+        (
+            [
+                {
+                    "ports": [{"name": "http", "port": 6443}],
+                    "endpoints": [
+                        {"addresses": ["192.0.2.1"], "conditions": {"ready": True}}
+                    ],
+                }
+            ],
+            False,
+        ),
+        (
+            [
+                {
+                    "ports": [{"name": "https", "port": 6443}],
+                    "endpoints": [
+                        {"addresses": ["192.0.2.1"], "conditions": {"ready": True}}
+                    ],
+                }
+            ],
+            True,
+        ),
+    ],
+)
+def test_resize_guard_endpoint_retry_requires_a_ready_https_endpoint(
+    resources, expected
+):
+    tasks = load_tasks("resize-admission-guard.yml")
+    barrier = next(
+        task
+        for task in tasks
+        if task["name"] == "Wait for the kubelet resize admission guard to be enforced"
+    )
+    endpoint_task = next(
+        task
+        for task in barrier["block"]
+        if task["name"] == "Read the Kubernetes API server endpoints"
+    )
+    expression = endpoint_task["until"][0]
+    env = Environment()
+    env.filters["community.general.json_query"] = lambda value, query: jmespath.search(
+        query, value
+    )
+    rendered = env.from_string("{{ " + expression + " }}").render(
+        kubernetes_resize_admission_guard_api_service={"resources": resources}
+    )
+
+    assert yaml.safe_load(rendered) is expected
 
 
 @pytest.mark.parametrize(
