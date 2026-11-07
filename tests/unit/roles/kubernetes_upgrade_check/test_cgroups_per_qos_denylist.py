@@ -428,32 +428,15 @@ def test_failed_api_enumeration_keeps_guard_on_existing_cluster():
 
 
 @pytest.mark.parametrize(
-    "play_hosts,markers,expected",
+    "assert_fresh_bootstrap,play_hosts,expected",
     [
-        (
-            ["controller", "worker"],
-            [{"stat": {"exists": False}}, {"stat": {"exists": False}}],
-            True,
-        ),
-        (
-            ["controller", "worker"],
-            [{"stat": {"exists": True}}, {"stat": {"exists": False}}],
-            False,
-        ),
-        (
-            ["controller"],
-            [{"stat": {"exists": False}}, {"stat": {"exists": False}}],
-            False,
-        ),
-        (
-            ["controller", "worker"],
-            [{"unreachable": True}, {"stat": {"exists": False}}],
-            False,
-        ),
+        (False, ["controller", "worker"], False),
+        (True, ["controller", "worker"], True),
+        (True, ["controller"], False),
     ],
 )
-def test_fresh_bootstrap_requires_complete_absent_join_markers(
-    play_hosts, markers, expected
+def test_fresh_bootstrap_requires_explicit_full_inventory_assertion(
+    assert_fresh_bootstrap, play_hosts, expected
 ):
     tasks = yaml.safe_load((ROLE / "tasks/main.yml").read_text())
     task = next(
@@ -465,6 +448,7 @@ def test_fresh_bootstrap_requires_complete_absent_join_markers(
         "kubernetes_upgrade_check_fresh_bootstrap"
     ]
     env = NativeEnvironment(undefined=StrictUndefined)
+    env.filters["bool"] = bool
     env.filters["difference"] = lambda value, other: [
         item for item in value if item not in other
     ]
@@ -473,13 +457,27 @@ def test_fresh_bootstrap_requires_complete_absent_join_markers(
         groups={"kubernetes": ["controller", "worker"]},
         kubernetes_upgrade_check_group="kubernetes",
         ansible_play_hosts_all=play_hosts,
-        kubernetes_upgrade_check_join_marker_results=markers,
+        kubernetes_upgrade_check_assert_fresh_bootstrap=assert_fresh_bootstrap,
     )
 
     assert result is expected
 
 
-def test_fresh_bootstrap_does_not_invent_existing_api_nodes():
+def test_fresh_bootstrap_assertion_defaults_to_false():
+    defaults = yaml.safe_load((ROLE / "defaults/main.yml").read_text())
+
+    assert defaults["kubernetes_upgrade_check_assert_fresh_bootstrap"] is False
+
+
+def test_failed_api_enumeration_does_not_probe_full_inventory_markers():
+    tasks = yaml.safe_load((ROLE / "tasks/main.yml").read_text())
+
+    assert "Check cluster join markers when API enumeration is unavailable" not in {
+        task["name"] for task in tasks
+    }
+
+
+def test_explicit_fresh_bootstrap_can_skip_unknown_api_nodes():
     assert (
         resize_guard_required(
             [{"min": "1.35.0"}],

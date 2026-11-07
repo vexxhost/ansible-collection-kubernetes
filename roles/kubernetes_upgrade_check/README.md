@@ -86,11 +86,16 @@ while the role tries later controllers for complete evidence.
 If no controller can enumerate Nodes, play hosts still use local fallback
 evidence, but that cannot prove that no out-of-inventory Nodes exist. The role
 therefore records a cluster-level unknown, retains the admission guard and
-refuses denylisted targets. It treats this as a fresh bootstrap only when the
-complete Kubernetes inventory is in the play, every host is reachable for the
-check, and no `/etc/kubernetes/kubelet.conf` join marker exists. Cluster safety
-state is calculated once and explicitly published to every play host before
-the Kubernetes role continues.
+refuses denylisted targets. File absence is not accepted as proof of cluster
+history because reset and replacement nodes may lack kubelet state while an
+older out-of-inventory Node is still running. For the first bootstrap of a
+cluster only, set `kubernetes_upgrade_check_assert_fresh_bootstrap: true` to
+assert that no pre-existing cluster or out-of-inventory Node can exist. The
+assertion is honored only when the complete Kubernetes inventory is in the
+play; never use it for recovery, reset, replacement, or rejoin operations.
+Cluster safety state is calculated once and explicitly published to every play
+host before the Kubernetes role continues. Failed API enumeration in a limited
+play does not open Ansible connections to inventory hosts outside that play.
 
 Every Node object returned by the API is inspected, including Nodes whose host
 is absent from `kubernetes_upgrade_check_group`. These untracked Nodes are
@@ -109,8 +114,10 @@ cgroups with a drain and rejoin, which restarts their pods. Follow the supported
 workload and control-plane quorum and to let the collection remove the resize
 admission guard safely.
 
-The role inspects every host in `kubernetes_upgrade_check_group` (which defaults
-to `kubernetes_group`, or `all`) even when Ansible runs with `--limit`. A
-missing or unavailable kubelet is recorded as unknown: the admission guard is
-retained and denylisted targets are refused, but the unavailable inventory host
+The role evaluates every host in `kubernetes_upgrade_check_group` (which
+defaults to `kubernetes_group`, or `all`) even when Ansible runs with `--limit`.
+API-backed evidence is used for hosts outside the play; local fallback
+inspection runs only on active play hosts. An omitted, missing, or unavailable
+kubelet is recorded as unknown without opening an Ansible connection to it: the
+admission guard is retained and denylisted targets are refused, but that host
 does not fail recovery or replacement runs.
