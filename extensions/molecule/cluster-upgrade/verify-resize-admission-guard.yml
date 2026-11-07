@@ -11,11 +11,6 @@
         kubernetes_resize_admission_guard_name
         | default('vexxhost-kubelet-resize-guard')
       }}
-    resize_guard_probe_name: >-
-      {{
-        kubernetes_resize_admission_guard_probe_name
-        | default(resize_guard_name ~ '-probe')
-      }}
   tasks:
     - name: Exercise the resize admission guard
       when:
@@ -62,7 +57,8 @@
             api_version: v1
             kind: Pod
             namespace: kube-system
-            name: "{{ resize_guard_probe_name }}"
+            label_selectors:
+              - app.kubernetes.io/name=vexxhost-resize-admission-probe
           register: resize_guard_enforcement_probe
 
         - name: Verify the enforcement probe was removed # noqa: run-once[task]

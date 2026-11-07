@@ -35,9 +35,7 @@
               scope: "*"
         validations:
           - expression: "false"
-            message: >-
-              In-place pod resize is disabled because a kubelet without pod
-              QoS cgroups is vulnerable to kubernetes/kubernetes#137993.
+            message: "{{ kubernetes_resize_admission_guard_validation_message }}"
             reason: Forbidden
 
 - name: Bind the kubelet resize admission policy
@@ -62,7 +60,10 @@
   when:
     - kubernetes_upgrade_check_resize_admission_guard_required | bool
     - not ansible_check_mode
-  delegate_to: "{{ kubernetes_bootstrap_node | default(groups[kubernetes_control_plane_group][0]) }}"
+  vars:
+    kubernetes_resize_admission_guard_delegate: >-
+      {{ kubernetes_bootstrap_node | default(groups[kubernetes_control_plane_group][0]) }}
+  delegate_to: "{{ kubernetes_resize_admission_guard_delegate }}"
   block:
     - name: Create the resize admission enforcement probe
       changed_when: false
@@ -72,11 +73,19 @@
           apiVersion: v1
           kind: Pod
           metadata:
-            name: "{{ kubernetes_resize_admission_guard_probe_name }}"
+            generateName: vexxhost-resize-admission-probe-
             namespace: kube-system
+            labels:
+              app.kubernetes.io/name: vexxhost-resize-admission-probe
+              app.kubernetes.io/managed-by: ansible-collection-kubernetes
           spec:
-            # Keep the probe unschedulable; only its API object is needed.
-            nodeName: "{{ kubernetes_resize_admission_guard_probe_name }}"
+            # Resize validation requires an existing assigned Node. The resize
+            # request is server-side dry-run and this Pod is always removed.
+            nodeName: >-
+              {{
+                hostvars[kubernetes_resize_admission_guard_delegate].kubelet_hostname
+                | default(kubernetes_resize_admission_guard_delegate)
+              }}
             restartPolicy: Never
             terminationGracePeriodSeconds: 0
             containers:
@@ -86,6 +95,7 @@
                   requests:
                     cpu: 10m
                     memory: 16Mi
+      register: kubernetes_resize_admission_guard_probe_create
 
     - name: Read the Kubernetes API server endpoints
       kubernetes.core.k8s_info:
@@ -133,7 +143,29 @@
           The kubernetes Service has no HTTPS endpoints; resize admission
           enforcement cannot be verified safely.
 
+    - name: Wait for every API server to observe the enforcement probe
+      ansible.builtin.command:
+        argv:
+          - kubectl
+          - --kubeconfig=/etc/kubernetes/admin.conf
+          - "--server=https://{{ item }}"
+          - --insecure-skip-tls-verify=true
+          - --namespace=kube-system
+          - get
+          - pod
+          - "{{ kubernetes_resize_admission_guard_probe_create.result.metadata.name }}"
+          - --output=name
+      changed_when: false
+      register: kubernetes_resize_admission_guard_probe_visibility
+      until: kubernetes_resize_admission_guard_probe_visibility.rc == 0
+      retries: "{{ kubernetes_resize_admission_guard_retries }}"
+      delay: "{{ kubernetes_resize_admission_guard_delay }}"
+      loop: "{{ kubernetes_resize_admission_guard_api_endpoints }}"
+
     - name: Verify every API server enforces the resize admission guard
+      vars:
+        kubernetes_resize_admission_guard_policy_denial: >-
+          ValidatingAdmissionPolicy '{{ kubernetes_resize_admission_guard_name }}'
       ansible.builtin.command:
         argv:
           - kubectl
@@ -143,25 +175,38 @@
           - --namespace=kube-system
           - patch
           - pod
-          - "{{ kubernetes_resize_admission_guard_probe_name }}"
+          - "{{ kubernetes_resize_admission_guard_probe_create.result.metadata.name }}"
           - --subresource=resize
           - --type=merge
           - --dry-run=server
           - >-
             --patch={"spec":{"containers":[{"name":"pause","resources":{"requests":{"cpu":"20m","memory":"16Mi"}}}]}}
       changed_when: false
-      failed_when: false
+      failed_when: >-
+        kubernetes_resize_admission_guard_probe.rc == 0
+        or kubernetes_resize_admission_guard_policy_denial
+           not in kubernetes_resize_admission_guard_probe.stderr
+        or kubernetes_resize_admission_guard_validation_message
+           not in kubernetes_resize_admission_guard_probe.stderr
       register: kubernetes_resize_admission_guard_probe
       until:
         - kubernetes_resize_admission_guard_probe.rc != 0
         - >-
-          kubernetes_resize_admission_guard_name
+          kubernetes_resize_admission_guard_policy_denial
+          in kubernetes_resize_admission_guard_probe.stderr
+        - >-
+          kubernetes_resize_admission_guard_validation_message
           in kubernetes_resize_admission_guard_probe.stderr
       retries: "{{ kubernetes_resize_admission_guard_retries }}"
       delay: "{{ kubernetes_resize_admission_guard_delay }}"
       loop: "{{ kubernetes_resize_admission_guard_api_endpoints }}"
   always:
     - name: Remove the resize admission enforcement probe
+      when:
+        - kubernetes_resize_admission_guard_probe_create is defined
+        - kubernetes_resize_admission_guard_probe_create.result is defined
+        - kubernetes_resize_admission_guard_probe_create.result.metadata is defined
+        - kubernetes_resize_admission_guard_probe_create.result.metadata.name is defined
       changed_when: false
       kubernetes.core.k8s:
         kubeconfig: /etc/kubernetes/admin.conf
@@ -169,7 +214,7 @@
         api_version: v1
         kind: Pod
         namespace: kube-system
-        name: "{{ kubernetes_resize_admission_guard_probe_name }}"
+        name: "{{ kubernetes_resize_admission_guard_probe_create.result.metadata.name }}"
         wait: true
 
 - name: Remove the kubelet resize admission policy binding

@@ -135,20 +135,87 @@ def test_resize_guard_waits_for_every_api_server_to_enforce_it():
         if task["name"] == "Wait for the kubelet resize admission guard to be enforced"
     )
     barrier_tasks = {task["name"]: task for task in barrier["block"]}
+    create = barrier_tasks["Create the resize admission enforcement probe"]
+    visibility = barrier_tasks[
+        "Wait for every API server to observe the enforcement probe"
+    ]
     probe = barrier_tasks["Verify every API server enforces the resize admission guard"]
+    cleanup = barrier["always"][0]
     argv = probe["ansible.builtin.command"]["argv"]
+    metadata = create["kubernetes.core.k8s"]["definition"]["metadata"]
 
     assert names.index("Bind the kubelet resize admission policy") < names.index(
         "Wait for the kubelet resize admission guard to be enforced"
     )
+    assert "name" not in metadata
+    assert metadata["generateName"] == "vexxhost-resize-admission-probe-"
+    assert create["register"] == "kubernetes_resize_admission_guard_probe_create"
+    assert visibility["loop"] == (
+        "{{ kubernetes_resize_admission_guard_api_endpoints }}"
+    )
+    assert "failed_when" not in visibility
     assert "--server=https://{{ item }}" in argv
     assert "--subresource=resize" in argv
     assert "--dry-run=server" in argv
+    assert (
+        "{{ kubernetes_resize_admission_guard_probe_create.result.metadata.name }}"
+        in argv
+    )
     assert probe["loop"] == "{{ kubernetes_resize_admission_guard_api_endpoints }}"
+    assert probe["failed_when"] is not False
     assert any(
-        "kubernetes_resize_admission_guard_name" in condition
+        "kubernetes_resize_admission_guard_policy_denial" in condition
         for condition in probe["until"]
     )
-    assert barrier["always"][0]["name"] == (
-        "Remove the resize admission enforcement probe"
+    assert any(
+        "kubernetes_resize_admission_guard_validation_message" in condition
+        for condition in probe["until"]
     )
+    assert cleanup["name"] == "Remove the resize admission enforcement probe"
+    assert cleanup["kubernetes.core.k8s"]["name"] == (
+        "{{ kubernetes_resize_admission_guard_probe_create.result.metadata.name }}"
+    )
+    assert cleanup["when"]
+
+
+@pytest.mark.parametrize(
+    "rc,stderr,expected_failure",
+    [
+        (
+            1,
+            "ValidatingAdmissionPolicy 'guard' denied request: expected message",
+            False,
+        ),
+        (0, "", True),
+        (1, 'pods "guard-probe" not found', True),
+        (1, "ValidatingAdmissionPolicy 'guard' denied request: wrong message", True),
+    ],
+)
+def test_resize_guard_probe_accepts_only_the_managed_policy_denial(
+    rc, stderr, expected_failure
+):
+    tasks = load_tasks("resize-admission-guard.yml")
+    barrier = next(
+        task
+        for task in tasks
+        if task["name"] == "Wait for the kubelet resize admission guard to be enforced"
+    )
+    probe = next(
+        task
+        for task in barrier["block"]
+        if task["name"] == "Verify every API server enforces the resize admission guard"
+    )
+    expression = probe["failed_when"]
+    rendered = (
+        Environment()
+        .from_string("{{ " + expression + " }}")
+        .render(
+            kubernetes_resize_admission_guard_probe={"rc": rc, "stderr": stderr},
+            kubernetes_resize_admission_guard_policy_denial=(
+                "ValidatingAdmissionPolicy 'guard'"
+            ),
+            kubernetes_resize_admission_guard_validation_message="expected message",
+        )
+    )
+
+    assert yaml.safe_load(rendered) is expected_failure
