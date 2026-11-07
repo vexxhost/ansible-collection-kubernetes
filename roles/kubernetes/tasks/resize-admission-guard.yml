@@ -121,7 +121,7 @@
           kubernetes_resize_admission_guard_api_service.resources
           | community.general.json_query(
               "[?ports[?name == 'https' && port != `null`]
-               && endpoints[?conditions.ready == `true`
+               && endpoints[?conditions.ready != `false`
                             && addresses[0] != `null`]]"
             )
           | length > 0
@@ -137,8 +137,8 @@
           {%- set endpoints = [] -%}
           {%- for slice in kubernetes_resize_admission_guard_api_slices -%}
           {%- for endpoint in slice.endpoints | default([]) -%}
-          {%- set ready = (endpoint.conditions | default({})).ready | default(false) -%}
-          {%- if ready is sameas true -%}
+          {%- set ready = (endpoint.conditions | default({})).ready | default(true) -%}
+          {%- if ready is not sameas false -%}
           {%- for address in endpoint.addresses | default([]) -%}
           {%- for port in slice.ports | default([]) -%}
           {%- if (port.name | default('')) == 'https'

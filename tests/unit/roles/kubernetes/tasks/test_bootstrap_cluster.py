@@ -184,10 +184,10 @@ def test_resize_guard_waits_for_every_api_server_to_enforce_it():
 
 
 @pytest.mark.parametrize(
-    "resources,expected",
+    "resources,expected_endpoints",
     [
-        ([], False),
-        ([{"ports": [], "endpoints": []}], False),
+        ([], []),
+        ([{"ports": [], "endpoints": []}], []),
         (
             [
                 {
@@ -197,7 +197,7 @@ def test_resize_guard_waits_for_every_api_server_to_enforce_it():
                     ],
                 }
             ],
-            False,
+            [],
         ),
         (
             [
@@ -208,7 +208,7 @@ def test_resize_guard_waits_for_every_api_server_to_enforce_it():
                     ],
                 }
             ],
-            False,
+            [],
         ),
         (
             [
@@ -219,12 +219,59 @@ def test_resize_guard_waits_for_every_api_server_to_enforce_it():
                     ],
                 }
             ],
-            True,
+            ["192.0.2.1:6443"],
+        ),
+        (
+            [
+                {
+                    "ports": [{"name": "https", "port": 6443}],
+                    "endpoints": [{"addresses": ["192.0.2.1"]}],
+                }
+            ],
+            ["192.0.2.1:6443"],
+        ),
+        (
+            [
+                {
+                    "ports": [{"name": "https", "port": 6443}],
+                    "endpoints": [{"addresses": ["192.0.2.1"], "conditions": {}}],
+                }
+            ],
+            ["192.0.2.1:6443"],
+        ),
+        (
+            [
+                {
+                    "ports": [{"name": "https", "port": 6443}],
+                    "endpoints": [
+                        {
+                            "addresses": ["192.0.2.1"],
+                            "conditions": {"ready": None},
+                        }
+                    ],
+                }
+            ],
+            ["192.0.2.1:6443"],
+        ),
+        (
+            [
+                {
+                    "ports": [{"name": "https", "port": 6443}],
+                    "endpoints": [
+                        {
+                            "addresses": ["192.0.2.1"],
+                            "conditions": {"ready": False},
+                        },
+                        {"addresses": ["192.0.2.2"]},
+                    ],
+                }
+            ],
+            ["192.0.2.2:6443"],
         ),
     ],
 )
-def test_resize_guard_endpoint_retry_requires_a_ready_https_endpoint(
-    resources, expected
+def test_resize_guard_endpoint_discovery_honors_readiness_semantics(
+    resources, expected_endpoints
 ):
     tasks = load_tasks("resize-admission-guard.yml")
     barrier = next(
@@ -237,6 +284,11 @@ def test_resize_guard_endpoint_retry_requires_a_ready_https_endpoint(
         for task in barrier["block"]
         if task["name"] == "Read the Kubernetes API server endpoints"
     )
+    record_task = next(
+        task
+        for task in barrier["block"]
+        if task["name"] == "Record the Kubernetes API server endpoints"
+    )
     expression = endpoint_task["until"][0]
     env = Environment()
     env.filters["community.general.json_query"] = lambda value, query: jmespath.search(
@@ -246,7 +298,16 @@ def test_resize_guard_endpoint_retry_requires_a_ready_https_endpoint(
         kubernetes_resize_admission_guard_api_service={"resources": resources}
     )
 
-    assert yaml.safe_load(rendered) is expected
+    assert yaml.safe_load(rendered) is bool(expected_endpoints)
+
+    endpoint_expression = record_task["ansible.builtin.set_fact"][
+        "kubernetes_resize_admission_guard_api_endpoints"
+    ]
+    rendered_endpoints = env.from_string(endpoint_expression).render(
+        kubernetes_resize_admission_guard_api_slices=resources
+    )
+
+    assert yaml.safe_load(rendered_endpoints) == expected_endpoints
 
 
 @pytest.mark.parametrize(
