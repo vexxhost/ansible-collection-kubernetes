@@ -54,13 +54,17 @@ only that subresource when at least one node lacks QoS cgroups.  Ordinary pod
 updates continue to work.  On a new cluster, the policy is installed as soon
 as the first API server is available and before additional control-plane or
 worker nodes join. On an existing cluster, it is installed before new nodes
-join or any kubelet is switched to 1.35+. It is removed when every node uses
-QoS cgroups, or when both the target version and every installed kubelet on a
-legacy node are outside the affected range. An unknown installed kubelet
-version or QoS-cgroup state conservatively keeps the guard. A VPA using
-`InPlaceOrRecreate` can fall back to eviction and recreation while the guard
-rejects in-place resize. Like the hard denylist, the guard has one range per
-Kubernetes minor so fixed branches can be opened independently.
+join or any kubelet is switched to 1.35+. After creating the policy and
+binding, the role enumerates the API addresses published by the `kubernetes`
+Service and sends a server-side dry-run resize directly to each API server. It
+does not continue until every endpoint rejects the request and names the
+managed policy, closing the admission-cache propagation window. It is removed
+when every node uses QoS cgroups, or when both the target version and every
+installed kubelet on a legacy node are outside the affected range. An unknown
+installed kubelet version or QoS-cgroup state conservatively keeps the guard.
+A VPA using `InPlaceOrRecreate` can fall back to eviction and recreation while
+the guard rejects in-place resize. Like the hard denylist, the guard has one
+range per Kubernetes minor so fixed branches can be opened independently.
 
 When upgrading from an affected release to the first fixed release, the
 preflight sees the old kubelets and deliberately retains the guard during the
@@ -92,7 +96,12 @@ older out-of-inventory Node is still running. For the first bootstrap of a
 cluster only, set `kubernetes_upgrade_check_assert_fresh_bootstrap: true` to
 assert that no pre-existing cluster or out-of-inventory Node can exist. The
 assertion is honored only when the complete Kubernetes inventory is in the
-play; never use it for recovery, reset, replacement, or rejoin operations.
+play and every play host can be checked and lacks
+`/etc/kubernetes/kubelet.conf`. Any existing marker, failed read, or
+unreachable host rejects the assertion. Pass it only for that invocation with
+`--extra-vars kubernetes_upgrade_check_assert_fresh_bootstrap=true`; do not
+persist it in `group_vars` or `host_vars`, and never use it for recovery,
+reset, replacement, or rejoin operations.
 Cluster safety state is calculated once and explicitly published to every play
 host before the Kubernetes role continues. Failed API enumeration in a limited
 play does not open Ansible connections to inventory hosts outside that play.

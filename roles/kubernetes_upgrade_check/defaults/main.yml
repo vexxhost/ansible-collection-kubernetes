@@ -8,11 +8,13 @@
 # nodes omitted from the play.
 kubernetes_upgrade_check_group: "{{ kubernetes_group | default('all') }}"
 
-# Set this only for the first bootstrap of a cluster when no pre-existing
-# Kubernetes API or out-of-inventory Node can exist.  It permits bootstrap to
-# continue if the API is not available yet, and is honored only when the full
-# Kubernetes inventory is in the play.  Never set it during recovery, reset,
-# replacement, or rejoin operations.
+# Pass this only as a one-run extra variable for the first bootstrap of a
+# cluster when no pre-existing Kubernetes API or out-of-inventory Node can
+# exist.  It permits bootstrap to continue if the API is not available yet,
+# and is honored only when the full Kubernetes inventory is in the play and
+# every host can be checked and lacks an existing kubelet join marker.  Never
+# persist it in inventory or use it during recovery, reset, replacement, or
+# rejoin operations.
 kubernetes_upgrade_check_assert_fresh_bootstrap: false
 
 # Kubernetes versions whose kubelet crashes on nodes that run pods without QoS

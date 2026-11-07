@@ -11,7 +11,7 @@ from ansible.plugins.test.core import version_compare
 DOCUMENTATION = """
   name: version_matching_ranges
   short_description: Return ranges containing a version
-  version_added: 3.5.1
+  version_added: 3.6.0
   description:
     - Returns entries whose C(min) is inclusive and whose optional C(max) is
       exclusive.

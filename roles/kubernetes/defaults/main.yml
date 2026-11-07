@@ -128,3 +128,8 @@ kubernetes_kubelet_container_hash_migration: true
 # controls the affected version ranges and removes the policy once no node
 # needs it or the target release contains the upstream fix.
 kubernetes_resize_admission_guard_name: vexxhost-kubelet-resize-guard
+# An unschedulable Pod used to verify that every API server has observed the
+# policy and binding. It is removed before the role continues.
+kubernetes_resize_admission_guard_probe_name: "{{ kubernetes_resize_admission_guard_name }}-probe"
+kubernetes_resize_admission_guard_retries: 30
+kubernetes_resize_admission_guard_delay: 2

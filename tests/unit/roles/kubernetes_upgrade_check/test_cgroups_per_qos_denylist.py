@@ -428,15 +428,38 @@ def test_failed_api_enumeration_keeps_guard_on_existing_cluster():
 
 
 @pytest.mark.parametrize(
-    "assert_fresh_bootstrap,play_hosts,expected",
+    "assert_fresh_bootstrap,play_hosts,markers,expected",
     [
-        (False, ["controller", "worker"], False),
-        (True, ["controller", "worker"], True),
-        (True, ["controller"], False),
+        (False, ["controller", "worker"], [], False),
+        (
+            True,
+            ["controller", "worker"],
+            [{"stat": {"exists": False}}, {"stat": {"exists": False}}],
+            True,
+        ),
+        (
+            True,
+            ["controller", "worker"],
+            [{"stat": {"exists": True}}, {"stat": {"exists": False}}],
+            False,
+        ),
+        (True, ["controller"], [], False),
+        (
+            True,
+            ["controller", "worker"],
+            [{"failed": True}, {"stat": {"exists": False}}],
+            False,
+        ),
+        (
+            True,
+            ["controller", "worker"],
+            [{"unreachable": True}, {"stat": {"exists": False}}],
+            False,
+        ),
     ],
 )
 def test_fresh_bootstrap_requires_explicit_full_inventory_assertion(
-    assert_fresh_bootstrap, play_hosts, expected
+    assert_fresh_bootstrap, play_hosts, markers, expected
 ):
     tasks = yaml.safe_load((ROLE / "tasks/main.yml").read_text())
     task = next(
@@ -458,6 +481,7 @@ def test_fresh_bootstrap_requires_explicit_full_inventory_assertion(
         kubernetes_upgrade_check_group="kubernetes",
         ansible_play_hosts_all=play_hosts,
         kubernetes_upgrade_check_assert_fresh_bootstrap=assert_fresh_bootstrap,
+        kubernetes_upgrade_check_asserted_fresh_bootstrap_marker_results=markers,
     )
 
     assert result is expected
@@ -469,12 +493,20 @@ def test_fresh_bootstrap_assertion_defaults_to_false():
     assert defaults["kubernetes_upgrade_check_assert_fresh_bootstrap"] is False
 
 
-def test_failed_api_enumeration_does_not_probe_full_inventory_markers():
+def test_limited_api_failure_does_not_probe_hosts_outside_the_play():
     tasks = yaml.safe_load((ROLE / "tasks/main.yml").read_text())
+    task = next(
+        task
+        for task in tasks
+        if task["name"]
+        == "Check join markers before accepting a fresh-bootstrap assertion"
+    )
 
-    assert "Check cluster join markers when API enumeration is unavailable" not in {
-        task["name"] for task in tasks
-    }
+    assert task["loop"] == "{{ ansible_play_hosts_all }}"
+    assert any(
+        "difference(ansible_play_hosts_all)" in condition.replace("\n", "")
+        for condition in task["when"]
+    )
 
 
 def test_explicit_fresh_bootstrap_can_skip_unknown_api_nodes():

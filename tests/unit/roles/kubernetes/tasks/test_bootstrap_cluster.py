@@ -9,7 +9,7 @@ import yaml
 from jinja2 import Environment
 
 
-def task_names(filename):
+def load_tasks(filename):
     task_path = os.path.join(
         os.path.dirname(__file__),
         "..",
@@ -23,7 +23,11 @@ def task_names(filename):
         filename,
     )
     with open(task_path) as task_file:
-        return [task["name"] for task in yaml.safe_load(task_file)]
+        return yaml.safe_load(task_file)
+
+
+def task_names(filename):
+    return [task["name"] for task in load_tasks(filename)]
 
 
 class TestKubeadmInitCommand:
@@ -117,3 +121,34 @@ def test_resize_guard_precedes_worker_setup():
     assert names.index(
         "Guard in-place pod resize on kubelets without pod QoS cgroups"
     ) < names.index("Setup nodes")
+    assert names.index(
+        "Guard in-place pod resize on kubelets without pod QoS cgroups"
+    ) < names.index("Upgrade the kubelets one node at a time")
+
+
+def test_resize_guard_waits_for_every_api_server_to_enforce_it():
+    tasks = load_tasks("resize-admission-guard.yml")
+    names = [task["name"] for task in tasks]
+    barrier = next(
+        task
+        for task in tasks
+        if task["name"] == "Wait for the kubelet resize admission guard to be enforced"
+    )
+    barrier_tasks = {task["name"]: task for task in barrier["block"]}
+    probe = barrier_tasks["Verify every API server enforces the resize admission guard"]
+    argv = probe["ansible.builtin.command"]["argv"]
+
+    assert names.index("Bind the kubelet resize admission policy") < names.index(
+        "Wait for the kubelet resize admission guard to be enforced"
+    )
+    assert "--server=https://{{ item }}" in argv
+    assert "--subresource=resize" in argv
+    assert "--dry-run=server" in argv
+    assert probe["loop"] == "{{ kubernetes_resize_admission_guard_api_endpoints }}"
+    assert any(
+        "kubernetes_resize_admission_guard_name" in condition
+        for condition in probe["until"]
+    )
+    assert barrier["always"][0]["name"] == (
+        "Remove the resize admission enforcement probe"
+    )

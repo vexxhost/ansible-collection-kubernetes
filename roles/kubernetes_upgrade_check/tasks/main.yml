@@ -113,7 +113,33 @@
 # API enumeration is the only runtime evidence that no out-of-inventory Nodes
 # exist. File absence cannot prove cluster history because reset and replacement
 # nodes also lack kubelet.conf. Only an explicit bootstrap assertion can waive
-# this unknown state, and limited plays cannot use that assertion.
+# this unknown state. Validate that assertion against positive join evidence;
+# limited plays cannot use it and therefore never open these connections.
+- name: Check join markers before accepting a fresh-bootstrap assertion
+  when:
+    - kubernetes_upgrade_check_cgroups_per_qos_inspection_required | bool
+    - kubernetes_upgrade_check_assert_fresh_bootstrap | bool
+    - >-
+      not (
+        hostvars[kubernetes_upgrade_check_fact_host].kubernetes_upgrade_check_api_enumeration_succeeded
+        | bool
+      )
+    - >-
+      groups[kubernetes_upgrade_check_group]
+      | difference(ansible_play_hosts_all)
+      | length == 0
+  run_once: true
+  delegate_to: "{{ item }}"
+  ignore_errors: true
+  ignore_unreachable: true
+  ansible.builtin.stat:
+    path: /etc/kubernetes/kubelet.conf
+    get_attributes: false
+    get_checksum: false
+    get_mime: false
+  loop: "{{ ansible_play_hosts_all }}"
+  register: kubernetes_upgrade_check_asserted_fresh_bootstrap_markers
+
 - name: Record whether API failure is a fresh bootstrap
   when:
     - kubernetes_upgrade_check_cgroups_per_qos_inspection_required | bool
@@ -123,6 +149,9 @@
         | bool
       )
   run_once: true
+  vars:
+    kubernetes_upgrade_check_asserted_fresh_bootstrap_marker_results: >-
+      {{ kubernetes_upgrade_check_asserted_fresh_bootstrap_markers.results | default([]) }}
   delegate_to: "{{ kubernetes_upgrade_check_fact_host }}"
   delegate_facts: true
   ansible.builtin.set_fact:
@@ -132,6 +161,27 @@
         and groups[kubernetes_upgrade_check_group]
         | difference(ansible_play_hosts_all)
         | length == 0
+        and kubernetes_upgrade_check_asserted_fresh_bootstrap_marker_results
+            | length == (groups[kubernetes_upgrade_check_group] | length)
+        and kubernetes_upgrade_check_asserted_fresh_bootstrap_marker_results
+            | selectattr('unreachable', 'defined')
+            | selectattr('unreachable')
+            | list
+            | length == 0
+        and kubernetes_upgrade_check_asserted_fresh_bootstrap_marker_results
+            | selectattr('failed', 'defined')
+            | selectattr('failed')
+            | list
+            | length == 0
+        and kubernetes_upgrade_check_asserted_fresh_bootstrap_marker_results
+            | selectattr('stat', 'defined')
+            | list
+            | length == (groups[kubernetes_upgrade_check_group] | length)
+        and kubernetes_upgrade_check_asserted_fresh_bootstrap_marker_results
+            | selectattr('stat', 'defined')
+            | selectattr('stat.exists')
+            | list
+            | length == 0
       }}
 
 - name: Record API kubelet inspection results # noqa: jinja[invalid]
@@ -499,7 +549,7 @@
   ansible.builtin.debug:
     msg: >-
       No control-plane delegate could enumerate every Kubernetes Node, and
-      this run has no explicit full-inventory fresh-bootstrap assertion.
+      this run has no valid explicit full-inventory fresh-bootstrap assertion.
       Out-of-inventory Nodes therefore remain a cluster-level unknown. The
       resize admission guard will remain installed and denylisted targets
       remain blocked.

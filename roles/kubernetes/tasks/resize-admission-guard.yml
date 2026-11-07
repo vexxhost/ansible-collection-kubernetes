@@ -55,6 +55,123 @@
         validationActions:
           - Deny
 
+# Policy and binding writes return before every API server necessarily observes
+# them. Probe every API address directly and do not join or upgrade a kubelet
+# until each server rejects the guarded subresource.
+- name: Wait for the kubelet resize admission guard to be enforced
+  when:
+    - kubernetes_upgrade_check_resize_admission_guard_required | bool
+    - not ansible_check_mode
+  delegate_to: "{{ kubernetes_bootstrap_node | default(groups[kubernetes_control_plane_group][0]) }}"
+  block:
+    - name: Create the resize admission enforcement probe
+      changed_when: false
+      kubernetes.core.k8s:
+        kubeconfig: /etc/kubernetes/admin.conf
+        definition:
+          apiVersion: v1
+          kind: Pod
+          metadata:
+            name: "{{ kubernetes_resize_admission_guard_probe_name }}"
+            namespace: kube-system
+          spec:
+            # Keep the probe unschedulable; only its API object is needed.
+            nodeName: "{{ kubernetes_resize_admission_guard_probe_name }}"
+            restartPolicy: Never
+            terminationGracePeriodSeconds: 0
+            containers:
+              - name: pause
+                image: registry.k8s.io/pause:3.10
+                resources:
+                  requests:
+                    cpu: 10m
+                    memory: 16Mi
+
+    - name: Read the Kubernetes API server endpoints
+      kubernetes.core.k8s_info:
+        kubeconfig: /etc/kubernetes/admin.conf
+        api_version: discovery.k8s.io/v1
+        kind: EndpointSlice
+        namespace: default
+        label_selectors:
+          - kubernetes.io/service-name=kubernetes
+      register: kubernetes_resize_admission_guard_api_service
+      until:
+        - kubernetes_resize_admission_guard_api_service.resources | length > 0
+      retries: "{{ kubernetes_resize_admission_guard_retries }}"
+      delay: "{{ kubernetes_resize_admission_guard_delay }}"
+
+    - name: Record the Kubernetes API server endpoints
+      vars:
+        kubernetes_resize_admission_guard_api_slices: >-
+          {{ kubernetes_resize_admission_guard_api_service.resources }}
+      ansible.builtin.set_fact:
+        kubernetes_resize_admission_guard_api_endpoints: >-
+          {%- set endpoints = [] -%}
+          {%- for slice in kubernetes_resize_admission_guard_api_slices -%}
+          {%- for endpoint in slice.endpoints | default([]) -%}
+          {%- set ready = (endpoint.conditions | default({})).ready | default(true) -%}
+          {%- if ready is not sameas false -%}
+          {%- for address in endpoint.addresses | default([]) -%}
+          {%- for port in slice.ports | default([]) -%}
+          {%- if (port.name | default('https')) == 'https' -%}
+          {%- set host = '[' ~ address ~ ']' if ':' in address else address -%}
+          {%- set _ = endpoints.append(host ~ ':' ~ (port.port | string)) -%}
+          {%- endif -%}
+          {%- endfor -%}
+          {%- endfor -%}
+          {%- endif -%}
+          {%- endfor -%}
+          {%- endfor -%}
+          {{ endpoints | unique | list }}
+
+    - name: Require at least one Kubernetes API server endpoint
+      ansible.builtin.assert:
+        that:
+          - kubernetes_resize_admission_guard_api_endpoints | length > 0
+        fail_msg: >-
+          The kubernetes Service has no HTTPS endpoints; resize admission
+          enforcement cannot be verified safely.
+
+    - name: Verify every API server enforces the resize admission guard
+      ansible.builtin.command:
+        argv:
+          - kubectl
+          - --kubeconfig=/etc/kubernetes/admin.conf
+          - "--server=https://{{ item }}"
+          - --insecure-skip-tls-verify=true
+          - --namespace=kube-system
+          - patch
+          - pod
+          - "{{ kubernetes_resize_admission_guard_probe_name }}"
+          - --subresource=resize
+          - --type=merge
+          - --dry-run=server
+          - >-
+            --patch={"spec":{"containers":[{"name":"pause","resources":{"requests":{"cpu":"20m","memory":"16Mi"}}}]}}
+      changed_when: false
+      failed_when: false
+      register: kubernetes_resize_admission_guard_probe
+      until:
+        - kubernetes_resize_admission_guard_probe.rc != 0
+        - >-
+          kubernetes_resize_admission_guard_name
+          in kubernetes_resize_admission_guard_probe.stderr
+      retries: "{{ kubernetes_resize_admission_guard_retries }}"
+      delay: "{{ kubernetes_resize_admission_guard_delay }}"
+      loop: "{{ kubernetes_resize_admission_guard_api_endpoints }}"
+  always:
+    - name: Remove the resize admission enforcement probe
+      changed_when: false
+      kubernetes.core.k8s:
+        kubeconfig: /etc/kubernetes/admin.conf
+        state: absent
+        api_version: v1
+        kind: Pod
+        namespace: kube-system
+        name: "{{ kubernetes_resize_admission_guard_probe_name }}"
+        wait: true
+
 - name: Remove the kubelet resize admission policy binding
   when: not (kubernetes_upgrade_check_resize_admission_guard_required | bool)
   delegate_to: "{{ kubernetes_bootstrap_node | default(groups[kubernetes_control_plane_group][0]) }}"

@@ -1,8 +1,8 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-# Copyright (c) 2026 VEXXHOST, Inc.
-# SPDX-License-Identifier: Apache-2.0
+# Copyright: (c) 2026, VEXXHOST, Inc.
+# GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 from __future__ import absolute_import, division, print_function
 
@@ -17,7 +17,7 @@ description:
     effective C(configz) through the API server's node proxy.
   - A missing Node object or an unavailable kubelet is returned as unknown for
     that node instead of failing the module.
-version_added: "3.5.1"
+version_added: "3.6.0"
 options:
   node_names:
     description:
