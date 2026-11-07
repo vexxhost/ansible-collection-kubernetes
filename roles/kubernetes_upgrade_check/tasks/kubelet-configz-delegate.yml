@@ -3,24 +3,59 @@
 
 ---
 - name: Query kubelet configuration through API delegate
-  when: kubernetes_upgrade_check_api_inspection.nodes is not defined
+  when: >-
+    hostvars[kubernetes_upgrade_check_fact_host].kubernetes_upgrade_check_api_inspection.nodes
+    is not defined
   delegate_to: "{{ kubernetes_upgrade_check_api_delegate }}"
   ignore_unreachable: true
   failed_when: false
   vexxhost.kubernetes.kubelet_configz:
     kubeconfig: /etc/kubernetes/admin.conf
-    node_names: "{{ kubernetes_upgrade_check_inventory_nodes.values() | list }}"
+    node_names: >-
+      {{
+        hostvars[kubernetes_upgrade_check_fact_host].kubernetes_upgrade_check_inventory_nodes.values()
+        | list
+      }}
     include_all_nodes: true
   register: kubernetes_upgrade_check_api_attempt
 
-- name: Select successful Kubernetes API inspection
+- name: Retain first API inspection with complete Node enumeration
   when:
-    - kubernetes_upgrade_check_api_inspection.nodes is not defined
+    - >-
+      hostvars[kubernetes_upgrade_check_fact_host].kubernetes_upgrade_check_api_inspection.nodes
+      is not defined
+    - >-
+      hostvars[kubernetes_upgrade_check_fact_host].kubernetes_upgrade_check_api_partial_inspection.nodes
+      is not defined
     - kubernetes_upgrade_check_api_attempt is defined
     - not (kubernetes_upgrade_check_api_attempt.unreachable | default(false) | bool)
     - not (kubernetes_upgrade_check_api_attempt.failed | default(false) | bool)
     - kubernetes_upgrade_check_api_attempt.api_error is not defined
     - kubernetes_upgrade_check_api_attempt.nodes is defined
+  delegate_to: "{{ kubernetes_upgrade_check_fact_host }}"
+  delegate_facts: true
+  ansible.builtin.set_fact:
+    kubernetes_upgrade_check_api_partial_inspection: >-
+      {{ kubernetes_upgrade_check_api_attempt }}
+
+- name: Select API inspection without node-level errors
+  when:
+    - >-
+      hostvars[kubernetes_upgrade_check_fact_host].kubernetes_upgrade_check_api_inspection.nodes
+      is not defined
+    - kubernetes_upgrade_check_api_attempt is defined
+    - not (kubernetes_upgrade_check_api_attempt.unreachable | default(false) | bool)
+    - not (kubernetes_upgrade_check_api_attempt.failed | default(false) | bool)
+    - kubernetes_upgrade_check_api_attempt.api_error is not defined
+    - kubernetes_upgrade_check_api_attempt.nodes is defined
+    - >-
+      kubernetes_upgrade_check_api_attempt.nodes.values()
+      | selectattr('error', 'defined')
+      | list
+      | length == 0
+  delegate_to: "{{ kubernetes_upgrade_check_fact_host }}"
+  delegate_facts: true
   ansible.builtin.set_fact:
     kubernetes_upgrade_check_api_inspection: >-
       {{ kubernetes_upgrade_check_api_attempt }}
+    kubernetes_upgrade_check_api_enumeration_succeeded: true

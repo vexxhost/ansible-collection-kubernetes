@@ -60,6 +60,8 @@ def resize_guard_required(
     installed_guard_hosts,
     untracked_disabled_nodes=None,
     untracked_guard_nodes=None,
+    api_enumeration_succeeded=True,
+    fresh_bootstrap=False,
 ):
     tasks = yaml.safe_load((ROLE / "tasks/main.yml").read_text())
     task = next(
@@ -71,16 +73,22 @@ def resize_guard_required(
         "kubernetes_upgrade_check_resize_admission_guard_required"
     ]
     env = NativeEnvironment(undefined=StrictUndefined)
+    env.filters["bool"] = bool
     return env.from_string(expression).render(
+        kubernetes_upgrade_check_cgroups_per_qos_inspection_required=True,
         kubernetes_upgrade_check_cgroups_per_qos_resize_guarded_by=target_guarded_by,
         kubernetes_upgrade_check_detected_disabled_hosts=disabled_hosts,
         kubernetes_upgrade_check_detected_resize_guard_hosts=installed_guard_hosts,
-        kubernetes_upgrade_check_untracked_disabled_nodes=(
+        kubernetes_upgrade_check_detected_untracked_disabled_nodes=(
             untracked_disabled_nodes or []
         ),
-        kubernetes_upgrade_check_untracked_resize_guard_nodes=(
+        kubernetes_upgrade_check_detected_untracked_resize_guard_nodes=(
             untracked_guard_nodes or []
         ),
+        kubernetes_upgrade_check_detected_api_enumeration_succeeded=(
+            api_enumeration_succeeded
+        ),
+        kubernetes_upgrade_check_detected_fresh_bootstrap=fresh_bootstrap,
     )
 
 
@@ -93,16 +101,29 @@ def classify_untracked_node(node):
     )
     env = NativeEnvironment(undefined=StrictUndefined)
     env.filters["vexxhost.kubernetes.version_matching_ranges"] = version_matching_ranges
+    env.filters["dict2items"] = lambda value: [
+        {"key": key, "value": item} for key, item in value.items()
+    ]
+    env.filters["difference"] = lambda value, other: [
+        item for item in value if item not in other
+    ]
     context = {
-        "item": "stale-node",
-        "kubernetes_upgrade_check_api_inspection": {"nodes": {"stale-node": node}},
+        "kubernetes_upgrade_check_fact_host": "fact-host",
+        "hostvars": {
+            "fact-host": {
+                "kubernetes_upgrade_check_api_inspection": {
+                    "nodes": {"stale-node": node}
+                },
+                "kubernetes_upgrade_check_inventory_nodes": {},
+                "kubernetes_upgrade_check_untracked_api_nodes": [],
+                "kubernetes_upgrade_check_untracked_disabled_nodes": [],
+                "kubernetes_upgrade_check_untracked_unknown_nodes": [],
+                "kubernetes_upgrade_check_untracked_resize_guard_nodes": [],
+            }
+        },
         "kubernetes_upgrade_check_cgroups_per_qos_resize_guard_versions": [
             {"min": "1.35.0"}
         ],
-        "kubernetes_upgrade_check_untracked_api_nodes": [],
-        "kubernetes_upgrade_check_untracked_disabled_nodes": [],
-        "kubernetes_upgrade_check_untracked_unknown_nodes": [],
-        "kubernetes_upgrade_check_untracked_resize_guard_nodes": [],
     }
     for variable, expression in task["vars"].items():
         context[variable] = env.from_string(expression).render(**context)
@@ -111,6 +132,47 @@ def classify_untracked_node(node):
         fact: env.from_string(expression).render(**context)
         for fact, expression in task["ansible.builtin.set_fact"].items()
     }
+
+
+def api_inspection_after_attempts(attempts):
+    delegate_tasks = yaml.safe_load(
+        (ROLE / "tasks/kubelet-configz-delegate.yml").read_text()
+    )
+    env = NativeEnvironment(undefined=StrictUndefined)
+    env.filters["bool"] = bool
+    facts = {
+        "kubernetes_upgrade_check_api_inspection": {},
+        "kubernetes_upgrade_check_api_partial_inspection": {},
+    }
+    hostvars = {"fact-host": facts}
+
+    for attempt in attempts:
+        for task in delegate_tasks[1:]:
+            context = {
+                "hostvars": hostvars,
+                "kubernetes_upgrade_check_fact_host": "fact-host",
+                "kubernetes_upgrade_check_api_attempt": attempt,
+            }
+            if all(
+                env.from_string("{{ %s }}" % condition).render(**context)
+                for condition in task["when"]
+            ):
+                for fact, expression in task["ansible.builtin.set_fact"].items():
+                    facts[fact] = (
+                        env.from_string(expression).render(**context)
+                        if isinstance(expression, str)
+                        else expression
+                    )
+
+    if (
+        "nodes" not in facts["kubernetes_upgrade_check_api_inspection"]
+        and "nodes" in facts["kubernetes_upgrade_check_api_partial_inspection"]
+    ):
+        facts["kubernetes_upgrade_check_api_inspection"] = facts[
+            "kubernetes_upgrade_check_api_partial_inspection"
+        ]
+
+    return facts["kubernetes_upgrade_check_api_inspection"]
 
 
 def test_check_mode_reads_the_installed_kubelet_version():
@@ -174,7 +236,7 @@ def test_api_inspection_retries_unreachable_controllers():
         ]
         == {}
     )
-    assert inspect["loop"] == "{{ kubernetes_upgrade_check_api_delegates }}"
+    assert "kubernetes_upgrade_check_api_delegates" in inspect["loop"]
     assert (
         inspect["loop_control"]["loop_var"] == "kubernetes_upgrade_check_api_delegate"
     )
@@ -183,10 +245,15 @@ def test_api_inspection_retries_unreachable_controllers():
         (ROLE / "tasks/kubelet-configz-delegate.yml").read_text()
     )
     query = delegate_tasks[0]
-    select = delegate_tasks[1]
+    select = next(
+        task
+        for task in delegate_tasks
+        if task["name"] == "Select API inspection without node-level errors"
+    )
     assert query["delegate_to"] == "{{ kubernetes_upgrade_check_api_delegate }}"
     assert query["ignore_unreachable"] is True
     assert query["failed_when"] is False
+    assert select["delegate_facts"] is True
     assert any(
         "kubernetes_upgrade_check_api_attempt.nodes is defined" in condition
         for condition in select["when"]
@@ -194,12 +261,6 @@ def test_api_inspection_retries_unreachable_controllers():
 
 
 def test_api_inspection_retries_after_api_error():
-    delegate_tasks = yaml.safe_load(
-        (ROLE / "tasks/kubelet-configz-delegate.yml").read_text()
-    )
-    conditions = delegate_tasks[1]["when"]
-    env = NativeEnvironment(undefined=StrictUndefined)
-    env.filters["bool"] = bool
     attempts = [
         {
             "nodes": {"worker": {"cgroups_per_qos": None}},
@@ -207,21 +268,25 @@ def test_api_inspection_retries_after_api_error():
         },
         {"nodes": {"worker": {"cgroups_per_qos": True}}},
     ]
-    inspection = {}
+    assert api_inspection_after_attempts(attempts) == attempts[1]
 
-    for attempt in attempts:
-        context = {
-            "kubernetes_upgrade_check_api_inspection": inspection,
-            "kubernetes_upgrade_check_api_attempt": attempt,
-        }
-        selected = all(
-            env.from_string("{{ %s }}" % condition).render(**context)
-            for condition in conditions
-        )
-        if selected:
-            inspection = attempt
 
-    assert inspection == attempts[1]
+def test_api_inspection_retries_after_node_level_error():
+    attempts = [
+        {"nodes": {"worker": {"error": "proxy timeout"}}},
+        {"nodes": {"worker": {"cgroups_per_qos": True}}},
+    ]
+
+    assert api_inspection_after_attempts(attempts) == attempts[1]
+
+
+def test_api_inspection_keeps_partial_result_after_all_delegates():
+    attempts = [
+        {"nodes": {"worker": {"error": "first proxy timeout"}}},
+        {"nodes": {"worker": {"error": "second proxy timeout"}}},
+    ]
+
+    assert api_inspection_after_attempts(attempts) == attempts[0]
 
 
 def test_unavailable_api_inspection_records_unknown_nodes():
@@ -235,7 +300,7 @@ def test_unavailable_api_inspection_records_unknown_nodes():
     env = NativeEnvironment(undefined=StrictUndefined)
 
     result = env.from_string(expression).render(
-        kubernetes_upgrade_check_api_inspection={},
+        kubernetes_upgrade_check_cluster_api_inspection={},
         item={"value": "missing-node"},
     )
 
@@ -347,6 +412,99 @@ def test_untracked_vulnerable_api_node_requires_guard():
         )
         is True
     )
+
+
+def test_failed_api_enumeration_keeps_guard_on_existing_cluster():
+    assert (
+        resize_guard_required(
+            [{"min": "1.35.0"}],
+            [],
+            [],
+            api_enumeration_succeeded=False,
+            fresh_bootstrap=False,
+        )
+        is True
+    )
+
+
+@pytest.mark.parametrize(
+    "play_hosts,markers,expected",
+    [
+        (
+            ["controller", "worker"],
+            [{"stat": {"exists": False}}, {"stat": {"exists": False}}],
+            True,
+        ),
+        (
+            ["controller", "worker"],
+            [{"stat": {"exists": True}}, {"stat": {"exists": False}}],
+            False,
+        ),
+        (
+            ["controller"],
+            [{"stat": {"exists": False}}, {"stat": {"exists": False}}],
+            False,
+        ),
+        (
+            ["controller", "worker"],
+            [{"unreachable": True}, {"stat": {"exists": False}}],
+            False,
+        ),
+    ],
+)
+def test_fresh_bootstrap_requires_complete_absent_join_markers(
+    play_hosts, markers, expected
+):
+    tasks = yaml.safe_load((ROLE / "tasks/main.yml").read_text())
+    task = next(
+        task
+        for task in tasks
+        if task["name"] == "Record whether API failure is a fresh bootstrap"
+    )
+    expression = task["ansible.builtin.set_fact"][
+        "kubernetes_upgrade_check_fresh_bootstrap"
+    ]
+    env = NativeEnvironment(undefined=StrictUndefined)
+    env.filters["difference"] = lambda value, other: [
+        item for item in value if item not in other
+    ]
+
+    result = env.from_string(expression).render(
+        groups={"kubernetes": ["controller", "worker"]},
+        kubernetes_upgrade_check_group="kubernetes",
+        ansible_play_hosts_all=play_hosts,
+        kubernetes_upgrade_check_join_marker_results=markers,
+    )
+
+    assert result is expected
+
+
+def test_fresh_bootstrap_does_not_invent_existing_api_nodes():
+    assert (
+        resize_guard_required(
+            [{"min": "1.35.0"}],
+            [],
+            [],
+            api_enumeration_succeeded=False,
+            fresh_bootstrap=True,
+        )
+        is False
+    )
+
+
+def test_cluster_safety_facts_are_published_to_every_play_host():
+    tasks = yaml.safe_load((ROLE / "tasks/main.yml").read_text())
+    tasks_by_name = {task["name"]: task for task in tasks}
+    aggregate = tasks_by_name["Record the cluster pod QoS cgroup state"]
+    publish = tasks_by_name["Publish cluster pod QoS cgroup state to every play host"]
+    deny = tasks_by_name["Refuse denylisted kubelets cluster-wide"]
+
+    assert aggregate["run_once"] is True
+    assert aggregate["delegate_facts"] is True
+    assert publish["run_once"] is True
+    assert publish["delegate_facts"] is True
+    assert publish["loop"] == "{{ ansible_play_hosts_all }}"
+    assert deny["any_errors_fatal"] is True
 
 
 def test_untracked_qos_enabled_api_node_does_not_require_guard():

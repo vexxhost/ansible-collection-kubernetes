@@ -80,8 +80,17 @@ node. The API query tries `kubernetes_bootstrap_node` first when it is
 explicitly set, then each host in `kubernetes_control_plane_group` until one
 returns usable API data. A delegate that cannot load its kubeconfig or list
 Nodes is skipped even though the module reports that evidence gap without
-failing. If no controller can perform the query, play hosts use local fallback
-evidence and hosts outside the play remain unknown.
+failing. A result with node-level `configz` errors is retained as a fallback
+while the role tries later controllers for complete evidence.
+
+If no controller can enumerate Nodes, play hosts still use local fallback
+evidence, but that cannot prove that no out-of-inventory Nodes exist. The role
+therefore records a cluster-level unknown, retains the admission guard and
+refuses denylisted targets. It treats this as a fresh bootstrap only when the
+complete Kubernetes inventory is in the play, every host is reachable for the
+check, and no `/etc/kubernetes/kubelet.conf` join marker exists. Cluster safety
+state is calculated once and explicitly published to every play host before
+the Kubernetes role continues.
 
 Every Node object returned by the API is inspected, including Nodes whose host
 is absent from `kubernetes_upgrade_check_group`. These untracked Nodes are
