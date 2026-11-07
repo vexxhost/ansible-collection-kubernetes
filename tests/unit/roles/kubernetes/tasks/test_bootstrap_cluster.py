@@ -145,6 +145,7 @@ def test_resize_guard_waits_for_every_api_server_to_enforce_it():
     cleanup = barrier["always"][0]
     argv = probe["ansible.builtin.command"]["argv"]
     metadata = create["kubernetes.core.k8s"]["definition"]["metadata"]
+    spec = create["kubernetes.core.k8s"]["definition"]["spec"]
 
     assert names.index("Bind the kubelet resize admission policy") < names.index(
         "Wait for the kubelet resize admission guard to be enforced"
@@ -156,6 +157,10 @@ def test_resize_guard_waits_for_every_api_server_to_enforce_it():
     assert "'/dev/null'" in generated_name
     assert metadata["name"] == "{{ kubernetes_resize_admission_guard_probe_name }}"
     assert "register" not in create
+    assert spec["initContainers"] == [
+        {"name": "hold", "image": "registry.k8s.io/pause:3.10"}
+    ]
+    assert spec["containers"][0]["name"] == "pause"
     assert visibility["loop"] == (
         "{{ kubernetes_resize_admission_guard_api_endpoints }}"
     )
@@ -163,6 +168,7 @@ def test_resize_guard_waits_for_every_api_server_to_enforce_it():
     assert "--server=https://{{ item }}" in argv
     assert "--subresource=resize" in argv
     assert "--dry-run=server" in argv
+    assert any('"name":"pause"' in argument for argument in argv)
     assert "{{ kubernetes_resize_admission_guard_probe_name }}" in argv
     assert probe["loop"] == "{{ kubernetes_resize_admission_guard_api_endpoints }}"
     assert probe["failed_when"] is not False

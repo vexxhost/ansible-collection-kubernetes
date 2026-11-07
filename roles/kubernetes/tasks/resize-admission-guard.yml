@@ -100,6 +100,13 @@
               }}
             restartPolicy: Never
             terminationGracePeriodSeconds: 0
+            # Pre-GA kubelets do not report resize support for running
+            # containers. Keep the target container waiting behind a
+            # non-terminating init container so built-in resize validation
+            # allows the dry-run request to reach the admission policy.
+            initContainers:
+              - name: hold
+                image: registry.k8s.io/pause:3.10
             containers:
               - name: pause
                 image: registry.k8s.io/pause:3.10
