@@ -6,9 +6,12 @@ Checks that run before the `kubernetes` role changes anything:
   version ahead of it.
 - Workers are not upgraded past a control plane that is not part of the play.
 - The target version is not in `kubernetes_upgrade_check_cgroups_per_qos_denylist`
-  while any node in the play runs pods without QoS cgroups
+  while any node in the Kubernetes inventory group runs pods without QoS cgroups
   (`--cgroups-per-qos=false`, which nodes deployed by older releases of this
   collection keep).
+- A cluster-wide admission guard is requested when an affected 1.35+ kubelet
+  can be crashed by an explicit `pods/resize` request and any node runs without
+  QoS cgroups.
 
 ## Kubelets that crash without QoS cgroups
 
@@ -43,9 +46,87 @@ kubernetes_upgrade_check_cgroups_per_qos_denylist:
 Overriding the variable replaces the whole list.  Setting it to `[]` turns
 the check off.
 
-Whether a node runs pods in QoS cgroups is read from
+All releases from 1.35.0 are also vulnerable when an API client explicitly
+updates the `pods/resize` subresource.  For versions selected by
+`kubernetes_upgrade_check_cgroups_per_qos_resize_guard_versions`, the
+`kubernetes` role creates a `ValidatingAdmissionPolicy` and binding that deny
+only that subresource when at least one node lacks QoS cgroups.  Ordinary pod
+updates continue to work.  On a new cluster, the policy is installed as soon
+as the first API server is available and before additional control-plane or
+worker nodes join. On an existing cluster, it is installed before new nodes
+join or any kubelet is switched to 1.35+. After creating the policy and
+binding, the role enumerates the API addresses published by the `kubernetes`
+Service and sends a server-side dry-run resize directly to each API server. It
+does not continue until every endpoint rejects the request and names the
+managed policy, closing the admission-cache propagation window. It is removed
+when every node uses QoS cgroups, or when both the target version and every
+installed kubelet on a legacy node are outside the affected range. An unknown
+installed kubelet version or QoS-cgroup state conservatively keeps the guard.
+A VPA using `InPlaceOrRecreate` can fall back to eviction and recreation while
+the guard rejects in-place resize. Like the hard denylist, the guard has one
+range per Kubernetes minor so fixed branches can be opened independently.
+
+When upgrading from an affected release to the first fixed release, the
+preflight sees the old kubelets and deliberately retains the guard during the
+upgrade. Run the Kubernetes role again for the full inventory after every
+kubelet is fixed so the role can remove the now-unneeded policy.
+
+The admission policy cannot protect against kubelet-initiated resize.  That is
+why the automatic-trigger releases remain hard-denied by
+`kubernetes_upgrade_check_cgroups_per_qos_denylist` until the upstream panic is
+fixed.
+
+For joined nodes, the role reads the running version from
+`status.nodeInfo.kubeletVersion` and the effective QoS-cgroup setting from the
+kubelet `configz` endpoint through the Kubernetes API. This includes
+command-line flag overrides without opening an Ansible connection to each
+node. The API query tries `kubernetes_bootstrap_node` first when it is
+explicitly set, then each host in `kubernetes_control_plane_group` until one
+returns usable API data. A delegate that cannot load its kubeconfig or list
+Nodes is skipped even though the module reports that evidence gap without
+failing. A result with node-level `configz` errors is retained as a fallback
+while the role tries later controllers for complete evidence.
+
+If no controller can enumerate Nodes, play hosts still use local fallback
+evidence, but that cannot prove that no out-of-inventory Nodes exist. The role
+therefore records a cluster-level unknown, retains the admission guard and
+refuses denylisted targets. File absence is not accepted as proof of cluster
+history because reset and replacement nodes may lack kubelet state while an
+older out-of-inventory Node is still running. For the first bootstrap of a
+cluster only, set `kubernetes_upgrade_check_assert_fresh_bootstrap: true` to
+assert that no pre-existing cluster or out-of-inventory Node can exist. The
+assertion is honored only when the complete Kubernetes inventory is in the
+play and every play host can be checked and lacks
+`/etc/kubernetes/kubelet.conf`. Any existing marker, failed read, or
+unreachable host rejects the assertion. Pass it only for that invocation with
+`--extra-vars kubernetes_upgrade_check_assert_fresh_bootstrap=true`; do not
+persist it in `group_vars` or `host_vars`, and never use it for recovery,
+reset, replacement, or rejoin operations.
+Cluster safety state is calculated once and explicitly published to every play
+host before the Kubernetes role continues. Failed API enumeration in a limited
+play does not open Ansible connections to inventory hosts outside that play.
+
+Every Node object returned by the API is inspected, including Nodes whose host
+is absent from `kubernetes_upgrade_check_group`. These untracked Nodes are
+reported and their state participates in denylist and admission-guard
+decisions. Shut down a removed host and delete its Node API object before
+removing it from inventory; an inaccessible untracked Node conservatively keeps
+the guard installed. For a play host that has no Node object yet, the role falls
+back to its local
 `/var/lib/kubelet/kubeadm-flags.env`, `/etc/default/kubelet` and
-`/var/lib/kubelet/config.yaml`, together with `kubernetes_kubeadm_extra_args`
-(for nodes that have not joined yet) and the `kubeletconfiguration` patch in
-`kubernetes_kubeadm_patches`.  Nodes can be moved to QoS cgroups with a drain
-and rejoin, which restarts their pods.
+`/var/lib/kubelet/config.yaml`, plus that host's
+`kubernetes_kubeadm_extra_args` and `kubernetes_kubeadm_patches` inventory
+values. A failed local read is unknown; only a successful `stat` proving that a
+file is absent permits inventory/default evidence. Nodes can be moved to QoS
+cgroups with a drain and rejoin, which restarts their pods. Follow the supported
+[legacy-node migration procedure](../../docs/ops/qos-cgroups.md) to preserve
+workload and control-plane quorum and to let the collection remove the resize
+admission guard safely.
+
+The role evaluates every host in `kubernetes_upgrade_check_group` (which
+defaults to `kubernetes_group`, or `all`) even when Ansible runs with `--limit`.
+API-backed evidence is used for hosts outside the play; local fallback
+inspection runs only on active play hosts. An omitted, missing, or unavailable
+kubelet is recorded as unknown without opening an Ansible connection to it: the
+admission guard is retained and denylisted targets are refused, but that host
+does not fail recovery or replacement runs.

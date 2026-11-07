@@ -13,83 +13,587 @@
 # under the License.
 
 ---
-# NOTE: Some kubelet versions crash on nodes without pod QoS cgroups (see
-#       kubernetes_upgrade_check_cgroups_per_qos_denylist), so refuse them
-#       before anything changes on any node.
-- name: Check the kubelet version against nodes without pod QoS cgroups
-  when: kubernetes_upgrade_check_cgroups_per_qos_denied_by | length > 0
-  block:
-    - name: Read the kubelet flags and configuration
-      ansible.builtin.slurp:
-        path: "{{ item }}"
-      loop:
-        - /var/lib/kubelet/kubeadm-flags.env
-        - /etc/default/kubelet
-        - /var/lib/kubelet/config.yaml
-      register: kubernetes_upgrade_check_kubelet_files
-      failed_when: false
+# NOTE: The guard depends on the full cluster even under --limit. Query through
+#       the API so an unavailable inventory host does not block replacement or
+#       recovery work. configz contains the effective value after flags have
+#       been applied, and Node status contains the running kubelet version.
+- name: Record Kubernetes Node names for hosts in the play
+  when: kubernetes_upgrade_check_cgroups_per_qos_inspection_required | bool
+  ansible.builtin.set_fact:
+    kubernetes_upgrade_check_node_name: >-
+      {{ kubelet_hostname | default(inventory_hostname_short) }}
 
-    # NOTE: kubeadm writes kubeadm-flags.env when the node joins, with the
-    #       kubelet arguments from kubernetes_kubeadm_extra_args, and keeps it
-    #       on upgrades.  config.yaml is written again on joins and upgrades,
-    #       with the kubeletconfiguration patch applied.
-    - name: Check whether the kubelet runs pods in QoS cgroups
-      vars:
-        kubernetes_upgrade_check_kubelet_file_contents: >-
-          {{
-            kubernetes_upgrade_check_kubelet_files.results
-            | selectattr('content', 'defined')
-            | items2dict(key_name='item', value_name='content')
-          }}
-        kubernetes_upgrade_check_kubelet_extra_args: >-
-          {{ (kubernetes_kubeadm_extra_args | default({})).kubelet | default({}, true) }}
-        kubernetes_upgrade_check_kubelet_flags: >-
-          {{
-            [
-              kubernetes_upgrade_check_kubelet_file_contents['/var/lib/kubelet/kubeadm-flags.env'] | b64decode
-              if '/var/lib/kubelet/kubeadm-flags.env' in kubernetes_upgrade_check_kubelet_file_contents
-              else (
-                '--cgroups-per-qos=' ~ (kubernetes_upgrade_check_kubelet_extra_args['cgroups-per-qos'] | string | lower)
-                if kubernetes_upgrade_check_kubelet_extra_args['cgroups-per-qos'] | default(none) is not none
-                else ''
-              ),
-              kubernetes_upgrade_check_kubelet_file_contents['/etc/default/kubelet'] | default('') | b64decode,
-            ]
-          }}
-        kubernetes_upgrade_check_kubelet_config: >-
-          {{
-            (
-              kubernetes_upgrade_check_kubelet_file_contents['/var/lib/kubelet/config.yaml'] | b64decode | from_yaml
-              if '/var/lib/kubelet/config.yaml' in kubernetes_upgrade_check_kubelet_file_contents
-              else {}
-            )
-            | combine((kubernetes_kubeadm_patches | default({})).kubeletconfiguration | default({}, true))
-          }}
-      ansible.builtin.set_fact:
-        kubernetes_upgrade_check_cgroups_per_qos: >-
-          {{
-            kubernetes_upgrade_check_kubelet_flags
-            | vexxhost.kubernetes.kubelet_cgroups_per_qos(kubernetes_upgrade_check_kubelet_config)
-          }}
+- name: Select host for cluster safety facts
+  ansible.builtin.set_fact:
+    kubernetes_upgrade_check_fact_host: "{{ ansible_play_hosts_all | first }}"
 
-    - name: Fail if the kubelet version crashes without pod QoS cgroups
-      vars:
-        kubernetes_upgrade_check_cgroups_per_qos_disabled_hosts: >-
-          {{
-            ansible_play_hosts
-            | map('extract', hostvars)
-            | selectattr('kubernetes_upgrade_check_cgroups_per_qos', 'defined')
-            | rejectattr('kubernetes_upgrade_check_cgroups_per_qos')
-            | map(attribute='inventory_hostname')
+- name: Initialize the Kubernetes inventory node map
+  when: kubernetes_upgrade_check_cgroups_per_qos_inspection_required | bool
+  run_once: true
+  delegate_to: "{{ kubernetes_upgrade_check_fact_host }}"
+  delegate_facts: true
+  ansible.builtin.set_fact:
+    kubernetes_upgrade_check_inventory_nodes: {}
+
+- name: Map inventory hosts to Kubernetes Node names
+  when: kubernetes_upgrade_check_cgroups_per_qos_inspection_required | bool
+  run_once: true
+  delegate_to: "{{ kubernetes_upgrade_check_fact_host }}"
+  delegate_facts: true
+  ansible.builtin.set_fact:
+    kubernetes_upgrade_check_inventory_nodes: >-
+      {%- set inventory_nodes = {} -%}
+      {%- for host in groups[kubernetes_upgrade_check_group] -%}
+      {%- set node_name = hostvars[host].kubernetes_upgrade_check_node_name
+            | default(hostvars[host].kubelet_hostname)
+            | default(hostvars[host].inventory_hostname_short) -%}
+      {%- set _ = inventory_nodes.update({host: node_name}) -%}
+      {%- endfor -%}
+      {{ inventory_nodes }}
+
+- name: Initialize Kubernetes Nodes absent from inventory
+  run_once: true
+  delegate_to: "{{ kubernetes_upgrade_check_fact_host }}"
+  delegate_facts: true
+  ansible.builtin.set_fact:
+    kubernetes_upgrade_check_untracked_api_nodes: []
+    kubernetes_upgrade_check_untracked_disabled_nodes: []
+    kubernetes_upgrade_check_untracked_unknown_nodes: []
+    kubernetes_upgrade_check_untracked_resize_guard_nodes: []
+
+- name: Initialize Kubernetes API inspection
+  when: kubernetes_upgrade_check_cgroups_per_qos_inspection_required | bool
+  run_once: true
+  delegate_to: "{{ kubernetes_upgrade_check_fact_host }}"
+  delegate_facts: true
+  ansible.builtin.set_fact:
+    kubernetes_upgrade_check_api_inspection: {}
+    kubernetes_upgrade_check_api_partial_inspection: {}
+    kubernetes_upgrade_check_api_enumeration_succeeded: false
+    kubernetes_upgrade_check_fresh_bootstrap: false
+    kubernetes_upgrade_check_api_delegates: >-
+      {{
+        (
+          ([kubernetes_bootstrap_node] if kubernetes_bootstrap_node is defined else [])
+          + groups[kubernetes_control_plane_group | default('controllers')]
+        )
+        | unique
+      }}
+
+# Try an explicitly selected bootstrap node first, then every control-plane
+# host. A transport or module failure leaves this attempt unavailable and the
+# next candidate is tried. If none work, play hosts use local fallback evidence
+# and hosts outside the play remain conservatively unknown.
+- name: Inspect kubelets through a reachable Kubernetes API delegate
+  when: kubernetes_upgrade_check_cgroups_per_qos_inspection_required | bool
+  run_once: true
+  ansible.builtin.include_tasks: kubelet-configz-delegate.yml
+  loop: >-
+    {{ hostvars[kubernetes_upgrade_check_fact_host].kubernetes_upgrade_check_api_delegates }}
+  loop_control:
+    loop_var: kubernetes_upgrade_check_api_delegate
+
+- name: Use partial API inspection after trying every controller
+  when:
+    - kubernetes_upgrade_check_cgroups_per_qos_inspection_required | bool
+    - >-
+      hostvars[kubernetes_upgrade_check_fact_host].kubernetes_upgrade_check_api_inspection.nodes
+      is not defined
+    - >-
+      hostvars[kubernetes_upgrade_check_fact_host].kubernetes_upgrade_check_api_partial_inspection.nodes
+      is defined
+  run_once: true
+  delegate_to: "{{ kubernetes_upgrade_check_fact_host }}"
+  delegate_facts: true
+  ansible.builtin.set_fact:
+    kubernetes_upgrade_check_api_inspection: >-
+      {{ hostvars[kubernetes_upgrade_check_fact_host].kubernetes_upgrade_check_api_partial_inspection }}
+    kubernetes_upgrade_check_api_enumeration_succeeded: true
+
+# API enumeration is the only runtime evidence that no out-of-inventory Nodes
+# exist. File absence cannot prove cluster history because reset and replacement
+# nodes also lack kubelet.conf. Only an explicit bootstrap assertion can waive
+# this unknown state. Validate that assertion against positive join evidence;
+# limited plays cannot use it and therefore never open these connections.
+- name: Check join markers before accepting a fresh-bootstrap assertion
+  when:
+    - kubernetes_upgrade_check_cgroups_per_qos_inspection_required | bool
+    - kubernetes_upgrade_check_assert_fresh_bootstrap | bool
+    - >-
+      not (
+        hostvars[kubernetes_upgrade_check_fact_host].kubernetes_upgrade_check_api_enumeration_succeeded
+        | bool
+      )
+    - >-
+      groups[kubernetes_upgrade_check_group]
+      | difference(ansible_play_hosts_all)
+      | length == 0
+  run_once: true
+  delegate_to: "{{ item }}"
+  ignore_errors: true
+  ignore_unreachable: true
+  ansible.builtin.stat:
+    path: /etc/kubernetes/kubelet.conf
+    get_attributes: false
+    get_checksum: false
+    get_mime: false
+  loop: "{{ ansible_play_hosts_all }}"
+  register: kubernetes_upgrade_check_asserted_fresh_bootstrap_markers
+
+- name: Record whether API failure is a fresh bootstrap
+  when:
+    - kubernetes_upgrade_check_cgroups_per_qos_inspection_required | bool
+    - >-
+      not (
+        hostvars[kubernetes_upgrade_check_fact_host].kubernetes_upgrade_check_api_enumeration_succeeded
+        | bool
+      )
+  run_once: true
+  vars:
+    kubernetes_upgrade_check_asserted_fresh_bootstrap_marker_results: >-
+      {{ kubernetes_upgrade_check_asserted_fresh_bootstrap_markers.results | default([]) }}
+  delegate_to: "{{ kubernetes_upgrade_check_fact_host }}"
+  delegate_facts: true
+  ansible.builtin.set_fact:
+    kubernetes_upgrade_check_fresh_bootstrap: >-
+      {{
+        kubernetes_upgrade_check_assert_fresh_bootstrap | bool
+        and groups[kubernetes_upgrade_check_group]
+        | difference(ansible_play_hosts_all)
+        | length == 0
+        and kubernetes_upgrade_check_asserted_fresh_bootstrap_marker_results
+            | length == (groups[kubernetes_upgrade_check_group] | length)
+        and kubernetes_upgrade_check_asserted_fresh_bootstrap_marker_results
+            | selectattr('unreachable', 'defined')
+            | selectattr('unreachable')
             | list
-          }}
-      when: kubernetes_upgrade_check_cgroups_per_qos_disabled_hosts | length > 0
+            | length == 0
+        and kubernetes_upgrade_check_asserted_fresh_bootstrap_marker_results
+            | selectattr('failed', 'defined')
+            | selectattr('failed')
+            | list
+            | length == 0
+        and kubernetes_upgrade_check_asserted_fresh_bootstrap_marker_results
+            | selectattr('stat', 'defined')
+            | list
+            | length == (groups[kubernetes_upgrade_check_group] | length)
+        and kubernetes_upgrade_check_asserted_fresh_bootstrap_marker_results
+            | selectattr('stat', 'defined')
+            | selectattr('stat.exists')
+            | list
+            | length == 0
+      }}
+
+- name: Record API kubelet inspection results # noqa: jinja[invalid]
+  when: kubernetes_upgrade_check_cgroups_per_qos_inspection_required | bool
+  run_once: true
+  vars:
+    kubernetes_upgrade_check_cluster_api_inspection: >-
+      {{
+        hostvars[kubernetes_upgrade_check_fact_host].kubernetes_upgrade_check_api_inspection
+      }}
+    kubernetes_upgrade_check_api_node: >-
+      {{
+        kubernetes_upgrade_check_cluster_api_inspection.nodes[item.value]
+        if (
+          kubernetes_upgrade_check_cluster_api_inspection.nodes is defined
+          and item.value in kubernetes_upgrade_check_cluster_api_inspection.nodes
+        )
+        else {
+          'exists': false,
+          'cgroups_per_qos': none,
+          'kubelet_version': '',
+          'error': 'Kubernetes API inspection was unavailable through every control-plane delegate',
+        }
+      }}
+    kubernetes_upgrade_check_api_cgroups_state: >-
+      {{
+        'enabled'
+        if kubernetes_upgrade_check_api_node.cgroups_per_qos is sameas true
+        else (
+          'disabled'
+          if kubernetes_upgrade_check_api_node.cgroups_per_qos is sameas false
+          else 'unknown'
+        )
+      }}
+    kubernetes_upgrade_check_api_kubelet_version: >-
+      {{ kubernetes_upgrade_check_api_node.kubelet_version | default('') }}
+  # Some Ansible versions template delegate_to before evaluating the task's
+  # when expression. Keep the skipped bootstrap path valid before an item
+  # exists.
+  delegate_to: "{{ item.key | default(inventory_hostname) }}"
+  delegate_facts: true
+  ansible.builtin.set_fact:
+    kubernetes_upgrade_check_node_exists: >-
+      {{ kubernetes_upgrade_check_api_node.exists }}
+    kubernetes_upgrade_check_cgroups_per_qos_state: >-
+      {{ kubernetes_upgrade_check_api_cgroups_state }}
+    kubernetes_upgrade_check_kubelet_version: >-
+      {{ kubernetes_upgrade_check_api_kubelet_version }}
+    kubernetes_upgrade_check_inspection_error: >-
+      {{ kubernetes_upgrade_check_api_node.error | default('') }}
+    kubernetes_upgrade_check_kubelet_resize_guard_required: >-
+      {{
+        kubernetes_upgrade_check_api_cgroups_state == 'unknown'
+        or (
+          kubernetes_upgrade_check_api_cgroups_state == 'disabled'
+          and (
+            kubernetes_upgrade_check_api_kubelet_version | length == 0
+            or kubernetes_upgrade_check_api_kubelet_version
+               | vexxhost.kubernetes.version_matching_ranges(
+                   kubernetes_upgrade_check_cgroups_per_qos_resize_guard_versions
+                 )
+               | length > 0
+          )
+        )
+      }}
+  loop: >-
+    {{
+      hostvars[kubernetes_upgrade_check_fact_host].kubernetes_upgrade_check_inventory_nodes
+      | dict2items
+    }}
+
+- name: Record Kubernetes Nodes absent from inventory # noqa: jinja[invalid]
+  when: kubernetes_upgrade_check_cgroups_per_qos_inspection_required | bool
+  run_once: true
+  vars:
+    kubernetes_upgrade_check_cluster_api_inspection: >-
+      {{
+        hostvars[kubernetes_upgrade_check_fact_host].kubernetes_upgrade_check_api_inspection
+      }}
+    kubernetes_upgrade_check_cluster_inventory_nodes: >-
+      {{
+        hostvars[kubernetes_upgrade_check_fact_host].kubernetes_upgrade_check_inventory_nodes
+      }}
+    kubernetes_upgrade_check_detected_untracked_api_nodes: >-
+      {{
+        (kubernetes_upgrade_check_cluster_api_inspection.nodes | default({})).keys()
+        | list
+        | difference(kubernetes_upgrade_check_cluster_inventory_nodes.values() | list)
+        | sort
+      }}
+    kubernetes_upgrade_check_detected_untracked_api_results: >-
+      {{
+        kubernetes_upgrade_check_cluster_api_inspection.nodes | default({})
+        | dict2items
+        | selectattr('key', 'in', kubernetes_upgrade_check_detected_untracked_api_nodes)
+        | list
+      }}
+    kubernetes_upgrade_check_detected_untracked_disabled_nodes: >-
+      {{
+        kubernetes_upgrade_check_detected_untracked_api_results
+        | selectattr('value.cgroups_per_qos', 'sameas', false)
+        | map(attribute='key')
+        | list
+      }}
+    kubernetes_upgrade_check_detected_untracked_unknown_nodes: >-
+      {{
+        kubernetes_upgrade_check_detected_untracked_api_results
+        | rejectattr('value.cgroups_per_qos', 'sameas', true)
+        | rejectattr('value.cgroups_per_qos', 'sameas', false)
+        | map(attribute='key')
+        | list
+      }}
+    kubernetes_upgrade_check_detected_untracked_resize_guard_nodes: >-
+      {%- set guarded_nodes = [] -%}
+      {%- for node_name in kubernetes_upgrade_check_detected_untracked_api_nodes -%}
+      {%- set node = kubernetes_upgrade_check_cluster_api_inspection.nodes[node_name] -%}
+      {%- set version = node.kubelet_version | default('') -%}
+      {%- if node.cgroups_per_qos is not sameas true
+            and (
+              node.cgroups_per_qos is not sameas false
+              or version | length == 0
+              or version
+                 | vexxhost.kubernetes.version_matching_ranges(
+                     kubernetes_upgrade_check_cgroups_per_qos_resize_guard_versions
+                   )
+                 | length > 0
+            ) -%}
+      {%- set _ = guarded_nodes.append(node_name) -%}
+      {%- endif -%}
+      {%- endfor -%}
+      {{ guarded_nodes }}
+  ansible.builtin.set_fact:
+    kubernetes_upgrade_check_untracked_api_nodes: >-
+      {{ kubernetes_upgrade_check_detected_untracked_api_nodes }}
+    kubernetes_upgrade_check_untracked_disabled_nodes: >-
+      {{ kubernetes_upgrade_check_detected_untracked_disabled_nodes }}
+    kubernetes_upgrade_check_untracked_unknown_nodes: >-
+      {{ kubernetes_upgrade_check_detected_untracked_unknown_nodes }}
+    kubernetes_upgrade_check_untracked_resize_guard_nodes: >-
+      {{ kubernetes_upgrade_check_detected_untracked_resize_guard_nodes }}
+  delegate_to: "{{ kubernetes_upgrade_check_fact_host }}"
+  delegate_facts: true
+
+# A play host missing from the API is being bootstrapped or rejoined. When the
+# whole API is unavailable (including initial bootstrap), local files are also
+# the best available evidence. Hosts omitted by --limit remain unknown; do not
+# open SSH connections to them.
+- name: Inspect play hosts unavailable through the Kubernetes API
+  when:
+    - kubernetes_upgrade_check_cgroups_per_qos_inspection_required | bool
+    - >-
+      hostvars[kubernetes_upgrade_check_cgroups_per_qos_host].kubernetes_upgrade_check_node_exists
+      is not sameas true
+  run_once: true
+  ansible.builtin.include_tasks: cgroups-per-qos-node.yml
+  loop: "{{ ansible_play_hosts_all }}"
+  loop_control:
+    loop_var: kubernetes_upgrade_check_cgroups_per_qos_host
+
+- name: Record the cluster pod QoS cgroup state
+  run_once: true
+  vars:
+    kubernetes_upgrade_check_detected_inspected_hosts: >-
+      {{
+        groups[kubernetes_upgrade_check_group]
+        | map('extract', hostvars)
+        | selectattr('kubernetes_upgrade_check_cgroups_per_qos_state', 'defined')
+        | rejectattr('kubernetes_upgrade_check_cgroups_per_qos_state', 'equalto', 'unknown')
+        | map(attribute='inventory_hostname')
+        | list
+      }}
+    kubernetes_upgrade_check_detected_disabled_hosts: >-
+      {{
+        groups[kubernetes_upgrade_check_group]
+        | map('extract', hostvars)
+        | selectattr('kubernetes_upgrade_check_cgroups_per_qos_state', 'defined')
+        | selectattr('kubernetes_upgrade_check_cgroups_per_qos_state', 'equalto', 'disabled')
+        | map(attribute='inventory_hostname')
+        | list
+      }}
+    kubernetes_upgrade_check_detected_unknown_hosts: >-
+      {{
+        groups[kubernetes_upgrade_check_group]
+        | map('extract', hostvars)
+        | selectattr('kubernetes_upgrade_check_cgroups_per_qos_state', 'defined')
+        | selectattr('kubernetes_upgrade_check_cgroups_per_qos_state', 'equalto', 'unknown')
+        | map(attribute='inventory_hostname')
+        | list
+      }}
+    kubernetes_upgrade_check_detected_resize_guard_hosts: >-
+      {{
+        groups[kubernetes_upgrade_check_group]
+        | map('extract', hostvars)
+        | selectattr('kubernetes_upgrade_check_kubelet_resize_guard_required', 'defined')
+        | selectattr('kubernetes_upgrade_check_kubelet_resize_guard_required')
+        | map(attribute='inventory_hostname')
+        | list
+      }}
+    kubernetes_upgrade_check_detected_untracked_nodes: >-
+      {{
+        hostvars[kubernetes_upgrade_check_fact_host].kubernetes_upgrade_check_untracked_api_nodes
+        | default([])
+      }}
+    kubernetes_upgrade_check_detected_untracked_disabled_nodes: >-
+      {{
+        hostvars[kubernetes_upgrade_check_fact_host].kubernetes_upgrade_check_untracked_disabled_nodes
+        | default([])
+      }}
+    kubernetes_upgrade_check_detected_untracked_unknown_nodes: >-
+      {{
+        hostvars[kubernetes_upgrade_check_fact_host].kubernetes_upgrade_check_untracked_unknown_nodes
+        | default([])
+      }}
+    kubernetes_upgrade_check_detected_untracked_resize_guard_nodes: >-
+      {{
+        hostvars[kubernetes_upgrade_check_fact_host].kubernetes_upgrade_check_untracked_resize_guard_nodes
+        | default([])
+      }}
+    kubernetes_upgrade_check_detected_api_enumeration_succeeded: >-
+      {{
+        hostvars[kubernetes_upgrade_check_fact_host].kubernetes_upgrade_check_api_enumeration_succeeded
+        | default(false)
+        | bool
+      }}
+    kubernetes_upgrade_check_detected_fresh_bootstrap: >-
+      {{
+        hostvars[kubernetes_upgrade_check_fact_host].kubernetes_upgrade_check_fresh_bootstrap
+        | default(false)
+        | bool
+      }}
+  delegate_to: "{{ kubernetes_upgrade_check_fact_host }}"
+  delegate_facts: true
+  ansible.builtin.set_fact:
+    kubernetes_upgrade_check_cgroups_per_qos_inspected_hosts: >-
+      {{
+        kubernetes_upgrade_check_detected_inspected_hosts
+        if kubernetes_upgrade_check_cgroups_per_qos_inspection_required | bool
+        else []
+      }}
+    kubernetes_upgrade_check_cgroups_per_qos_disabled_hosts: >-
+      {{
+        kubernetes_upgrade_check_detected_disabled_hosts
+        if kubernetes_upgrade_check_cgroups_per_qos_inspection_required | bool
+        else []
+      }}
+    kubernetes_upgrade_check_cgroups_per_qos_resize_guard_hosts: >-
+      {{
+        kubernetes_upgrade_check_detected_resize_guard_hosts
+        if kubernetes_upgrade_check_cgroups_per_qos_inspection_required | bool
+        else []
+      }}
+    kubernetes_upgrade_check_cgroups_per_qos_unknown_hosts: >-
+      {{
+        kubernetes_upgrade_check_detected_unknown_hosts
+        if kubernetes_upgrade_check_cgroups_per_qos_inspection_required | bool
+        else []
+      }}
+    kubernetes_upgrade_check_cgroups_per_qos_untracked_nodes: >-
+      {{
+        kubernetes_upgrade_check_detected_untracked_nodes
+        if kubernetes_upgrade_check_cgroups_per_qos_inspection_required | bool
+        else []
+      }}
+    kubernetes_upgrade_check_cgroups_per_qos_untracked_disabled_nodes: >-
+      {{
+        kubernetes_upgrade_check_detected_untracked_disabled_nodes
+        if kubernetes_upgrade_check_cgroups_per_qos_inspection_required | bool
+        else []
+      }}
+    kubernetes_upgrade_check_cgroups_per_qos_untracked_unknown_nodes: >-
+      {{
+        kubernetes_upgrade_check_detected_untracked_unknown_nodes
+        if kubernetes_upgrade_check_cgroups_per_qos_inspection_required | bool
+        else []
+      }}
+    kubernetes_upgrade_check_api_enumeration_succeeded: >-
+      {{
+        kubernetes_upgrade_check_detected_api_enumeration_succeeded
+        if kubernetes_upgrade_check_cgroups_per_qos_inspection_required | bool
+        else false
+      }}
+    kubernetes_upgrade_check_fresh_bootstrap: >-
+      {{
+        kubernetes_upgrade_check_detected_fresh_bootstrap
+        if kubernetes_upgrade_check_cgroups_per_qos_inspection_required | bool
+        else false
+      }}
+    kubernetes_upgrade_check_cgroups_per_qos_api_enumeration_unknown: >-
+      {{
+        kubernetes_upgrade_check_cgroups_per_qos_inspection_required | bool
+        and not kubernetes_upgrade_check_detected_api_enumeration_succeeded
+        and not kubernetes_upgrade_check_detected_fresh_bootstrap
+      }}
+    kubernetes_upgrade_check_resize_admission_guard_required: >-
+      {{
+        (
+          kubernetes_upgrade_check_cgroups_per_qos_inspection_required | bool
+          and not kubernetes_upgrade_check_detected_api_enumeration_succeeded
+          and not kubernetes_upgrade_check_detected_fresh_bootstrap
+        )
+        or (
+          kubernetes_upgrade_check_cgroups_per_qos_resize_guarded_by | length > 0
+          and (
+            (
+              kubernetes_upgrade_check_detected_disabled_hosts
+              + kubernetes_upgrade_check_detected_untracked_disabled_nodes
+            )
+            | length > 0
+          )
+        )
+        or (
+          (
+            kubernetes_upgrade_check_detected_resize_guard_hosts
+            + kubernetes_upgrade_check_detected_untracked_resize_guard_nodes
+          )
+          | length > 0
+        )
+      }}
+
+- name: Publish cluster pod QoS cgroup state to every play host
+  run_once: true
+  vars:
+    kubernetes_upgrade_check_cluster_facts: >-
+      {{ hostvars[kubernetes_upgrade_check_fact_host] }}
+  delegate_to: "{{ item }}"
+  delegate_facts: true
+  ansible.builtin.set_fact:
+    kubernetes_upgrade_check_cgroups_per_qos_inspected_hosts: >-
+      {{ kubernetes_upgrade_check_cluster_facts.kubernetes_upgrade_check_cgroups_per_qos_inspected_hosts }}
+    kubernetes_upgrade_check_cgroups_per_qos_disabled_hosts: >-
+      {{ kubernetes_upgrade_check_cluster_facts.kubernetes_upgrade_check_cgroups_per_qos_disabled_hosts }}
+    kubernetes_upgrade_check_cgroups_per_qos_resize_guard_hosts: >-
+      {{ kubernetes_upgrade_check_cluster_facts.kubernetes_upgrade_check_cgroups_per_qos_resize_guard_hosts }}
+    kubernetes_upgrade_check_cgroups_per_qos_unknown_hosts: >-
+      {{ kubernetes_upgrade_check_cluster_facts.kubernetes_upgrade_check_cgroups_per_qos_unknown_hosts }}
+    kubernetes_upgrade_check_cgroups_per_qos_untracked_nodes: >-
+      {{ kubernetes_upgrade_check_cluster_facts.kubernetes_upgrade_check_cgroups_per_qos_untracked_nodes }}
+    kubernetes_upgrade_check_cgroups_per_qos_untracked_disabled_nodes: >-
+      {{ kubernetes_upgrade_check_cluster_facts.kubernetes_upgrade_check_cgroups_per_qos_untracked_disabled_nodes }}
+    kubernetes_upgrade_check_cgroups_per_qos_untracked_unknown_nodes: >-
+      {{ kubernetes_upgrade_check_cluster_facts.kubernetes_upgrade_check_cgroups_per_qos_untracked_unknown_nodes }}
+    kubernetes_upgrade_check_api_enumeration_succeeded: >-
+      {{ kubernetes_upgrade_check_cluster_facts.kubernetes_upgrade_check_api_enumeration_succeeded }}
+    kubernetes_upgrade_check_fresh_bootstrap: >-
+      {{ kubernetes_upgrade_check_cluster_facts.kubernetes_upgrade_check_fresh_bootstrap }}
+    kubernetes_upgrade_check_cgroups_per_qos_api_enumeration_unknown: >-
+      {{ kubernetes_upgrade_check_cluster_facts.kubernetes_upgrade_check_cgroups_per_qos_api_enumeration_unknown }}
+    kubernetes_upgrade_check_resize_admission_guard_required: >-
+      {{ kubernetes_upgrade_check_cluster_facts.kubernetes_upgrade_check_resize_admission_guard_required }}
+  loop: "{{ ansible_play_hosts_all }}"
+
+- name: Report Kubernetes Nodes absent from inventory
+  when: kubernetes_upgrade_check_cgroups_per_qos_untracked_nodes | length > 0
+  run_once: true
+  ansible.builtin.debug:
+    msg: >-
+      Kubernetes API Nodes absent from kubernetes_upgrade_check_group:
+      {{ kubernetes_upgrade_check_cgroups_per_qos_untracked_nodes | join(', ') }}.
+      Their effective kubelet state is included in resize safety decisions.
+      Delete stale Node API objects only after their kubelets are shut down.
+
+- name: Report incomplete Kubernetes API Node enumeration
+  when: kubernetes_upgrade_check_cgroups_per_qos_api_enumeration_unknown | bool
+  run_once: true
+  ansible.builtin.debug:
+    msg: >-
+      No control-plane delegate could enumerate every Kubernetes Node, and
+      this run has no valid explicit full-inventory fresh-bootstrap assertion.
+      Out-of-inventory Nodes therefore remain a cluster-level unknown. The
+      resize admission guard will remain installed and denylisted targets
+      remain blocked.
+
+- name: Report nodes with unknown pod QoS cgroup state
+  when: kubernetes_upgrade_check_cgroups_per_qos_unknown_hosts | length > 0
+  run_once: true
+  ansible.builtin.debug:
+    msg: >-
+      Could not determine the effective pod QoS cgroup state of:
+      {{ kubernetes_upgrade_check_cgroups_per_qos_unknown_hosts | join(', ') }}.
+      The resize admission guard will remain installed. Targets in
+      kubernetes_upgrade_check_cgroups_per_qos_denylist remain blocked, but
+      unavailable nodes do not prevent recovery or replacement runs.
+
+- name: Refuse denylisted kubelets cluster-wide
+  when:
+    - kubernetes_upgrade_check_cgroups_per_qos_denied_by | length > 0
+    - >-
+      (
+        kubernetes_upgrade_check_cgroups_per_qos_disabled_hosts
+        | union(kubernetes_upgrade_check_cgroups_per_qos_unknown_hosts)
+        | union(kubernetes_upgrade_check_cgroups_per_qos_untracked_disabled_nodes)
+        | union(kubernetes_upgrade_check_cgroups_per_qos_untracked_unknown_nodes)
+        | length > 0
+      )
+      or kubernetes_upgrade_check_cgroups_per_qos_api_enumeration_unknown | bool
+  any_errors_fatal: true
+  block:
+    - name: Fail if the kubelet version crashes without pod QoS cgroups
       ansible.builtin.fail:
         msg: |
           Refusing to deploy Kubernetes {{ kubernetes_version }}: its kubelet
           crashes on nodes that run pods without QoS cgroups
-          (--cgroups-per-qos=false), and these nodes do:
-          {{ kubernetes_upgrade_check_cgroups_per_qos_disabled_hosts | join(', ') }}
+          (--cgroups-per-qos=false). These nodes have it disabled:
+          {{ kubernetes_upgrade_check_cgroups_per_qos_disabled_hosts | join(', ') | default('none', true) }}
+          These nodes could not be inspected safely:
+          {{ kubernetes_upgrade_check_cgroups_per_qos_unknown_hosts | join(', ') | default('none', true) }}
+          Kubernetes API Nodes absent from inventory with QoS cgroups disabled:
+          {{ kubernetes_upgrade_check_cgroups_per_qos_untracked_disabled_nodes | join(', ') | default('none', true) }}
+          Kubernetes API Nodes absent from inventory that could not be inspected safely:
+          {{ kubernetes_upgrade_check_cgroups_per_qos_untracked_unknown_nodes | join(', ') | default('none', true) }}
+          Complete Kubernetes API Node enumeration unavailable:
+          {{ kubernetes_upgrade_check_cgroups_per_qos_api_enumeration_unknown }}
 
           Kubernetes 1.35.9 and 1.36.4 made the kubelet resize a pod when a
           container starts without a record of the resources applied to it.
@@ -100,7 +604,7 @@
 
           Use a version outside kubernetes_upgrade_check_cgroups_per_qos_denylist
           (for example 1.35.8 or 1.36.3), or move these nodes to QoS cgroups
-          first, which restarts their pods.
+          first, which restarts their pods. See docs/ops/qos-cgroups.md.
 
 - name: Retrieve the "kubeadm-config" ConfigMap
   run_once: true

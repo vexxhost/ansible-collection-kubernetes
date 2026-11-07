@@ -15,6 +15,14 @@
   when: inventory_hostname in groups[kubernetes_control_plane_group]
   ansible.builtin.include_tasks: control-plane.yml
 
+# NOTE: bootstrap-cluster.yml installs the guard before additional control
+#       planes join. Repeat it here before worker setup so worker-only limited
+#       runs cannot register a vulnerable, schedulable node first.
+- name: Guard in-place pod resize on kubelets without pod QoS cgroups
+  when: kubernetes_version is version('1.35.0', '>=')
+  run_once: true
+  ansible.builtin.include_tasks: resize-admission-guard.yml
+
 - name: Setup nodes
   when: inventory_hostname not in groups[kubernetes_control_plane_group]
   ansible.builtin.include_tasks: nodes.yml

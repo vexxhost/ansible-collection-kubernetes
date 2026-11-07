@@ -148,8 +148,8 @@
     nodeset: debian-trixie-triple-node
     vars:
       molecule_scenario: cluster-upgrade
-      old_kubernetes_version: 1.33.4
-      kubernetes_version: 1.34.0
+      old_kubernetes_version: 1.34.9
+      kubernetes_version: 1.35.6
     group-vars:
       controllers:
         # NOTE(mnaser): Since we're running in clouds, we use the first controller IP
@@ -168,6 +168,29 @@
       old_kubernetes_version: 1.30.14
       kubernetes_version: 1.31.14
     voting: false
+
+# NOTE: Kubernetes 1.35 makes in-place pod resize GA.  Legacy nodes without pod
+#       QoS cgroups must reject the pods/resize subresource before their
+#       kubelets are upgraded, or an explicit resize can panic the kubelet.
+- job:
+    name: ansible-collection-kubernetes-molecule-cluster-upgrade-resize-guard
+    parent: ansible-collection-kubernetes-molecule-cluster-upgrade
+    vars:
+      old_kubernetes_version: 1.34.9
+      kubernetes_version: 1.35.6
+      cluster_upgrade_legacy_qos_cgroups: true
+    voting: true
+
+# Exercise stale guard removal on a QoS-enabled cluster in a voting job. Skip
+# only the unrelated Cilium restart assertion that keeps the base job
+# non-voting.
+- job:
+    name: ansible-collection-kubernetes-molecule-cluster-upgrade-resize-cleanup
+    parent: ansible-collection-kubernetes-molecule-cluster-upgrade
+    vars:
+      cluster_upgrade_seed_resize_guard: true
+      cluster_upgrade_verify_cilium_restarts: false
+    voting: true
 
 - job:
     name: ansible-collection-kubernetes-molecule-download-binaries
@@ -233,6 +256,8 @@
         - ansible-collection-kubernetes-molecule-cluster-api
         - ansible-collection-kubernetes-molecule-cluster-upgrade
         - ansible-collection-kubernetes-molecule-cluster-upgrade-1-31
+        - ansible-collection-kubernetes-molecule-cluster-upgrade-resize-cleanup
+        - ansible-collection-kubernetes-molecule-cluster-upgrade-resize-guard
         - ansible-collection-kubernetes-molecule-download-binaries
         - ansible-collection-kubernetes-molecule-ha
         - ansible-collection-kubernetes-molecule-helm
@@ -250,6 +275,8 @@
         - ansible-collection-kubernetes-molecule-bgp
         - ansible-collection-kubernetes-molecule-cluster-api
         - ansible-collection-kubernetes-molecule-cluster-upgrade
+        - ansible-collection-kubernetes-molecule-cluster-upgrade-resize-cleanup
+        - ansible-collection-kubernetes-molecule-cluster-upgrade-resize-guard
         - ansible-collection-kubernetes-molecule-download-binaries
         - ansible-collection-kubernetes-molecule-ha
         - ansible-collection-kubernetes-molecule-helm
