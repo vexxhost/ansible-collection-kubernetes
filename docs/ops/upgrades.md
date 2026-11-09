@@ -84,6 +84,20 @@ cluster is still functional after each step.
 
 ## Kubernetes
 
+!!! warning "Legacy nodes without pod QoS cgroups"
+
+    Nodes joined by older collection releases can retain
+    `--cgroups-per-qos=false`. Migrate them with the
+    [pod QoS cgroup procedure](qos-cgroups.md) before upgrading to a Kubernetes
+    patch release refused by `kubernetes_upgrade_check`. Do not combine that
+    migration with a Kubernetes version upgrade.
+
+    When upgrading from an affected release to the first release containing
+    the upstream fix, run the Kubernetes role for the full inventory once more
+    after all kubelets are upgraded. The preflight intentionally keeps the
+    admission guard while it still observes the old kubelet versions; the
+    follow-up run removes it after every node reports a fixed version.
+
 The overview of the process is that we will start by running the `kubeadm` role
 independently to update the `kubeadm` binary, start the control plane upgrade
 and then roll out the remaining systems.

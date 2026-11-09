@@ -27,6 +27,7 @@
 
     - name: Verify Cilium operator pods have not been restarted # noqa: run-once[task]
       run_once: true
+      when: cluster_upgrade_verify_cilium_restarts | default(true) | bool
       ansible.builtin.assert:
         that:
           - item.status.containerStatuses[0].restartCount == 0
@@ -73,6 +74,9 @@
           Before: {{ upgrade_canary_before }}.
           After: {{ upgrade_canary_after }}.
         success_msg: The upgrade kept all {{ upgrade_canary_before | length }} canary containers running
+
+- name: Verify resize admission guard behavior
+  ansible.builtin.import_playbook: verify-resize-admission-guard.yml
 
 # NOTE: prepare.yml removed bind-address from the stored configuration, so
 #       this checks the upgrade put it back on every control plane node.

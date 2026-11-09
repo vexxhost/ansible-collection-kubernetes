@@ -11,6 +11,9 @@ nodeRegistration:
 {% if kubernetes_kubeadm_api_version == 'v1beta4' %}
   criSocket: "{{ kubelet_cri_socket }}"
 {% endif %}
+{% if kubernetes_kubeadm_node_registration_taints is not none %}
+  taints: {{ kubernetes_kubeadm_node_registration_taints | to_json }}
+{% endif %}
   kubeletExtraArgs: {{ kubernetes_kubeadm_kubelet_args | vexxhost.kubernetes.kubeadm_args(kubernetes_kubeadm_api_version) | to_json }}
 {% if kubernetes_kubeadm_api_version != 'v1beta2' %}
 patches:
@@ -22,6 +25,9 @@ kind: JoinConfiguration
 nodeRegistration:
 {% if kubernetes_kubeadm_api_version == 'v1beta4' %}
   criSocket: "{{ kubelet_cri_socket }}"
+{% endif %}
+{% if kubernetes_kubeadm_node_registration_taints is not none %}
+  taints: {{ kubernetes_kubeadm_node_registration_taints | to_json }}
 {% endif %}
   kubeletExtraArgs: {{ kubernetes_kubeadm_kubelet_args | vexxhost.kubernetes.kubeadm_args(kubernetes_kubeadm_api_version) | to_json }}
 {% if kubernetes_kubeadm_api_version != 'v1beta2' %}
