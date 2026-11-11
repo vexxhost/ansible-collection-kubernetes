@@ -12,6 +12,14 @@ kubernetes_kubeadm_api_version: >-
 
 # Component arguments rendered into the kubeadm configuration (see the
 # vexxhost.kubernetes.kubeadm_args filter for the format).
+kubernetes_kubeadm_default_image_repository: >-
+  {{ 'registry.k8s.io' if kubernetes_version is version('1.25.0', '>=') else 'k8s.gcr.io' }}
+kubernetes_kubeadm_default_dns_image_repository: >-
+  {{
+    kubernetes_kubeadm_default_image_repository
+    ~ ('/coredns' if kubernetes_version is version('1.21.0', '>=') else '')
+  }}
+
 kubernetes_kubeadm_kubelet_args: >-
   {{
     ({'fail-swap-on': 'false'} if kubernetes_allow_unsafe_swap | bool else {})
