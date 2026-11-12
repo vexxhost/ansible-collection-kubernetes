@@ -20,6 +20,12 @@ Ansible controller before changing the stored configuration. Snapshot files
 and directories are private. Manage retention outside the upgrade operation.
 External etcd deployments need their own backup procedure.
 
+### Proxy-free state is more than resource deletion
+
+When `kubernetes_remove_kube_proxy: true`, kubeadm's stored configuration must
+retain `proxy.disabled: true` on supported schemas before addons reconcile.
+The role migrates older configuration with kubeadm and reads the value back.
+
 Controllers are reconciled serially. The stored cluster version decides whether
 `upgrade apply` is needed; each controller's three component manifests decide
 whether its `upgrade node` remains necessary. A rerun therefore finishes peers
@@ -36,6 +42,7 @@ propagating the failure. All site plays stop on fatal errors.
 | --- | --- |
 | 1.29 and 1.30 | Restore CoreDNS placement immediately after either kubeadm control-plane command, then finish its rollout before kubelets. |
 | 1.31 | Migrate container hashes while kubelet/containerd are stopped. Follow the newest committed BoltDB tree; inactive pages and old transactions are not live annotations. |
+| 1.31 and later | Migrate the stored kubeadm schema when necessary and persist `proxy.disabled` before upgrade when Cilium replaces kube-proxy. |
 | 1.31 and later | Keep CoreDNS placement and overlapping rolling updates through the supported `corednsdeployment` patch. |
 | 1.34 | Prepare the etcd 3.5-to-3.6 transition before kubeadm changes members; the bridge and data checks are operator prerequisites. |
 | 1.35 and later affected releases | Retain the stopped-kubelet resource-checkpoint transition on entry, preserve the native checkpoint on later hops and keep the resize admission guard. Remove obsolete gate overrides and validate target runtime/CRI behavior. |

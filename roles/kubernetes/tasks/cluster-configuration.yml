@@ -19,14 +19,70 @@
     name: kubeadm-config
   register: kubernetes_kubeadm_config
 
+- name: Read the stored configuration as data
+  run_once: true
+  ansible.builtin.set_fact:
+    kubernetes_kubeadm_stored_cluster_configuration: "{{ kubernetes_kubeadm_config.resources[0].data.ClusterConfiguration | from_yaml }}"
+
+# Convert with the target kubeadm, rather than adding v1beta4 fields to a
+# v1beta3 document. Other cluster settings remain owned by the stored copy.
+- name: Migrate the stored configuration schema when required
+  when:
+    - kubernetes_kubeadm_api_version == 'v1beta4'
+    - kubernetes_kubeadm_stored_cluster_configuration.apiVersion != 'kubeadm.k8s.io/v1beta4'
+    - not ansible_check_mode
+  run_once: true
+  delegate_to: "{{ kubernetes_bootstrap_node }}"
+  block:
+    - name: Create a protected migration directory
+      ansible.builtin.tempfile:
+        state: directory
+        prefix: kubeadm-config-
+      register: kubernetes_kubeadm_migration_directory
+
+    - name: Write the original configuration for kubeadm migration
+      ansible.builtin.copy:
+        content: "{{ kubernetes_kubeadm_stored_cluster_configuration | to_nice_yaml }}"
+        dest: "{{ kubernetes_kubeadm_migration_directory.path }}/old.yaml"
+        mode: "0600"
+
+    - name: Convert the existing configuration with the target kubeadm
+      changed_when: false
+      ansible.builtin.command:
+        argv:
+          - kubeadm
+          - config
+          - migrate
+          - --old-config
+          - "{{ kubernetes_kubeadm_migration_directory.path }}/old.yaml"
+          - --new-config
+          - "{{ kubernetes_kubeadm_migration_directory.path }}/new.yaml"
+
+    - name: Read the migrated configuration
+      ansible.builtin.slurp:
+        src: "{{ kubernetes_kubeadm_migration_directory.path }}/new.yaml"
+      register: kubernetes_kubeadm_migrated_configuration
+
+    - name: Use the converted stored configuration
+      ansible.builtin.set_fact:
+        kubernetes_kubeadm_stored_cluster_configuration: >-
+          {{
+            kubernetes_kubeadm_migrated_configuration.content | b64decode | from_yaml_all
+            | selectattr('kind', 'equalto', 'ClusterConfiguration') | first
+          }}
+  always:
+    - name: Remove temporary migration files
+      when: kubernetes_kubeadm_migration_directory.path is defined
+      ansible.builtin.file:
+        path: "{{ kubernetes_kubeadm_migration_directory.path }}"
+        state: absent
+
 # NOTE: Compare the parsed configuration so the ConfigMap is only written
 #       when an argument changes, and not because of YAML formatting.
 - name: Update the component arguments in the stored kubeadm cluster configuration
   run_once: true
   delegate_to: "{{ kubernetes_bootstrap_node }}"
   vars:
-    kubernetes_kubeadm_stored_cluster_configuration: >-
-      {{ kubernetes_kubeadm_config.resources[0].data.ClusterConfiguration | from_yaml }}
     kubernetes_kubeadm_cluster_configuration: >-
       {{
         kubernetes_kubeadm_stored_cluster_configuration
@@ -36,8 +92,14 @@
             'controllerManager': kubernetes_kubeadm_controller_manager_args,
             'scheduler': kubernetes_kubeadm_scheduler_args,
           })
+        | combine(
+            {'proxy': {'disabled': true}}
+            if kubernetes_remove_kube_proxy | bool
+            and kubernetes_kubeadm_stored_cluster_configuration.apiVersion == 'kubeadm.k8s.io/v1beta4'
+            else {}, recursive=True
+          )
       }}
-  when: kubernetes_kubeadm_cluster_configuration != kubernetes_kubeadm_stored_cluster_configuration
+  when: kubernetes_kubeadm_cluster_configuration != (kubernetes_kubeadm_config.resources[0].data.ClusterConfiguration | from_yaml)
   kubernetes.core.k8s:
     kubeconfig: /etc/kubernetes/admin.conf
     definition:
@@ -48,3 +110,29 @@
         namespace: kube-system
       data:
         ClusterConfiguration: "{{ kubernetes_kubeadm_cluster_configuration | to_nice_yaml(indent=2) }}"
+
+- name: Read back proxy-disabled intent before kubeadm operations
+  when:
+    - kubernetes_remove_kube_proxy | bool
+    - kubernetes_kubeadm_stored_cluster_configuration.apiVersion == 'kubeadm.k8s.io/v1beta4'
+    - not ansible_check_mode
+  run_once: true
+  delegate_to: "{{ kubernetes_bootstrap_node }}"
+  kubernetes.core.k8s_info:
+    kubeconfig: /etc/kubernetes/admin.conf
+    api_version: v1
+    kind: ConfigMap
+    namespace: kube-system
+    name: kubeadm-config
+  register: kubernetes_proxy_disabled_readback
+
+- name: Require persisted kubeadm proxy disabling
+  when:
+    - kubernetes_remove_kube_proxy | bool
+    - kubernetes_kubeadm_stored_cluster_configuration.apiVersion == 'kubeadm.k8s.io/v1beta4'
+    - not ansible_check_mode
+  run_once: true
+  ansible.builtin.assert:
+    that:
+      - (kubernetes_proxy_disabled_readback.resources[0].data.ClusterConfiguration | from_yaml).proxy.disabled | bool
+    fail_msg: The stored kubeadm configuration did not retain proxy.disabled=true.
