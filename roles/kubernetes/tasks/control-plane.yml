@@ -102,10 +102,10 @@
     #       target version).
     - name: Upload kubelet configuration for the target version
       run_once: true
-      delegate_to: "{{ kubernetes_bootstrap_node | default(groups[kubernetes_control_plane_group][0]) }}"
-      changed_when: true
-      ansible.builtin.command:
-        cmd: kubeadm init phase upload-config kubelet --config /etc/kubernetes/kubeadm.yaml
+      ansible.builtin.include_tasks:
+        file: kubelet-configuration.yml
+        apply:
+          delegate_to: "{{ kubernetes_bootstrap_node | default(groups[kubernetes_control_plane_group][0]) }}"
 
     - name: Start an upgrade
       run_once: true

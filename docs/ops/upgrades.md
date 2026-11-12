@@ -29,6 +29,18 @@ certificate settings and explicit etcd overrides. Returning to the normal
 registry replaces a stale mirror with the target kubeadm version's defaults.
 Confirm target images and registry credentials are available before upgrading.
 
+Kubelet configuration is loaded from its existing ConfigMap before updating
+role-owned cgroup, TLS and feature-gate settings. A minimal init template alone
+does not describe site DNS, reservations, pod limits or resolver policies;
+uploading it directly can replace these with defaults on every upgraded node.
+The role now preserves supported site settings, removes obsolete role-managed
+gates explicitly, and validates the merged document with the target kubeadm
+before upload. Unsupported settings stop the run rather than disappearing.
+No persistent kubelet configuration backup is created because custom settings
+can contain credentials. Private validation and upload inputs are removed by
+the task's `always` cleanup on success or failure. This does not migrate node-local CLI flags or
+runtime sockets, which require their own controlled procedure.
+
 ### Proxy-free state is more than resource deletion
 
 When `kubernetes_remove_kube_proxy: true`, kubeadm's stored configuration must
