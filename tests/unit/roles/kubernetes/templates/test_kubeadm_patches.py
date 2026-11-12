@@ -3,7 +3,12 @@
 
 """Tests for the kubeadm patches the kubernetes role manages."""
 
+from pathlib import Path
+
 import pytest
+import yaml
+from ansible.parsing.dataloader import DataLoader
+from ansible.template import Templar
 
 
 @pytest.mark.parametrize(
@@ -52,9 +57,40 @@ def test_coredns_patch_keeps_node_selector(role_vars):
 
     assert patches == {
         "corednsdeployment": {
-            "spec": {"template": {"spec": {"nodeSelector": selector}}}
+            "spec": {
+                "template": {"spec": {"nodeSelector": selector}},
+                "strategy": {
+                    "type": "RollingUpdate",
+                    "rollingUpdate": {"maxUnavailable": 0, "maxSurge": 1},
+                },
+                "minReadySeconds": 15,
+            }
         }
     }
+
+
+@pytest.mark.parametrize("ready_seconds", [None, 30])
+def test_coredns_repair_uses_the_same_existing_patch_override(role_vars, ready_seconds):
+    patch = (
+        {}
+        if ready_seconds is None
+        else {"corednsdeployment": {"spec": {"minReadySeconds": ready_seconds}}}
+    )
+    variables = role_vars(
+        kubernetes_version="1.31.14", kubernetes_kubeadm_patches=patch
+    )
+    role = Path(__file__).resolve().parents[5] / "roles/kubernetes"
+    repair = yaml.safe_load((role / "tasks/coredns-upgrade.yml").read_text())[0]
+    definition = Templar(loader=DataLoader(), variables=variables).template(
+        repair["kubernetes.core.k8s"]["definition"]
+    )
+    spec = definition["spec"]
+    assert (
+        spec
+        == variables["kubernetes_kubeadm_managed_patches"]["corednsdeployment"]["spec"]
+    )
+    assert spec["minReadySeconds"] == (15 if ready_seconds is None else ready_seconds)
+    assert spec["strategy"]["rollingUpdate"] == {"maxUnavailable": 0, "maxSurge": 1}
 
 
 @pytest.mark.parametrize(

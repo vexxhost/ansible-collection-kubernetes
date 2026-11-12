@@ -1,0 +1,38 @@
+# Copyright (c) 2026 VEXXHOST, Inc.
+# SPDX-License-Identifier: Apache-2.0
+
+---
+# Kubeadm 1.29/1.30 lack corednsdeployment patches. The last controller's
+# upgrade node can update DNS, so call this after both kubeadm upgrade commands.
+- name: Reconcile CoreDNS placement and rolling update settings
+  delegate_to: "{{ kubernetes_bootstrap_node | default(groups[kubernetes_control_plane_group][0]) }}"
+  kubernetes.core.k8s:
+    kubeconfig: /etc/kubernetes/admin.conf
+    definition:
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: coredns
+        namespace: kube-system
+      spec: "{{ _kubernetes_coredns_upgrade_spec }}"
+
+# Node labels may not be available during bootstrap yet.
+- name: Wait for the existing cluster DNS rollout to finish
+  when: kubernetes_upgrade_check_cluster_version is defined
+  delegate_to: "{{ kubernetes_bootstrap_node | default(groups[kubernetes_control_plane_group][0]) }}"
+  kubernetes.core.k8s_info:
+    kubeconfig: /etc/kubernetes/admin.conf
+    api_version: apps/v1
+    kind: Deployment
+    namespace: kube-system
+    name: coredns
+  register: kubernetes_coredns_rollout
+  retries: "{{ kubernetes_health_check_retries }}"
+  delay: "{{ kubernetes_health_check_delay }}"
+  until:
+    - kubernetes_coredns_rollout is succeeded
+    - kubernetes_coredns_rollout.resources | length == 1
+    - kubernetes_coredns_rollout.resources[0].status.observedGeneration | default(0) >= kubernetes_coredns_rollout.resources[0].metadata.generation
+    - kubernetes_coredns_rollout.resources[0].status.updatedReplicas | default(0) == kubernetes_coredns_rollout.resources[0].spec.replicas
+    - kubernetes_coredns_rollout.resources[0].status.availableReplicas | default(0) == kubernetes_coredns_rollout.resources[0].spec.replicas
+    - kubernetes_coredns_rollout.resources[0].status.replicas | default(0) == kubernetes_coredns_rollout.resources[0].spec.replicas

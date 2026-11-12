@@ -13,5 +13,8 @@
       ansible.builtin.command:
         cmd: "{{ kubernetes_upgrade_command }}"
 
+    - name: Finish the kubeadm DNS operation before proceeding
+      ansible.builtin.include_tasks: coredns-upgrade.yml
+
     - name: Wait for the control plane
       ansible.builtin.include_tasks: health-check.yml

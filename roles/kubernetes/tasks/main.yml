@@ -31,6 +31,11 @@
   when: inventory_hostname not in groups[kubernetes_control_plane_group]
   ansible.builtin.include_tasks: nodes.yml
 
+- name: Finish DNS reconciliation before upgrading kubelets
+  when: ansible_play_hosts | intersect(groups[kubernetes_control_plane_group]) | length > 0
+  run_once: true
+  ansible.builtin.include_tasks: coredns-upgrade.yml
+
 # NOTE: Upgrade one node at a time, control plane nodes first, and wait for
 #       each node (and the control plane) to be healthy before the next one.
 - name: Upgrade the kubelets one node at a time
@@ -64,18 +69,3 @@
       kind: DaemonSet
     - api_version: v1
       kind: ConfigMap
-
-- name: Set node selector for CoreDNS components
-  run_once: true
-  delegate_to: "{{ kubernetes_bootstrap_node | default(groups[kubernetes_control_plane_group][0]) }}"
-  kubernetes.core.k8s:
-    definition:
-      apiVersion: apps/v1
-      kind: Deployment
-      metadata:
-        name: coredns
-        namespace: kube-system
-      spec:
-        template:
-          spec:
-            nodeSelector: "{{ kubernetes_coredns_node_selector }}"
