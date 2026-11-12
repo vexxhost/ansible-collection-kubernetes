@@ -25,6 +25,38 @@ External etcd deployments need their own backup procedure.
 When `kubernetes_remove_kube_proxy: true`, kubeadm's stored configuration must
 retain `proxy.disabled: true` on supported schemas before addons reconcile.
 The role migrates older configuration with kubeadm and reads the value back.
+It also checks every targeted node's IPv4/IPv6 host rules before application
+preparation, after controller commands, and at final reconciliation. A
+worker-only recovery runs the same host check.
+
+Deleting a kube-proxy DaemonSet or ConfigMap does not remove its kernel rules.
+A remaining `KUBE-FORWARD` INVALID drop can precede a replacement CNI's accept
+rules and stall a connection after SYN/SYN-ACK. An apparently healthy node or
+matching Cilium Helm release does not prove that packet path is clean.
+Unexpected proxy resources, writers or owned host rules stop the run before
+further disruption. This guard never silently flushes the firewall.
+
+For a reviewed legacy node, first stop unintended proxy writers and establish
+that Cilium replacement is healthy. An explicit recovery is available:
+
+```console
+ansible reviewed-node -i inventory/hosts.ini --become \
+  -m vexxhost.kubernetes.kube_proxy_state -a 'state=absent'
+```
+
+Recovery requires a single healthy Cilium agent in replacement mode, saves
+root-only originals in a new `/var/tmp/kube-proxy-recovery-*` directory, tests
+no-flush transactions and verifies unrelated rules are unchanged. Errors
+restore only the owned rules; originals remain for investigation. Other CNIs
+require their own reviewed recovery. Kubelet, Cilium, Tailscale and other
+firewall owners are preserved. Validate new external service connections
+after each recovered node before rerunning the upgrade. The recovery helper
+does not claim continuous availability or replace external ingress checks.
+
+These checks inspect the selected iptables backend. IPVS, native nftables
+proxy mode and rules in an alternate inactive backend require a separate
+audit. Qualify recovery with the deployed firewall and Cilium versions before
+use.
 
 Controllers are reconciled serially. The stored cluster version decides whether
 `upgrade apply` is needed; each controller's three component manifests decide

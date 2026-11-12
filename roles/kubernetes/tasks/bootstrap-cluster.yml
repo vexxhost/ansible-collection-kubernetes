@@ -26,6 +26,14 @@
   ansible.builtin.debug:
     msg: "{{ kubernetes_bootstrap_node }}"
 
+# The existing preflight has run and the usable API controller is now known.
+- name: Reject proxy resources and host residue before application preparation
+  when:
+    - kubernetes_remove_kube_proxy | bool
+    - kubernetes_upgrade_check_cluster_version is defined
+  run_once: true
+  ansible.builtin.include_tasks: kube-proxy-check.yml
+
 - name: Upload cluster configuration for bootstrap node
   ansible.builtin.template:
     src: kubeadm.yaml.j2
