@@ -345,36 +345,139 @@ def bolt_page_size(data):
 
 def rewrite_database(data, replacements):
     """Return (data, counts) with hash annotations replaced in a BoltDB file."""
-    page_size = bolt_page_size(data)
     tokens = _tokens(replacements)
     counts = {old: 0 for old in replacements}
     updated = bytearray(data)
-
-    offset = 0
-    while offset < len(updated):
-        page_id, flags, count, overflow = BOLT_PAGE_HEADER.unpack_from(updated, offset)
-        page_end = offset + (overflow + 1) * page_size
-        # NOTE: Unused pages can hold stale bytes, so only trust headers that
-        #       carry their own page id and a known page type.
-        if (
-            page_id != offset // page_size
-            or flags
-            not in (
-                BOLT_BRANCH_PAGE,
-                BOLT_LEAF_PAGE,
-                BOLT_META_PAGE,
-                BOLT_FREELIST_PAGE,
-            )
-            or page_end > len(updated)
-        ):
-            offset += page_size
-            continue
-
-        if flags == BOLT_LEAF_PAGE and count:
-            _rewrite_leaf_page(updated, offset, page_end, count, tokens, counts)
-        offset = page_end
-
+    # Free pages retain valid-looking headers and old metadata. Only the tree
+    # reachable from the newest committed meta page belongs to this database.
+    for start, end, count in active_leaf_pages(data):
+        elements, changed = _rewrite_elements(
+            updated, start, end, count, tokens, counts, False
+        )
+        if elements is None:
+            raise MigrationError("invalid committed BoltDB leaf page")
+        if changed:
+            _pack_elements(updated, start, end, elements)
     return bytes(updated), counts
+
+
+def _fnv64(data):
+    value = 0xCBF29CE484222325
+    for byte in data:
+        value = ((value ^ byte) * 0x100000001B3) & 0xFFFFFFFFFFFFFFFF
+    return value
+
+
+def active_leaf_pages(data):
+    """Walk committed branch/bucket pointers, excluding free and stale pages."""
+    page_size = bolt_page_size(data)
+    metas = []
+    for page_id in (0, 1):
+        start = page_id * page_size
+        if len(data) < start + 80:
+            continue
+        magic, version, size, _ = struct.unpack_from("<IIII", data, start + 16)
+        root, _, _, high_water, txid, checksum = struct.unpack_from(
+            "<QQQQQQ", data, start + 32
+        )
+        if (
+            BOLT_PAGE_HEADER.unpack_from(data, start)[:2] == (page_id, BOLT_META_PAGE)
+            and (magic, version, size) == (BOLT_MAGIC, 2, page_size)
+            and checksum == _fnv64(data[start + 16 : start + 72])
+            and 2 <= root < high_water <= len(data) // page_size
+        ):
+            metas.append((txid, root, high_water))
+    if not metas:
+        raise MigrationError("no valid committed BoltDB meta page")
+    _, root, high_water = max(metas)
+    pending, seen, leaves = [root], set(), []
+    while pending:
+        page_id = pending.pop()
+        if not 2 <= page_id < high_water or page_id in seen:
+            raise MigrationError("invalid or repeated BoltDB page reference")
+        start = page_id * page_size
+        actual, flags, count, overflow = BOLT_PAGE_HEADER.unpack_from(data, start)
+        end = start + (overflow + 1) * page_size
+        occupied = set(range(page_id, page_id + overflow + 1))
+        if actual != page_id or end > high_water * page_size or occupied & seen:
+            raise MigrationError("invalid BoltDB page allocation")
+        seen.update(occupied)
+        table_end = start + 16 + count * 16
+        if table_end > end:
+            raise MigrationError("invalid BoltDB element table")
+        if flags == BOLT_BRANCH_PAGE:
+            for index in range(count):
+                element = start + 16 + index * 16
+                pos, key_size, child = struct.unpack_from("<IIQ", data, element)
+                if not table_end <= element + pos <= element + pos + key_size <= end:
+                    raise MigrationError("invalid BoltDB branch element")
+                pending.append(child)
+        elif flags == BOLT_LEAF_PAGE:
+            leaves.append((start, end, count))
+            for index in range(count):
+                element = start + 16 + index * 16
+                flags, pos, key_size, value_size = BOLT_LEAF_ELEMENT.unpack_from(
+                    data, element
+                )
+                value_start = element + pos + key_size
+                if (
+                    not table_end
+                    <= element + pos
+                    <= value_start
+                    <= value_start + value_size
+                    <= end
+                ):
+                    raise MigrationError("invalid BoltDB leaf element")
+                if flags & BOLT_BUCKET_LEAF:
+                    if value_size < 16:
+                        raise MigrationError("truncated BoltDB bucket")
+                    child = struct.unpack_from("<Q", data, value_start)[0]
+                    if child:
+                        pending.append(child)
+        else:
+            raise MigrationError("committed BoltDB tree references a non-tree page")
+    return leaves
+
+
+def remaining_live_hashes(data, replacements):
+    """Inspect live keys/values, never padding, freelists or old transactions."""
+    remaining = set()
+
+    def scan(start, end, count):
+        table_end = start + 16 + count * 16
+        for index in range(count):
+            element = start + 16 + index * 16
+            flags, pos, key_size, value_size = BOLT_LEAF_ELEMENT.unpack_from(
+                data, element
+            )
+            key_start = element + pos
+            value_start = key_start + key_size
+            value_end = value_start + value_size
+            if not table_end <= key_start <= value_start <= value_end <= end:
+                raise MigrationError("invalid BoltDB leaf element")
+            key, value = data[key_start:value_start], data[value_start:value_end]
+            if flags & BOLT_BUCKET_LEAF:
+                root = struct.unpack_from("<Q", value)[0]
+                if root == 0:
+                    inline_start = value_start + 16
+                    if inline_start + 16 > value_end:
+                        raise MigrationError("truncated inline BoltDB bucket")
+                    _, kind, entries, overflow = BOLT_PAGE_HEADER.unpack_from(
+                        data, inline_start
+                    )
+                    if kind != BOLT_LEAF_PAGE or overflow:
+                        raise MigrationError("invalid inline BoltDB bucket")
+                    scan(inline_start, value_end, entries)
+                value = b""
+            remaining.update(
+                old
+                for old, token, _ in _tokens(replacements)
+                if token in key or token in value
+            )
+
+    for start, end, count in active_leaf_pages(data):
+        scan(start, end, count)
+    return sorted(remaining)
 
 
 def _rewrite_leaf_page(page, start, end, count, tokens, counts):
@@ -405,7 +508,7 @@ def apply(migrations, db_path=CONTAINERD_METADATA_DB):
     missing = sorted(old for old, found in counts.items() if not found)
     if missing:
         raise MigrationError(f"hashes not found in the database: {missing}")
-    leftover = [old for old, token, _ in _tokens(replacements) if token in rewritten]
+    leftover = remaining_live_hashes(rewritten, replacements)
     if leftover:
         raise MigrationError(f"hashes left in the database: {sorted(leftover)}")
 

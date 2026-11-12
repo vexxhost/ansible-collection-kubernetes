@@ -29,6 +29,7 @@ propagating the failure. All site plays stop on fatal errors.
 | Target | Managed compatibility |
 | --- | --- |
 | 1.29 and 1.30 | Restore CoreDNS placement immediately after either kubeadm control-plane command, then finish its rollout before kubelets. |
+| 1.31 | Migrate container hashes while kubelet/containerd are stopped. Follow the newest committed BoltDB tree; inactive pages and old transactions are not live annotations. |
 | 1.31 and later | Keep CoreDNS placement and overlapping rolling updates through the supported `corednsdeployment` patch. |
 | 1.34 | Prepare the etcd 3.5-to-3.6 transition before kubeadm changes members; the bridge and data checks are operator prerequisites. |
 | 1.35 and later affected releases | Retain the stopped-kubelet resource-checkpoint transition on entry, preserve the native checkpoint on later hops and keep the resize admission guard. Remove obsolete gate overrides and validate target runtime/CRI behavior. |
