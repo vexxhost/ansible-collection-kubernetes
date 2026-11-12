@@ -1,0 +1,105 @@
+# Copyright (c) 2026 VEXXHOST, Inc.
+# SPDX-License-Identifier: Apache-2.0
+
+---
+- name: Read the existing kubelet configuration before upgrade
+  kubernetes.core.k8s_info:
+    kubeconfig: /etc/kubernetes/admin.conf
+    api_version: v1
+    kind: ConfigMap
+    namespace: kube-system
+    name: kubelet-config
+  register: kubernetes_existing_kubelet_config
+
+- name: Require the existing kubelet configuration
+  ansible.builtin.assert:
+    that:
+      - kubernetes_existing_kubelet_config.resources | length == 1
+      - kubernetes_existing_kubelet_config.resources[0].data.kubelet is defined
+    fail_msg: Existing kubelet configuration is unavailable; refusing a defaulted replacement.
+
+- name: Read the rendered target configuration
+  ansible.builtin.slurp:
+    src: /etc/kubernetes/kubeadm.yaml
+  no_log: true
+  register: kubernetes_rendered_upgrade_config
+
+- name: Merge only role-owned kubelet settings
+  no_log: true
+  vars:
+    configs: "{{ kubernetes_rendered_upgrade_config.content | b64decode | from_yaml_all | list }}"
+  ansible.builtin.set_fact:
+    kubernetes_upgrade_configs: "{{ configs }}"
+    kubernetes_merged_kubelet_config: >-
+      {{
+        kubernetes_existing_kubelet_config.resources[0].data.kubelet | from_yaml
+        | vexxhost.kubernetes.kubelet_upgrade_config(
+            configs | selectattr('kind', 'equalto', 'KubeletConfiguration') | first
+          )
+      }}
+
+- name: Validate and upload the preserved kubelet configuration
+  block:
+    - name: Create a private configuration staging directory
+      ansible.builtin.tempfile:
+        state: directory
+        prefix: kubelet-upgrade-
+      register: kubernetes_kubelet_staging
+
+    # A standalone ClusterConfiguration avoids validating the bootstrap-only
+    # JoinConfiguration, which intentionally has no discovery configuration.
+    - name: Write target validation input without bootstrap credentials
+      ansible.builtin.copy:
+        content: |
+          {{ (kubernetes_upgrade_configs | selectattr('kind', 'equalto', 'ClusterConfiguration') | first) | to_nice_yaml }}
+          ---
+          {{ kubernetes_merged_kubelet_config | to_nice_yaml }}
+        dest: "{{ kubernetes_kubelet_staging.path }}/validate.yaml"
+        mode: "0600"
+      no_log: true
+
+    - name: Validate preserved fields against the target kubeadm schema
+      ansible.builtin.command:
+        argv:
+          - kubeadm
+          - config
+          - validate
+          - --config
+          - "{{ kubernetes_kubelet_staging.path }}/validate.yaml"
+      register: kubernetes_kubelet_validation
+      changed_when: false
+      failed_when: >-
+        kubernetes_kubelet_validation.rc != 0 or
+        'unknown field' in kubernetes_kubelet_validation.stderr or
+        'strict decoding error' in kubernetes_kubelet_validation.stderr
+      no_log: true
+
+    - name: Write the upload input with the original init and join settings
+      ansible.builtin.copy:
+        content: |
+          {% for config in kubernetes_upgrade_configs %}
+          ---
+          {{ (kubernetes_merged_kubelet_config if config.kind == 'KubeletConfiguration' else config) | to_nice_yaml }}
+          {% endfor %}
+        dest: "{{ kubernetes_kubelet_staging.path }}/upload.yaml"
+        mode: "0600"
+      no_log: true
+
+    - name: Upload only the validated kubelet component configuration
+      changed_when: true
+      ansible.builtin.command:
+        argv:
+          - kubeadm
+          - init
+          - phase
+          - upload-config
+          - kubelet
+          - --config
+          - "{{ kubernetes_kubelet_staging.path }}/upload.yaml"
+      no_log: true
+  always:
+    - name: Remove private kubelet staging files
+      when: kubernetes_kubelet_staging.path is defined
+      ansible.builtin.file:
+        path: "{{ kubernetes_kubelet_staging.path }}"
+        state: absent
