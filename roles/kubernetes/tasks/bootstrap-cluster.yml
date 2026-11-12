@@ -129,6 +129,22 @@
 - name: Update the stored kubeadm cluster configuration
   ansible.builtin.include_tasks: cluster-configuration.yml
 
+- name: Preserve controller kubelet HA before kubeadm enables local mode
+  when:
+    - kubernetes_upgrade_check_cluster_version is defined
+    - kubernetes_version is version('1.33.0', '>=')
+    - kubernetes_upgrade_vip_handoff | bool
+  run_once: true
+  delegate_to: "{{ item }}"
+  vexxhost.kubernetes.kubelet_ha_endpoint:
+    hostname: "{{ kubernetes_kubelet_ha_hostname }}"
+    # Use the existing API VIP; a second address setting could split HA routes.
+    address: "{{ kube_vip_address | default(kubernetes_keepalived_vip | default(kubernetes_hostname)) }}"
+    control_plane_endpoint: "https://{{ kubernetes_kubeadm_stored_cluster_configuration.controlPlaneEndpoint }}"
+    node_address: "{{ hostvars[item].kubelet_node_ip | default(omit) }}"
+    node_name: "{{ hostvars[item].kubernetes_kubelet_node_name }}"
+  loop: "{{ ansible_play_hosts | intersect(groups[kubernetes_control_plane_group]) }}"
+
 - name: Check if the node is already part of the cluster
   ansible.builtin.stat:
     path: /etc/kubernetes/kubelet.conf
