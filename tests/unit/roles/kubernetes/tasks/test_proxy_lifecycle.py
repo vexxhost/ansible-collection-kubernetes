@@ -41,3 +41,14 @@ def test_existing_proxy_intent_is_enforced_without_replacing_other_fields(proxy)
     )
     assert result["proxy"] == {"disabled": True}
     assert result["networking"] == original["networking"]
+
+
+def test_worker_recovery_checks_host_state_before_setup():
+    tasks = yaml.safe_load((ROOT / "roles/kubernetes/tasks/main.yml").read_text())
+    guard = next(
+        i
+        for i, t in enumerate(tasks)
+        if t["name"] == "Check proxy-free state during worker-only recovery"
+    )
+    setup = next(i for i, t in enumerate(tasks) if t["name"] == "Setup nodes")
+    assert guard < setup

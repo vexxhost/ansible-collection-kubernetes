@@ -1,0 +1,29 @@
+# Copyright (c) 2026 VEXXHOST, Inc.
+# SPDX-License-Identifier: Apache-2.0
+
+---
+- name: Read kube-proxy resources before accepting a proxy-free cluster
+  delegate_to: "{{ kubernetes_bootstrap_node | default(groups[kubernetes_control_plane_group][0]) }}"
+  kubernetes.core.k8s_info:
+    kubeconfig: /etc/kubernetes/admin.conf
+    api_version: "{{ item.api_version }}"
+    kind: "{{ item.kind }}"
+    namespace: kube-system
+    name: kube-proxy
+  loop:
+    - {api_version: apps/v1, kind: DaemonSet}
+    - {api_version: v1, kind: ConfigMap}
+  register: kubernetes_proxy_resources
+
+- name: Refuse unexpected proxy writers before host-rule validation
+  ansible.builtin.assert:
+    that:
+      - kubernetes_proxy_resources.results | map(attribute='resources') | flatten | length == 0
+    fail_msg: >-
+      kube-proxy resources exist despite kubernetes_remove_kube_proxy=true.
+      Verify the replacement and stop the proxy writers before reviewed host recovery.
+
+- name: Check both address families on each targeted node
+  delegate_to: "{{ item }}"
+  vexxhost.kubernetes.kube_proxy_state:
+  loop: "{{ kubernetes_proxy_check_hosts | default(ansible_play_hosts) }}"

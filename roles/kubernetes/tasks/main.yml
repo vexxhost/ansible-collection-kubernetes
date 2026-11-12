@@ -15,6 +15,14 @@
   ansible.builtin.set_fact:
     kubernetes_kubelet_node_name: "{{ kubelet_hostname }}"
 
+- name: Check proxy-free state during worker-only recovery
+  when:
+    - kubernetes_remove_kube_proxy | bool
+    - kubernetes_upgrade_check_cluster_version is defined
+    - ansible_play_hosts | intersect(groups[kubernetes_control_plane_group]) | length == 0
+  run_once: true
+  ansible.builtin.include_tasks: kube-proxy-check.yml
+
 - name: Setup control plane
   when: inventory_hostname in groups[kubernetes_control_plane_group]
   ansible.builtin.include_tasks: control-plane.yml
@@ -69,3 +77,8 @@
       kind: DaemonSet
     - api_version: v1
       kind: ConfigMap
+
+- name: Verify proxy-free resources and host state after reconciliation
+  when: kubernetes_remove_kube_proxy | bool
+  run_once: true
+  ansible.builtin.include_tasks: kube-proxy-check.yml

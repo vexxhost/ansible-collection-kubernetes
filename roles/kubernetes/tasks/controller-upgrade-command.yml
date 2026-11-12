@@ -13,6 +13,10 @@
       ansible.builtin.command:
         cmd: "{{ kubernetes_upgrade_command }}"
 
+    - name: Reject unexpected proxy reconciliation before continuing
+      when: kubernetes_remove_kube_proxy | bool
+      ansible.builtin.include_tasks: kube-proxy-check.yml
+
     - name: Finish the kubeadm DNS operation before proceeding
       ansible.builtin.include_tasks: coredns-upgrade.yml
 
