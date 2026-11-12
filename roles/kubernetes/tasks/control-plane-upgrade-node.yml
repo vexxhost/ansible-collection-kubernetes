@@ -2,23 +2,87 @@
 # SPDX-License-Identifier: Apache-2.0
 
 ---
-- name: Check if the Kubernetes API service is up to date
+- name: Read the controller component manifests
   delegate_to: "{{ kubernetes_control_plane_upgrade_host }}"
-  check_mode: false
-  ansible.builtin.command:
-    cmd: grep -q "v{{ kubernetes_version }}" /etc/kubernetes/manifests/kube-apiserver.yaml
-  changed_when: false
-  failed_when: false
-  register: kubernetes_control_plane_version_check
+  ansible.builtin.slurp:
+    src: "/etc/kubernetes/manifests/{{ item }}.yaml"
+  loop:
+    - kube-apiserver
+    - kube-controller-manager
+    - kube-scheduler
+  register: kubernetes_controller_manifests
 
-- name: Upgrade the control plane and wait for it
-  when: kubernetes_control_plane_version_check.rc != 0
-  block:
-    - name: Trigger an upgrade of the Kubernetes API services
-      delegate_to: "{{ kubernetes_control_plane_upgrade_host }}"
-      changed_when: true
-      ansible.builtin.command:
-        cmd: kubeadm upgrade node {{ kubernetes_kubeadm_upgrade_args }}
+- name: Reset the controller reconciliation decision
+  ansible.builtin.set_fact:
+    kubernetes_controller_upgrade_required: false
 
-    - name: Wait for the control plane after upgrading the node
-      ansible.builtin.include_tasks: health-check.yml
+- name: Read the running controller components
+  delegate_to: "{{ kubernetes_bootstrap_node }}"
+  kubernetes.core.k8s_info:
+    kubeconfig: /etc/kubernetes/admin.conf
+    kind: Pod
+    namespace: kube-system
+    field_selectors:
+      - "spec.nodeName={{ hostvars[kubernetes_control_plane_upgrade_host].kubernetes_kubelet_node_name }}"
+    label_selectors:
+      - component in (kube-apiserver,kube-controller-manager,kube-scheduler)
+  register: kubernetes_controller_pods
+
+- name: Reconcile missing or incomplete running components
+  ansible.builtin.set_fact:
+    kubernetes_controller_upgrade_required: true
+  when: kubernetes_controller_pods.resources | length != 3
+
+- name: Reconcile running component image versions
+  ansible.builtin.set_fact:
+    kubernetes_controller_upgrade_required: true
+  when: item.image is not regex('^.*:v' ~ (kubernetes_version | regex_escape) ~ '(@sha256:[0-9a-f]+)?$')
+  loop: "{{ kubernetes_controller_pods.resources | map(attribute='status.containerStatuses', default=[]) | flatten }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: Decide from each component's exact image version
+  vars:
+    kubernetes_component_manifest: "{{ item.content | b64decode | from_yaml }}"
+    kubernetes_component_image: "{{ (kubernetes_component_manifest.spec.containers | selectattr('name', 'equalto', item.item) | first).image }}"
+  ansible.builtin.set_fact:
+    kubernetes_controller_upgrade_required: true
+  when: kubernetes_component_image is not regex('^.*:v' ~ (kubernetes_version | regex_escape) ~ '(@sha256:[0-9a-f]+)?$')
+  loop: "{{ kubernetes_controller_manifests.results }}"
+  loop_control:
+    label: "{{ item.item }}"
+
+- name: Upgrade the incomplete controller
+  when: kubernetes_controller_upgrade_required | bool
+  ansible.builtin.include_tasks: controller-upgrade-command.yml
+  vars:
+    kubernetes_upgrade_host: "{{ kubernetes_control_plane_upgrade_host }}"
+    kubernetes_upgrade_command: "kubeadm upgrade node {{ kubernetes_kubeadm_upgrade_args }}"
+
+- name: Wait for all selected controller components to report the target image
+  when: not ansible_check_mode
+  delegate_to: "{{ kubernetes_bootstrap_node }}"
+  kubernetes.core.k8s_info:
+    kubeconfig: /etc/kubernetes/admin.conf
+    kind: Pod
+    namespace: kube-system
+    field_selectors:
+      - "spec.nodeName={{ hostvars[kubernetes_control_plane_upgrade_host].kubernetes_kubelet_node_name }}"
+    label_selectors:
+      - component in (kube-apiserver,kube-controller-manager,kube-scheduler)
+  register: kubernetes_controller_target_pods
+  vars:
+    kubernetes_controller_target_containers: >-
+      {{ kubernetes_controller_target_pods.resources
+      | map(attribute='status.containerStatuses', default=[]) | flatten }}
+  retries: "{{ kubernetes_health_check_retries }}"
+  delay: "{{ kubernetes_health_check_delay }}"
+  until:
+    - kubernetes_controller_target_pods is succeeded
+    - kubernetes_controller_target_pods.resources | length == 3
+    - kubernetes_controller_target_containers | length == 3
+    - kubernetes_controller_target_containers | rejectattr('ready', 'equalto', true) | list | length == 0
+    - >-
+      kubernetes_controller_target_containers
+      | rejectattr('image', 'regex', '^.*:v' ~ (kubernetes_version | regex_escape) ~ '(@sha256:[0-9a-f]+)?$')
+      | list | length == 0

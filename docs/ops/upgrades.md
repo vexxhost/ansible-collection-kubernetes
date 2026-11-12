@@ -1,233 +1,66 @@
-# Upgrades
+# Kubernetes upgrades
 
-At the moment, the collection does not have a playbook to allow for automatic
-detection of the current version and upgrade to the latest version.  In the
-meantime, upgrades need to be done manually.
+Set `kubernetes_version` to an exact patch release in the next minor, then run
+one playbook for the complete inventory:
 
-For the following steps, please make sure to select the "Playbooks" tab if you
-used the playbooks directly and "Atmosphere" if you are using this collection
-as part of the Atmosphere deployment.
+```console
+ansible-playbook vexxhost.kubernetes.site -i inventory/hosts.ini
+```
 
-!!! warning
+Repeat for each intervening minor until the chosen target, selecting a
+supported exact patch release at each step. Each invocation handles one minor;
+do not skip intermediate Kubernetes minors. Complete the version-specific
+prerequisites below before each step.
 
-    All of the commands below include both `--check` and `--diff` flags, you
-    must remove them before running the commands if you want to apply the
-    changes.
+## Upgrade lifecycle
 
-While running the steps below, you will need to make sure to verify that the
-cluster is still functional after each step.
+Controllers are reconciled serially. The stored cluster version decides whether
+`upgrade apply` is needed; each controller's three component manifests decide
+whether its `upgrade node` remains necessary. A rerun therefore finishes peers
+even if an interrupted run already recorded the target cluster version.
 
-!!! warning
+The kubelet loop remains serial and keeps running containers. Controller
+kubelets refresh only kubeadm's `kubelet-config` phase, rather than repeating
+the control-plane/add-on upgrade. Rescue starts a failed kubelet before
+propagating the failure. All site plays stop on fatal errors.
 
-    These instructions have been validated for the 1.5.2 release of the
-    collection (which ships in Atmosphere 1.5.1).
+## Compatibility by target version
 
-## Control plane infrastructure + `containerd`
+| Target | Managed compatibility |
+| --- | --- |
+| 1.34 | Prepare the etcd 3.5-to-3.6 transition before kubeadm changes members; the bridge and data checks are operator prerequisites. |
+| 1.35 and later affected releases | Retain the stopped-kubelet resource-checkpoint transition on entry, preserve the native checkpoint on later hops and keep the resize admission guard. Remove obsolete gate overrides and validate target runtime/CRI behavior. |
 
-!!! warning
+### Etcd, runtime and resize prerequisites
 
-    This step will "forget" the package by manipulating the `dpkg` database
-    in order to avoid killing the service, it's recommended to try running
-    this step on a test cluster and also on a single node before running it
-    on the entire cluster.
+Before moving local etcd from 3.5 to 3.6, update every member to 3.5.32 or
+later and verify that legacy v2 data does not block the transition. Follow the
+[etcd upgrade procedure](https://etcd.io/docs/v3.6/upgrades/upgrade_3_6/),
+including snapshot and WAL checks with a compatible `etcdutl`. Check protected
+offline data copies, never run the checker against the live data directory,
+and stop for custom data or an unexpected result. Keep verified backups.
 
-=== "Playbooks"
+Before starting the target kubelet, qualify its container runtime and CRI
+behavior with both existing workloads and a new pod with init containers.
+Persist the accepted runtime version and checksum so role dependencies cannot
+select an older default. Preserve runtime configuration and runc behavior;
+perform any required runtime intermediate upgrades as a separate controlled
+operation. This workflow does not automatically implement that runtime path.
 
-    ``` bash
-    ansible-playbook -i inventory/hosts.ini --check --diff /dev/stdin <<END
-    ---
-    - name: Configure Kubernetes VIP
-      hosts: "{{ kubernetes_control_plane_group | default('controllers') }}"
-      become: true
-      roles:
-        - role: vexxhost.kubernetes.keepalived
-        - role: vexxhost.kubernetes.haproxy
+On nodes using legacy QoS cgroup settings, retain the collection's checkpoint
+transition before the first 1.35 kubelet startup and verify the resulting
+resource records. Preserve the kubelet-owned checkpoint on subsequent hops.
+Retain the resize admission guard on affected releases: successful startup
+does not make explicit in-place resize safe. Honor patch-specific denylist checks
+and follow the [pod QoS cgroup procedure](qos-cgroups.md); do not bypass a
+denied patch or combine a cgroup migration with a minor upgrade.
 
-    - name: Install Kubernetes
-      hosts: "{{ kubernetes_group | default('all') }}"
-      become: true
-      roles:
-        - role: vexxhost.containers.containerd
-    END
-    ```
+Keep the collection's managed `InPlacePodVerticalScaling: false` behavior for
+1.33/1.34 nodes with legacy QoS cgroup settings. Do not combine a cgroup
+migration with the version bump. For later affected releases, follow the
+[pod QoS cgroup procedure](qos-cgroups.md) and the resize upgrade guard.
 
-=== "Atmosphere"
-
-    ``` bash
-    ansible-playbook -i inventory/hosts.ini --check --diff /dev/stdin <<END
-    ---
-    - name: Configure Kubernetes VIP
-      hosts: "{{ kubernetes_control_plane_group | default('controllers') }}"
-      become: true
-      roles:
-        - role: vexxhost.atmosphere.defaults
-        - role: vexxhost.kubernetes.keepalived
-          vars:
-            keepalived_image: "{{ atmosphere_images['keepalived'] }}"
-            keepalived_vrid: "{{ kubernetes_keepalived_vrid }}"
-            keepalived_interface: "{{ kubernetes_keepalived_interface }}"
-            keepalived_vip: "{{ kubernetes_keepalived_vip }}"
-        - role: vexxhost.kubernetes.haproxy
-          vars:
-            haproxy_image: "{{ atmosphere_images['haproxy'] }}"
-
-    - name: Install Kubernetes
-      hosts: "{{ kubernetes_group | default('all') }}"
-      become: true
-      roles:
-        - role: vexxhost.atmosphere.defaults
-        - role: vexxhost.containers.containerd
-          vars:
-            containerd_pause_image: "{{ atmosphere_images['pause'] }}"
-    END
-    ```
-
-## Kubernetes
-
-!!! warning "Legacy nodes without pod QoS cgroups"
-
-    Nodes joined by older collection releases can retain
-    `--cgroups-per-qos=false`. Migrate them with the
-    [pod QoS cgroup procedure](qos-cgroups.md) before upgrading to a Kubernetes
-    patch release refused by `kubernetes_upgrade_check`. Do not combine that
-    migration with a Kubernetes version upgrade.
-
-    When upgrading from an affected release to the first release containing
-    the upstream fix, run the Kubernetes role for the full inventory once more
-    after all kubelets are upgraded. The preflight intentionally keeps the
-    admission guard while it still observes the old kubelet versions; the
-    follow-up run removes it after every node reports a fixed version.
-
-The overview of the process is that we will start by running the `kubeadm` role
-independently to update the `kubeadm` binary, start the control plane upgrade
-and then roll out the remaining systems.
-
-You will need to make sure to update `kubernetes_version` to the target version
-in `inventory/group_vars/kubernetes.yml` before running the steps below.
-
-!!! warning
-
-    This step will "forget" the package by manipulating the `dpkg` database
-    in order to avoid killing the service, it's recommended to try running
-    this step on a test cluster and also on a single node before running it
-    on the entire cluster.
-
-=== "Playbooks"
-
-    ``` bash
-    ansible-playbook -i inventory/hosts.ini /dev/stdin <<END
-    ---
-    # helm upgrade --values /tmp/mariadb.yml mariadb openstack-helm-infra/mariadb
-    # TODO: fix https://github.com/kubernetes/ingress-nginx/blob/712e10d4176da06e28a11eb6f9e2d7a263b887cb/rootfs/etc/nginx/template/nginx.tmpl#L1322
-
-    - name: Upgrade all packages
-      hosts: "{{ kubernetes_group | default('all') }}"
-      become: true
-      roles:
-        - role: vexxhost.kubernetes.kubeadm
-          vars:
-            kubeadm_version: "{{ kubernetes_version }}"
-        - role: vexxhost.kubernetes.kubectl
-          vars:
-            kubectl_version: "{{ kubernetes_version }}"
-        - role: vexxhost.kubernetes.kubelet
-          vars:
-            kubelet_version: "{{ kubernetes_version }}"
-
-    - name: Run the control plane upgrade
-      hosts: "{{ kubernetes_control_plane_group | default('controllers') }}"
-      become: true
-      tasks:
-        - name: Run "kubeadm upgrade plan"
-          changed_when: false
-          ansible.builtin.shell: kubeadm upgrade plan
-          when: ansible_play_hosts[0] == inventory_hostname
-
-        - name: Run "kubeadm upgrade apply"
-          changed_when: false
-          ansible.builtin.shell: kubeadm upgrade apply v{{ kubernetes_version }} --yes
-          when: ansible_play_hosts[0] == inventory_hostname
-
-        - name: Run "kubeadm upgrade node" on other controllers
-          changed_when: false
-          throttle: 1
-          ansible.builtin.shell: kubeadm upgrade node
-          when: ansible_play_hosts[0] != inventory_hostname
-
-    # TODO: upgrade CNI
-
-    - name: Run the "kubelet" upgrade
-      hosts: "{{ kubernetes_group | default('all') }}"
-      become: true
-      tasks:
-        - name: Run "kubeadm upgrade node"
-          changed_when: false
-          ansible.builtin.shell: kubeadm upgrade node
-
-        - name: Restart "kubelet"
-          ansible.builtin.service:
-            name: kubelet
-            state: restarted
-    END
-    ```
-
-=== "Atmosphere"
-
-    ``` bash
-    ansible-playbook -i inventory/hosts.ini /dev/stdin <<END
-    ---
-    # helm upgrade --values /tmp/mariadb.yml mariadb openstack-helm-infra/mariadb
-    # TODO: fix https://github.com/kubernetes/ingress-nginx/blob/712e10d4176da06e28a11eb6f9e2d7a263b887cb/rootfs/etc/nginx/template/nginx.tmpl#L1322
-
-    - name: Upgrade all packages
-      hosts: "{{ kubernetes_group | default('all') }}"
-      become: true
-      roles:
-        - role: vexxhost.atmosphere.defaults
-        - role: vexxhost.kubernetes.kubeadm
-          vars:
-            kubeadm_version: "{{ kubernetes_version }}"
-        - role: vexxhost.kubernetes.kubectl
-          vars:
-            kubectl_version: "{{ kubernetes_version }}"
-        - role: vexxhost.kubernetes.kubelet
-          vars:
-            kubelet_version: "{{ kubernetes_version }}"
-            containerd_pause_image: "{{ atmosphere_images['pause'] }}"
-
-    - name: Run the control plane upgrade
-      hosts: "{{ kubernetes_control_plane_group | default('controllers') }}"
-      become: true
-      tasks:
-        - name: Run "kubeadm upgrade plan"
-          changed_when: false
-          ansible.builtin.shell: kubeadm upgrade plan
-          when: ansible_play_hosts[0] == inventory_hostname
-
-        - name: Run "kubeadm upgrade apply"
-          changed_when: false
-          ansible.builtin.shell: kubeadm upgrade apply v{{ kubernetes_version }} --yes
-          when: ansible_play_hosts[0] == inventory_hostname
-
-        - name: Run "kubeadm upgrade node" on other controllers
-          changed_when: false
-          throttle: 1
-          ansible.builtin.shell: kubeadm upgrade node
-          when: ansible_play_hosts[0] != inventory_hostname
-
-    # TODO: upgrade CNI
-
-    - name: Run the "kubelet" upgrade
-      hosts: "{{ kubernetes_group | default('all') }}"
-      become: true
-      tasks:
-        - name: Run "kubeadm upgrade node"
-          changed_when: false
-          ansible.builtin.shell: kubeadm upgrade node
-
-        - name: Restart "kubelet"
-          ansible.builtin.service:
-            name: kubelet
-            state: restarted
-    END
-    ```
+The playbook does not perform a complete runtime/etcd migration or establish
+integrated HA application continuity. Complete the prerequisite operations
+and qualify the exact collection, addon and runtime combination before rollout;
+monitor service traffic throughout each minor upgrade.
