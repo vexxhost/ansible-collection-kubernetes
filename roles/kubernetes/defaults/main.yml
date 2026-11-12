@@ -99,6 +99,9 @@ kubernetes_upgrade_operation_timeout: 1800
 # Protected etcd snapshots are retained on the bootstrap node and deployer.
 kubernetes_etcd_snapshot_directory: ~/.local/state/kubernetes-upgrades
 
+# Preserve a certificate-valid HA endpoint when kubeadm enables local mode.
+kubernetes_kubelet_ha_hostname: kubernetes.default.svc.cluster.local
+
 # Allow custom CA usage in the cluster
 kubernetes_allow_custom_ca: false
 

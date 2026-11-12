@@ -85,6 +85,7 @@ propagating the failure. All site plays stop on fatal errors.
 | 1.31 | Migrate container hashes while kubelet/containerd are stopped. Follow the newest committed BoltDB tree; inactive pages and old transactions are not live annotations. |
 | 1.31 and later | Migrate the stored kubeadm schema when necessary and persist `proxy.disabled` before upgrade when Cilium replaces kube-proxy. |
 | 1.31 and later | Keep CoreDNS placement and overlapping rolling updates through the supported `corednsdeployment` patch. |
+| 1.33 and later | Preserve a custom, certificate-valid controller kubelet HA endpoint before kubeadm's local-endpoint behavior can restart it. Preserve any existing custom endpoint. |
 | 1.34 | Prepare the etcd 3.5-to-3.6 transition before kubeadm changes members; the bridge and data checks are operator prerequisites. |
 | 1.35 and later affected releases | Retain the stopped-kubelet resource-checkpoint transition on entry, preserve the native checkpoint on later hops and keep the resize admission guard. Remove obsolete gate overrides and validate target runtime/CRI behavior. |
 
@@ -113,10 +114,18 @@ does not make explicit in-place resize safe. Honor patch-specific denylist check
 and follow the [pod QoS cgroup procedure](qos-cgroups.md); do not bypass a
 denied patch or combine a cgroup migration with a minor upgrade.
 
+The HA hostname defaults to `kubernetes.default.svc.cluster.local`, a standard
+API certificate SAN, with an exact hosts-file mapping to the existing VIP.
+For another cluster DNS domain, set `kubernetes_kubelet_ha_hostname` accordingly.
+The module authenticates the hostname using the current kubelet credentials
+before changing files, preserves all other kubeconfig fields, and does not
+restart the kubelet during preparation.
+
 CoreDNS uses `maxUnavailable: 0`, `maxSurge: 1` and 15 seconds of readiness
 stabilization. The role shares this policy between kubeadm patches and legacy
 placement repair; site overrides use the existing
-`kubernetes_kubeadm_patches.corednsdeployment.spec` input.
+`kubernetes_kubeadm_patches.corednsdeployment.spec` input. The HA address likewise
+comes from the existing API VIP settings, without a second address override.
 Kubeadm 1.29/1.30 can still overwrite the initial Deployment
 before the collection repairs placement: this compatibility path can involve
 two rollouts. Overlapping replicas do not establish zero DNS packet loss.
