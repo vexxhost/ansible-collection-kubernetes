@@ -87,6 +87,10 @@ kubernetes_non_init_namespace: "{{ ansible_connection == 'community.docker.docke
 kubernetes_coredns_node_selector:
   openstack-control-plane: enabled
 
+# Optional application integration, with prerequisites/prepare/restore tasks.
+# Called around each disruptive controller operation, with unconditional cleanup.
+kubernetes_upgrade_lifecycle_role: ""
+
 # Transfer kube-vip ownership before disrupting a controller in an HA cluster.
 kubernetes_upgrade_vip_handoff: >-
   {{

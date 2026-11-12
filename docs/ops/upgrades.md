@@ -131,6 +131,17 @@ before the collection repairs placement: this compatibility path can involve
 two rollouts. Overlapping replicas do not establish zero DNS packet loss.
 Worker-only recovery skips unrelated CoreDNS reconciliation.
 
+## Application lifecycle integration
+
+`kubernetes_upgrade_lifecycle_role` is empty by default. A consuming deployment
+can supply its own role. That role's `prerequisites.yml` runs once
+after the existing upgrade preflight and before controller disruption;
+worker-only recovery skips it. The `prepare.yml` and `restore.yml` tasks
+wrap each controller operation. Their context is `kubernetes_upgrade_host` and
+`kubernetes_version`; restoration runs even after a failed preparation or
+upgrade. This integration protects applications around controller operations;
+it is not a replacement for their normal deployment roles.
+
 Keep the collection's managed `InPlacePodVerticalScaling: false` behavior for
 1.33/1.34 nodes with legacy QoS cgroup settings. Do not combine a cgroup
 migration with the version bump. For later affected releases, follow the

@@ -43,6 +43,23 @@ def test_existing_proxy_intent_is_enforced_without_replacing_other_fields(proxy)
     assert result["networking"] == original["networking"]
 
 
+def test_proxy_preflight_precedes_application_changes():
+    tasks = yaml.safe_load(
+        (ROOT / "roles/kubernetes/tasks/bootstrap-cluster.yml").read_text()
+    )
+    guard = next(
+        i
+        for i, t in enumerate(tasks)
+        if t.get("ansible.builtin.include_tasks") == "kube-proxy-check.yml"
+    )
+    application = next(
+        i
+        for i, t in enumerate(tasks)
+        if t["name"] == "Prepare existing-cluster application prerequisites"
+    )
+    assert guard < application
+
+
 def test_worker_recovery_checks_host_state_before_setup():
     tasks = yaml.safe_load((ROOT / "roles/kubernetes/tasks/main.yml").read_text())
     guard = next(
