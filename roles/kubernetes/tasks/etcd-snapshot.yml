@@ -1,0 +1,82 @@
+# Copyright (c) 2026 VEXXHOST, Inc.
+# SPDX-License-Identifier: Apache-2.0
+
+---
+- name: Retain a verified etcd snapshot before the version transition
+  when: not ansible_check_mode
+  delegate_to: "{{ kubernetes_bootstrap_node }}"
+  vars:
+    kubernetes_etcd_data_directory: "{{ (kubernetes_upgrade_check_cluster_configuration.etcd | default({})).local.dataDir | default('/var/lib/etcd') }}"
+  block:
+    - name: Create the protected snapshot parent
+      ansible.builtin.file:
+        path: "{{ kubernetes_etcd_data_directory }}/upgrade-backups"
+        state: directory
+        owner: root
+        group: root
+        mode: "0700"
+
+    - name: Allocate a new snapshot directory
+      ansible.builtin.tempfile:
+        state: directory
+        path: "{{ kubernetes_etcd_data_directory }}/upgrade-backups"
+        prefix: "{{ kubernetes_version }}-"
+      register: kubernetes_etcd_snapshot
+
+    - name: Locate the running local etcd container
+      changed_when: false
+      ansible.builtin.command:
+        argv: [crictl, ps, --name, etcd, -q]
+      register: kubernetes_etcd_container
+      failed_when: kubernetes_etcd_container.rc != 0 or kubernetes_etcd_container.stdout_lines | length != 1
+
+    - name: Save the etcd snapshot through the authenticated local endpoint
+      changed_when: true
+      ansible.builtin.command:
+        argv:
+          - crictl
+          - exec
+          - "{{ kubernetes_etcd_container.stdout | trim }}"
+          - etcdctl
+          - --endpoints=https://127.0.0.1:2379
+          - --cacert=/etc/kubernetes/pki/etcd/ca.crt
+          - --cert=/etc/kubernetes/pki/etcd/healthcheck-client.crt
+          - --key=/etc/kubernetes/pki/etcd/healthcheck-client.key
+          - snapshot
+          - save
+          - "{{ kubernetes_etcd_snapshot.path }}/snapshot.db"
+
+    - name: Verify snapshot integrity before changing the cluster
+      changed_when: false
+      ansible.builtin.command:
+        argv:
+          - crictl
+          - exec
+          - "{{ kubernetes_etcd_container.stdout | trim }}"
+          - etcdutl
+          - snapshot
+          - status
+          - "{{ kubernetes_etcd_snapshot.path }}/snapshot.db"
+          - --write-out=json
+
+    - name: Create a protected off-node snapshot directory
+      delegate_to: localhost
+      become: false
+      ansible.builtin.file:
+        path: "{{ kubernetes_etcd_snapshot_directory }}/{{ kubernetes_bootstrap_node }}/{{ kubernetes_etcd_snapshot.path | basename }}"
+        state: directory
+        mode: "0700"
+
+    - name: Fetch and checksum the off-node snapshot copy
+      ansible.builtin.fetch:
+        src: "{{ kubernetes_etcd_snapshot.path }}/snapshot.db"
+        dest: "{{ kubernetes_etcd_snapshot_directory }}/{{ kubernetes_bootstrap_node }}/{{ kubernetes_etcd_snapshot.path | basename }}/snapshot.db"
+        flat: true
+        validate_checksum: true
+
+    - name: Protect the local snapshot file
+      delegate_to: localhost
+      become: false
+      ansible.builtin.file:
+        path: "{{ kubernetes_etcd_snapshot_directory }}/{{ kubernetes_bootstrap_node }}/{{ kubernetes_etcd_snapshot.path | basename }}/snapshot.db"
+        mode: "0600"
