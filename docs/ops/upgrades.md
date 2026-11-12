@@ -20,6 +20,15 @@ Ansible controller before changing the stored configuration. Snapshot files
 and directories are private. Manage retention outside the upgrade operation.
 External etcd deployments need their own backup procedure.
 
+The image repository is reconciled into the stored ClusterConfiguration before
+upgrading. Previously a new `kubernetes_image_repository` only changed the init
+file, while kubeadm continued reading an old cluster/CoreDNS registry from its
+ConfigMap. The reconciliation owns only `imageRepository` and
+`dns.imageRepository`; it preserves DNS image tags, disabled state, networking,
+certificate settings and explicit etcd overrides. Returning to the normal
+registry replaces a stale mirror with the target kubeadm version's defaults.
+Confirm target images and registry credentials are available before upgrading.
+
 ### Proxy-free state is more than resource deletion
 
 When `kubernetes_remove_kube_proxy: true`, kubeadm's stored configuration must

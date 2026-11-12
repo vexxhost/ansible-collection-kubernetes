@@ -98,6 +98,11 @@
             and kubernetes_kubeadm_stored_cluster_configuration.apiVersion == 'kubeadm.k8s.io/v1beta4'
             else {}, recursive=True
           )
+        | vexxhost.kubernetes.kubeadm_image_repository(
+            kubernetes_image_repository,
+            kubernetes_kubeadm_default_image_repository,
+            kubernetes_kubeadm_default_dns_image_repository
+          )
       }}
   when: kubernetes_kubeadm_cluster_configuration != (kubernetes_kubeadm_config.resources[0].data.ClusterConfiguration | from_yaml)
   kubernetes.core.k8s:

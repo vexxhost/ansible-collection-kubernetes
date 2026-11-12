@@ -6,6 +6,9 @@ from ansible.plugins.filter.core import combine
 from ansible_collections.vexxhost.kubernetes.plugins.filter.kubeadm_cluster_args import (
     kubeadm_cluster_args,
 )
+from ansible_collections.vexxhost.kubernetes.plugins.filter.kubeadm_image_repository import (
+    kubeadm_image_repository,
+)
 from jinja2.nativetypes import NativeEnvironment
 
 ROOT = Path(__file__).resolve().parents[5]
@@ -22,6 +25,9 @@ def test_existing_proxy_intent_is_enforced_without_replacing_other_fields(proxy)
     env = NativeEnvironment()
     env.filters.update(combine=combine, bool=bool)
     env.filters["vexxhost.kubernetes.kubeadm_cluster_args"] = kubeadm_cluster_args
+    env.filters["vexxhost.kubernetes.kubeadm_image_repository"] = (
+        kubeadm_image_repository
+    )
     original = {
         "apiVersion": "kubeadm.k8s.io/v1beta4",
         "kind": "ClusterConfiguration",
@@ -38,6 +44,9 @@ def test_existing_proxy_intent_is_enforced_without_replacing_other_fields(proxy)
         kubernetes_kubeadm_api_server_args={},
         kubernetes_kubeadm_controller_manager_args={},
         kubernetes_kubeadm_scheduler_args={},
+        kubernetes_image_repository="registry.k8s.io",
+        kubernetes_kubeadm_default_image_repository="registry.k8s.io",
+        kubernetes_kubeadm_default_dns_image_repository="registry.k8s.io/coredns",
     )
     assert result["proxy"] == {"disabled": True}
     assert result["networking"] == original["networking"]
