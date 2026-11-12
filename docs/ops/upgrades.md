@@ -63,6 +63,15 @@ Controllers are reconciled serially. The stored cluster version decides whether
 whether its `upgrade node` remains necessary. A rerun therefore finishes peers
 even if an interrupted run already recorded the target cluster version.
 
+For kube-vip ARP HA, the target controller temporarily leaves the VIP election.
+The role waits for another owner, removes only a stale host VIP after the local
+kube-vip exits, reconnects only kubelet/Cilium TCP tuples bound to that retired
+VIP, and waits for sustained API/lease recovery before gracefully stopping the
+old API. The original manifest is restored in `always`; a host watchdog also
+restores it after `kubernetes_upgrade_operation_timeout` if Ansible is lost.
+Set `kubernetes_upgrade_vip_handoff: false` for a separately managed endpoint.
+BGP and single-controller deployments keep the ordinary kubeadm path.
+
 The kubelet loop remains serial and keeps running containers. Controller
 kubelets refresh only kubeadm's `kubelet-config` phase, rather than repeating
 the control-plane/add-on upgrade. Rescue starts a failed kubelet before

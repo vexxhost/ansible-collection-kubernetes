@@ -1,0 +1,99 @@
+# Copyright (c) 2026 VEXXHOST, Inc.
+# SPDX-License-Identifier: Apache-2.0
+
+---
+- name: Inspect unfinished controller recovery state
+  delegate_to: "{{ kubernetes_upgrade_host }}"
+  ansible.builtin.stat:
+    path: /var/lib/kubernetes/upgrade/controller-state.json
+  register: kubernetes_upgrade_previous_state
+
+- name: Restore any previous owned handoff before preparing a new operation
+  when: kubernetes_upgrade_previous_state.stat.exists
+  delegate_to: "{{ kubernetes_upgrade_host }}"
+  changed_when: true
+  ansible.builtin.command:
+    argv:
+      - "{{ hostvars[kubernetes_upgrade_host].ansible_facts.python.executable | default('/usr/bin/python3') }}"
+      - /var/lib/kubernetes/upgrade/controller.py
+      - restore
+
+- name: Inspect this controller kube-vip manifest
+  delegate_to: "{{ kubernetes_upgrade_host }}"
+  ansible.builtin.stat:
+    path: /etc/kubernetes/manifests/kube-vip.yaml
+  register: kubernetes_upgrade_vip_manifest
+
+- name: Prepare the kube-vip handoff
+  when:
+    - kubernetes_upgrade_vip_handoff | bool
+    - kubernetes_upgrade_vip_manifest.stat.exists
+  block:
+    - name: Create the protected controller recovery directory
+      delegate_to: "{{ kubernetes_upgrade_host }}"
+      ansible.builtin.file:
+        path: /var/lib/kubernetes/upgrade
+        state: directory
+        owner: root
+        group: root
+        mode: "0700"
+
+    - name: Install the bounded controller recovery helper
+      delegate_to: "{{ kubernetes_upgrade_host }}"
+      ansible.builtin.copy:
+        src: upgrade_controller.py
+        dest: /var/lib/kubernetes/upgrade/controller.py
+        owner: root
+        group: root
+        mode: "0700"
+
+    - name: Suspend this kube-vip with automatic restoration
+      delegate_to: "{{ kubernetes_upgrade_host }}"
+      changed_when: true
+      ansible.builtin.command:
+        argv:
+          - "{{ hostvars[kubernetes_upgrade_host].ansible_facts.python.executable | default('/usr/bin/python3') }}"
+          - /var/lib/kubernetes/upgrade/controller.py
+          - suspend
+          - --node
+          - "{{ hostvars[kubernetes_upgrade_host].kubernetes_kubelet_node_name }}"
+          - --address
+          - "{{ kube_vip_address | default(kubernetes_keepalived_vip) }}"
+          - --interface
+          - "{{ kube_vip_interface | default(kubernetes_keepalived_interface) }}"
+          - --timeout
+          - "{{ kubernetes_upgrade_operation_timeout }}"
+
+    - name: Wait for another controller to own the API VIP lease
+      delegate_to: "{{ (groups[kubernetes_control_plane_group] | difference([kubernetes_upgrade_host])) | first }}"
+      kubernetes.core.k8s_info:
+        kubeconfig: /etc/kubernetes/admin.conf
+        api_version: coordination.k8s.io/v1
+        kind: Lease
+        namespace: kube-system
+        name: plndr-cp-lock
+      register: kubernetes_upgrade_vip_lease
+      retries: 45
+      delay: 2
+      until:
+        - kubernetes_upgrade_vip_lease is succeeded
+        - kubernetes_upgrade_vip_lease.resources | length == 1
+        - kubernetes_upgrade_vip_lease.resources[0].spec.holderIdentity | default('') | length > 0
+        - kubernetes_upgrade_vip_lease.resources[0].spec.holderIdentity != hostvars[kubernetes_upgrade_host].kubernetes_kubelet_node_name
+
+    - name: Recover retired-VIP clients before disrupting the old API
+      delegate_to: "{{ kubernetes_upgrade_host }}"
+      changed_when: true
+      ansible.builtin.command:
+        argv:
+          - "{{ hostvars[kubernetes_upgrade_host].ansible_facts.python.executable | default('/usr/bin/python3') }}"
+          - /var/lib/kubernetes/upgrade/controller.py
+          - recover
+          - --node
+          - "{{ hostvars[kubernetes_upgrade_host].kubernetes_kubelet_node_name }}"
+          - --address
+          - "{{ kube_vip_address | default(kubernetes_keepalived_vip) }}"
+          - --interface
+          - "{{ kube_vip_interface | default(kubernetes_keepalived_interface) }}"
+          - --target
+          - "{{ kubernetes_version }}"
