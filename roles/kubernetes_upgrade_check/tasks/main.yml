@@ -607,6 +607,7 @@
           first, which restarts their pods. See docs/ops/qos-cgroups.md.
 
 - name: Retrieve the "kubeadm-config" ConfigMap
+  no_log: true
   run_once: true
   delegate_to: "{{ groups[kubernetes_control_plane_group | default('controllers')][0] }}"
   ignore_errors: true
@@ -625,6 +626,7 @@
     - kubernetes_upgrade_check_kubeadm_config.resources | length > 0
   block:
     - name: Parse the ClusterConfiguration
+      no_log: true
       run_once: true
       ansible.builtin.set_fact:
         kubernetes_upgrade_check_cluster_configuration: "{{ kubernetes_upgrade_check_kubeadm_config.resources[0].data.ClusterConfiguration | from_yaml }}" # yamllint disable-line rule:line-length

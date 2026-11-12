@@ -41,6 +41,15 @@ can contain credentials. Private validation and upload inputs are removed by
 the task's `always` cleanup on success or failure. This does not migrate node-local CLI flags or
 runtime sockets, which require their own controlled procedure.
 
+### Sensitive configuration in Ansible output
+
+Bootstrap tokens, certificate upload keys, custom CA private keys and raw
+kubeadm/kubelet configuration are handled with `no_log: true`. The same applies
+to controller manifests, pod specs used by kubelet migrations and custom
+patches, which can contain inline secrets.
+Sensitive copy, template and ConfigMap updates also disable diff output.
+Version, readiness and health checks continue to report their results.
+
 ### Proxy-free state is more than resource deletion
 
 When `kubernetes_remove_kube_proxy: true`, kubeadm's stored configuration must

@@ -28,6 +28,8 @@
         mode: "0750"
 
     - name: Write kubeadm patches
+      no_log: true
+      diff: false
       ansible.builtin.copy:
         content: "{{ item.value | to_nice_yaml(indent=2) }}"
         dest: "{{ kubernetes_kubeadm_patches_dir }}/{{ item.key }}+strategic.yaml"
