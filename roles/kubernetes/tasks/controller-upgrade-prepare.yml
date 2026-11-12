@@ -18,6 +18,12 @@
       - /var/lib/kubernetes/upgrade/controller.py
       - restore
 
+- name: Prepare application compatibility for this controller
+  when: kubernetes_upgrade_lifecycle_role | length > 0
+  ansible.builtin.include_role:
+    name: "{{ kubernetes_upgrade_lifecycle_role }}"
+    tasks_from: prepare
+
 - name: Inspect this controller kube-vip manifest
   delegate_to: "{{ kubernetes_upgrade_host }}"
   ansible.builtin.stat:

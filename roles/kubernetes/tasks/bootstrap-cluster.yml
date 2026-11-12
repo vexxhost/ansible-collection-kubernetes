@@ -34,6 +34,16 @@
   run_once: true
   ansible.builtin.include_tasks: kube-proxy-check.yml
 
+- name: Prepare existing-cluster application prerequisites
+  when:
+    - kubernetes_upgrade_lifecycle_role | length > 0
+    - kubernetes_upgrade_check_cluster_version is defined
+    - not ansible_check_mode
+  run_once: true
+  ansible.builtin.include_role:
+    name: "{{ kubernetes_upgrade_lifecycle_role }}"
+    tasks_from: prerequisites
+
 - name: Upload cluster configuration for bootstrap node
   ansible.builtin.template:
     src: kubeadm.yaml.j2

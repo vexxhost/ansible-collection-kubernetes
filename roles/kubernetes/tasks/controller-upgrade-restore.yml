@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 ---
-- name: Restore controller ownership
+- name: Restore controller ownership and application discovery
   block:
     - name: Inspect controller recovery state
       delegate_to: "{{ kubernetes_upgrade_host }}"
@@ -19,3 +19,9 @@
           - "{{ hostvars[kubernetes_upgrade_host].ansible_facts.python.executable | default('/usr/bin/python3') }}"
           - /var/lib/kubernetes/upgrade/controller.py
           - restore
+  always:
+    - name: Restore application compatibility after this controller
+      when: kubernetes_upgrade_lifecycle_role | length > 0
+      ansible.builtin.include_role:
+        name: "{{ kubernetes_upgrade_lifecycle_role }}"
+        tasks_from: restore
