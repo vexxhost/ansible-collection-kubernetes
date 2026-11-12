@@ -1,0 +1,21 @@
+# Copyright (c) 2026 VEXXHOST, Inc.
+# SPDX-License-Identifier: Apache-2.0
+
+---
+- name: Restore controller ownership
+  block:
+    - name: Inspect controller recovery state
+      delegate_to: "{{ kubernetes_upgrade_host }}"
+      ansible.builtin.stat:
+        path: /var/lib/kubernetes/upgrade/controller-state.json
+      register: kubernetes_controller_recovery_state
+
+    - name: Restore the exact suspended kube-vip manifest
+      when: kubernetes_controller_recovery_state.stat.exists
+      delegate_to: "{{ kubernetes_upgrade_host }}"
+      changed_when: true
+      ansible.builtin.command:
+        argv:
+          - "{{ hostvars[kubernetes_upgrade_host].ansible_facts.python.executable | default('/usr/bin/python3') }}"
+          - /var/lib/kubernetes/upgrade/controller.py
+          - restore

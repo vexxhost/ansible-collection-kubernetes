@@ -2,9 +2,12 @@
 # SPDX-License-Identifier: Apache-2.0
 
 ---
-- name: Upgrade one controller and wait for its health
+- name: Upgrade one controller with preparation and restoration
   when: not ansible_check_mode
   block:
+    - name: Prepare the controller operation
+      ansible.builtin.include_tasks: controller-upgrade-prepare.yml
+
     - name: Run the controller kubeadm upgrade
       delegate_to: "{{ kubernetes_upgrade_host }}"
       changed_when: true
@@ -22,3 +25,6 @@
 
     - name: Wait for the control plane
       ansible.builtin.include_tasks: health-check.yml
+  always:
+    - name: Restore controller and application runtime state
+      ansible.builtin.include_tasks: controller-upgrade-restore.yml

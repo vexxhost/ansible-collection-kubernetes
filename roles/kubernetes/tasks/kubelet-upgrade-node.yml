@@ -38,6 +38,7 @@
     - kubernetes_kubelet_upgrade_current | length > 0
     - kubernetes_kubelet_upgrade_required | bool or kubernetes_kubelet_resize_state_seed | bool
   vars:
+    kubernetes_upgrade_host: "{{ kubernetes_kubelet_upgrade_host }}"
     kubernetes_kubelet_upgrade_control_plane: "{{ kubernetes_kubelet_upgrade_host in groups[kubernetes_control_plane_group] }}"
     kubernetes_kubelet_upgrade_required: "{{ kubernetes_kubelet_upgrade_current != kubernetes_version }}"
     kubernetes_kubelet_hash_migration: >-
@@ -55,6 +56,12 @@
         )
       }}
   block:
+    - name: Prepare the controller kubelet operation
+      when:
+        - kubernetes_kubelet_upgrade_control_plane | bool
+        - not ansible_check_mode
+      ansible.builtin.include_tasks: controller-upgrade-prepare.yml
+
     - name: Upgrade the node configuration
       when: kubernetes_kubelet_upgrade_required | bool
       delegate_to: "{{ kubernetes_kubelet_upgrade_host }}"
@@ -204,3 +211,9 @@
         msg: >-
           Upgrading the kubelet on {{ kubernetes_kubelet_upgrade_host }} failed:
           {{ ansible_failed_result.msg | default('see the failed task above') }}
+  always:
+    - name: Restore controller and application runtime state after kubelet work
+      when:
+        - kubernetes_kubelet_upgrade_control_plane | bool
+        - not ansible_check_mode
+      ansible.builtin.include_tasks: controller-upgrade-restore.yml
