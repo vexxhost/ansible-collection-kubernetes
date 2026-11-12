@@ -28,6 +28,8 @@ propagating the failure. All site plays stop on fatal errors.
 
 | Target | Managed compatibility |
 | --- | --- |
+| 1.29 and 1.30 | Restore CoreDNS placement immediately after either kubeadm control-plane command, then finish its rollout before kubelets. |
+| 1.31 and later | Keep CoreDNS placement and overlapping rolling updates through the supported `corednsdeployment` patch. |
 | 1.34 | Prepare the etcd 3.5-to-3.6 transition before kubeadm changes members; the bridge and data checks are operator prerequisites. |
 | 1.35 and later affected releases | Retain the stopped-kubelet resource-checkpoint transition on entry, preserve the native checkpoint on later hops and keep the resize admission guard. Remove obsolete gate overrides and validate target runtime/CRI behavior. |
 
@@ -54,6 +56,15 @@ Retain the resize admission guard on affected releases: successful startup
 does not make explicit in-place resize safe. Honor patch-specific denylist checks
 and follow the [pod QoS cgroup procedure](qos-cgroups.md); do not bypass a
 denied patch or combine a cgroup migration with a minor upgrade.
+
+CoreDNS uses `maxUnavailable: 0`, `maxSurge: 1` and 15 seconds of readiness
+stabilization. The role shares this policy between kubeadm patches and legacy
+placement repair; site overrides use the existing
+`kubernetes_kubeadm_patches.corednsdeployment.spec` input.
+Kubeadm 1.29/1.30 can still overwrite the initial Deployment
+before the collection repairs placement: this compatibility path can involve
+two rollouts. Overlapping replicas do not establish zero DNS packet loss.
+Worker-only recovery skips unrelated CoreDNS reconciliation.
 
 Keep the collection's managed `InPlacePodVerticalScaling: false` behavior for
 1.33/1.34 nodes with legacy QoS cgroup settings. Do not combine a cgroup
