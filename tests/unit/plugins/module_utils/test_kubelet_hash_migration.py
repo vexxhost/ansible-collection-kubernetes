@@ -113,9 +113,44 @@ def metadata_any(hash_value):
 def build_database(elements):
     meta = struct.pack("<QHHI", 0, migration.BOLT_META_PAGE, 0, 0)
     meta += struct.pack("<IIII", migration.BOLT_MAGIC, 2, PAGE_SIZE, 0)
+    meta += struct.pack("<QQQQQ", 2, 0, 0xFFFFFFFFFFFFFFFF, 3, 1)
+    meta += struct.pack("<Q", migration._fnv64(meta[16:]))
     pages = [meta.ljust(PAGE_SIZE, b"\0"), b"\0" * PAGE_SIZE]
     pages.append(build_page(2, elements).ljust(PAGE_SIZE, b"\0"))
     return b"".join(pages)
+
+
+def test_inactive_leaf_and_padding_do_not_count_as_live_metadata(tmp_path):
+    database = build_database([(0, b"spec", metadata_any("abc1234"))])
+    stale = build_page(3, [(0, b"stale", metadata_any("abc1234"))])
+    database += stale.ljust(PAGE_SIZE, b"\0")
+    path = tmp_path / "meta.db"
+    path.write_bytes(database)
+
+    result = migration.apply(
+        [{"old_hash": "abc1234", "new_hash": "deadbeef"}], str(path)
+    )
+
+    assert result["changed"] is True
+    assert path.read_bytes()[3 * PAGE_SIZE :] == database[3 * PAGE_SIZE :]
+    assert b"abc1234" in path.read_bytes()  # inactive bytes are intentionally untouched
+    assert (
+        migration.remaining_live_hashes(path.read_bytes(), {"abc1234": "deadbeef"})
+        == []
+    )
+
+
+def test_invalid_meta_checksum_does_not_write_the_database(tmp_path):
+    database = bytearray(build_database([(0, b"spec", metadata_any("abc1234"))]))
+    database[72] ^= 1
+    path = tmp_path / "meta.db"
+    path.write_bytes(database)
+
+    with pytest.raises(migration.MigrationError, match="meta page"):
+        migration.apply([{"old_hash": "abc1234", "new_hash": "deadbeef"}], str(path))
+
+    assert path.read_bytes() == database
+    assert list(tmp_path.iterdir()) == [path]
 
 
 def test_rewrite_database_handles_values_and_inline_buckets():
