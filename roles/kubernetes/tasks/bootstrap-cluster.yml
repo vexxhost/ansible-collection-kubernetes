@@ -111,6 +111,13 @@
 
 # NOTE: Before any node joins, so new control plane nodes get the arguments
 #       too, and before "kubeadm upgrade apply" in control-plane.yml.
+- name: Save etcd before changing an existing cluster's upgrade configuration
+  when:
+    - kubernetes_upgrade_check_upgrade_required | default(false) | bool
+    - kubernetes_upgrade_check_cluster_configuration.etcd.external is not defined
+  run_once: true
+  ansible.builtin.include_tasks: etcd-snapshot.yml
+
 - name: Update the stored kubeadm cluster configuration
   ansible.builtin.include_tasks: cluster-configuration.yml
 

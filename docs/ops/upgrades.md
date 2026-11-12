@@ -14,6 +14,12 @@ prerequisites below before each step.
 
 ## Upgrade lifecycle
 
+The role retains an authenticated etcd snapshot on the bootstrap controller
+and a checksum-verified copy under `kubernetes_etcd_snapshot_directory` on the
+Ansible controller before changing the stored configuration. Snapshot files
+and directories are private. Manage retention outside the upgrade operation.
+External etcd deployments need their own backup procedure.
+
 Controllers are reconciled serially. The stored cluster version decides whether
 `upgrade apply` is needed; each controller's three component manifests decide
 whether its `upgrade node` remains necessary. A rerun therefore finishes peers
@@ -42,6 +48,7 @@ later and verify that legacy v2 data does not block the transition. Follow the
 including snapshot and WAL checks with a compatible `etcdutl`. Check protected
 offline data copies, never run the checker against the live data directory,
 and stop for custom data or an unexpected result. Keep verified backups.
+The playbook's normal snapshot does not replace this bridge or data review.
 
 Before starting the target kubelet, qualify its container runtime and CRI
 behavior with both existing workloads and a new pod with init containers.

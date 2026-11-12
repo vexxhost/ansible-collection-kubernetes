@@ -87,6 +87,9 @@ kubernetes_non_init_namespace: "{{ ansible_connection == 'community.docker.docke
 kubernetes_coredns_node_selector:
   openstack-control-plane: enabled
 
+# Protected etcd snapshots are retained on the bootstrap node and deployer.
+kubernetes_etcd_snapshot_directory: ~/.local/state/kubernetes-upgrades
+
 # Allow custom CA usage in the cluster
 kubernetes_allow_custom_ca: false
 
