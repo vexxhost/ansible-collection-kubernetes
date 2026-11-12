@@ -45,6 +45,8 @@
     tasks_from: prerequisites
 
 - name: Upload cluster configuration for bootstrap node
+  no_log: true
+  diff: false
   ansible.builtin.template:
     src: kubeadm.yaml.j2
     dest: /etc/kubernetes/kubeadm.yaml
@@ -64,6 +66,8 @@
         group: root
         recurse: true
     - name: Create kubernetes ca key
+      no_log: true
+      diff: false
       ansible.builtin.copy:
         content: "{{ kubernetes_custom_ca_key }}"
         dest: /etc/kubernetes/pki/ca.key
@@ -78,6 +82,8 @@
       when:
         - (kubernetes_custom_ca_cert is defined) and (kubernetes_custom_ca_cert|length > 0)
     - name: Create etcd-ca key
+      no_log: true
+      diff: false
       ansible.builtin.copy:
         content: "{{ kubernetes_custom_etcd_ca_key }}"
         dest: /etc/kubernetes/pki/etcd/ca.key
@@ -92,6 +98,8 @@
       when:
         - (kubernetes_custom_etcd_ca_cert is defined) and (kubernetes_custom_etcd_ca_cert|length > 0)
     - name: Create front-proxy-ca key
+      no_log: true
+      diff: false
       ansible.builtin.copy:
         content: "{{ kubernetes_custom_front_proxy_ca_key }}"
         dest: /etc/kubernetes/pki/front-proxy-ca.key
@@ -107,6 +115,7 @@
         - (kubernetes_custom_front_proxy_ca_cert is defined) and (kubernetes_custom_front_proxy_ca_cert|length > 0)
 
 - name: Initialize cluster
+  no_log: true
   throttle: 1
   ansible.builtin.shell: |
     kubeadm init --config /etc/kubernetes/kubeadm.yaml --upload-certs \

@@ -79,6 +79,7 @@
     #       spec, and the 1.35 actuated pod state is written from the pod
     #       specs, so read them while the API is reachable.
     - name: List the pods on the node
+      no_log: true
       when: kubernetes_kubelet_hash_migration | bool or kubernetes_kubelet_resize_state_seed | bool
       delegate_to: "{{ kubernetes_bootstrap_node | default(groups[kubernetes_control_plane_group][0]) }}"
       kubernetes.core.k8s_info:
@@ -95,6 +96,7 @@
         state: stopped
 
     - name: Plan the container hash migration
+      no_log: true
       when: kubernetes_kubelet_hash_migration | bool
       delegate_to: "{{ kubernetes_kubelet_upgrade_host }}"
       vexxhost.kubernetes.kubelet_container_hash_migration:
@@ -126,6 +128,7 @@
             state: started
 
     - name: Write the kubelet actuated pod state
+      no_log: true
       when: kubernetes_kubelet_resize_state_seed | bool
       delegate_to: "{{ kubernetes_kubelet_upgrade_host }}"
       vexxhost.kubernetes.kubelet_resize_state:

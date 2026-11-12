@@ -9,6 +9,7 @@
 #       bind-address for the scheduler and controller manager) lose it on
 #       every upgrade. Merge the role's arguments into the stored copy.
 - name: Get the stored kubeadm cluster configuration
+  no_log: true
   run_once: true
   delegate_to: "{{ kubernetes_bootstrap_node }}"
   kubernetes.core.k8s_info:
@@ -20,6 +21,7 @@
   register: kubernetes_kubeadm_config
 
 - name: Read the stored configuration as data
+  no_log: true
   run_once: true
   ansible.builtin.set_fact:
     kubernetes_kubeadm_stored_cluster_configuration: "{{ kubernetes_kubeadm_config.resources[0].data.ClusterConfiguration | from_yaml }}"
@@ -27,6 +29,7 @@
 # Convert with the target kubeadm, rather than adding v1beta4 fields to a
 # v1beta3 document. Other cluster settings remain owned by the stored copy.
 - name: Migrate the stored configuration schema when required
+  no_log: true
   when:
     - kubernetes_kubeadm_api_version == 'v1beta4'
     - kubernetes_kubeadm_stored_cluster_configuration.apiVersion != 'kubeadm.k8s.io/v1beta4'
@@ -41,6 +44,7 @@
       register: kubernetes_kubeadm_migration_directory
 
     - name: Write the original configuration for kubeadm migration
+      diff: false
       ansible.builtin.copy:
         content: "{{ kubernetes_kubeadm_stored_cluster_configuration | to_nice_yaml }}"
         dest: "{{ kubernetes_kubeadm_migration_directory.path }}/old.yaml"
@@ -80,6 +84,8 @@
 # NOTE: Compare the parsed configuration so the ConfigMap is only written
 #       when an argument changes, and not because of YAML formatting.
 - name: Update the component arguments in the stored kubeadm cluster configuration
+  no_log: true
+  diff: false
   run_once: true
   delegate_to: "{{ kubernetes_bootstrap_node }}"
   vars:
@@ -117,6 +123,7 @@
         ClusterConfiguration: "{{ kubernetes_kubeadm_cluster_configuration | to_nice_yaml(indent=2) }}"
 
 - name: Read back proxy-disabled intent before kubeadm operations
+  no_log: true
   when:
     - kubernetes_remove_kube_proxy | bool
     - kubernetes_kubeadm_stored_cluster_configuration.apiVersion == 'kubeadm.k8s.io/v1beta4'

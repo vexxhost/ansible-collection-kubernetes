@@ -3,6 +3,7 @@
 
 ---
 - name: Read the controller component manifests
+  no_log: true
   delegate_to: "{{ kubernetes_control_plane_upgrade_host }}"
   ansible.builtin.slurp:
     src: "/etc/kubernetes/manifests/{{ item }}.yaml"
@@ -17,6 +18,7 @@
     kubernetes_controller_upgrade_required: false
 
 - name: Read the running controller components
+  no_log: true
   delegate_to: "{{ kubernetes_bootstrap_node }}"
   kubernetes.core.k8s_info:
     kubeconfig: /etc/kubernetes/admin.conf
@@ -42,6 +44,7 @@
     label: "{{ item.name }}"
 
 - name: Decide from each component's exact image version
+  no_log: true
   vars:
     kubernetes_component_manifest: "{{ item.content | b64decode | from_yaml }}"
     kubernetes_component_image: "{{ (kubernetes_component_manifest.spec.containers | selectattr('name', 'equalto', item.item) | first).image }}"
@@ -60,6 +63,7 @@
     kubernetes_upgrade_command: "kubeadm upgrade node {{ kubernetes_kubeadm_upgrade_args }}"
 
 - name: Wait for all selected controller components to report the target image
+  no_log: true
   when: not ansible_check_mode
   delegate_to: "{{ kubernetes_bootstrap_node }}"
   kubernetes.core.k8s_info:

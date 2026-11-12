@@ -3,6 +3,7 @@
 
 ---
 - name: Read the existing kubelet configuration before upgrade
+  no_log: true
   kubernetes.core.k8s_info:
     kubeconfig: /etc/kubernetes/admin.conf
     api_version: v1
@@ -49,6 +50,7 @@
     # A standalone ClusterConfiguration avoids validating the bootstrap-only
     # JoinConfiguration, which intentionally has no discovery configuration.
     - name: Write target validation input without bootstrap credentials
+      diff: false
       ansible.builtin.copy:
         content: |
           {{ (kubernetes_upgrade_configs | selectattr('kind', 'equalto', 'ClusterConfiguration') | first) | to_nice_yaml }}
@@ -75,6 +77,7 @@
       no_log: true
 
     - name: Write the upload input with the original init and join settings
+      diff: false
       ansible.builtin.copy:
         content: |
           {% for config in kubernetes_upgrade_configs %}

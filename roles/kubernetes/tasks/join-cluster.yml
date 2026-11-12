@@ -3,6 +3,7 @@
 
 ---
 - name: Generate control-plane certificates for joining cluster
+  no_log: true
   run_once: true
   delegate_to: "{{ kubernetes_bootstrap_node | default(groups[kubernetes_control_plane_group][0]) }}"
   ansible.builtin.command: kubeadm init phase upload-certs --upload-certs --config /etc/kubernetes/kubeadm.yaml
@@ -19,6 +20,7 @@
   register: kubernetes_kubeadm_certificate_info
 
 - name: Generate token for joining cluster
+  no_log: true
   run_once: true
   delegate_to: "{{ kubernetes_bootstrap_node | default(groups[kubernetes_control_plane_group][0]) }}"
   changed_when: true
@@ -27,6 +29,8 @@
   register: kubernetes_kubeadm_token_create
 
 - name: Upload kubeadm configuration
+  no_log: true
+  diff: false
   ansible.builtin.template:
     src: kubeadm.yaml.j2
     dest: /etc/kubernetes/kubeadm.yaml
@@ -35,6 +39,7 @@
     mode: "0640"
 
 - name: Join cluster
+  no_log: true
   throttle: 1
   ansible.builtin.shell: |
     kubeadm join --config /etc/kubernetes/kubeadm.yaml \
