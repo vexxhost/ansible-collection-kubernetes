@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.6.0](https://github.com/vexxhost/ansible-collection-kubernetes/compare/v3.5.1...v3.6.0) (2026-11-13)
+
+
+### Features
+
+* **kubernetes:** guard resize without pod QoS cgroups ([#348](https://github.com/vexxhost/ansible-collection-kubernetes/issues/348)) ([828b3e3](https://github.com/vexxhost/ansible-collection-kubernetes/commit/828b3e38d46318680b330be476e88d32b686deab))
+
 ## [3.5.1](https://github.com/vexxhost/ansible-collection-kubernetes/compare/v3.5.0...v3.5.1) (2026-11-04)
 
 
