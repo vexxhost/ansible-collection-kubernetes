@@ -11,6 +11,10 @@
 - name: Configure kubeadm patches
   ansible.builtin.include_tasks: kubeadm-patches.yml
 
+- name: Record the node name for delegated upgrade operations
+  ansible.builtin.set_fact:
+    kubernetes_kubelet_node_name: "{{ kubelet_hostname }}"
+
 - name: Setup control plane
   when: inventory_hostname in groups[kubernetes_control_plane_group]
   ansible.builtin.include_tasks: control-plane.yml
@@ -26,10 +30,6 @@
 - name: Setup nodes
   when: inventory_hostname not in groups[kubernetes_control_plane_group]
   ansible.builtin.include_tasks: nodes.yml
-
-- name: Record the node name for kubelet upgrades
-  ansible.builtin.set_fact:
-    kubernetes_kubelet_node_name: "{{ kubelet_hostname }}"
 
 # NOTE: Upgrade one node at a time, control plane nodes first, and wait for
 #       each node (and the control plane) to be healthy before the next one.

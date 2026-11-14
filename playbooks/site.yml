@@ -14,6 +14,7 @@
 
 ---
 - name: Configure Kubernetes VIP
+  any_errors_fatal: true
   hosts: "{{ kubernetes_control_plane_group | default('controllers') }}"
   become: true
   roles:
@@ -22,6 +23,7 @@
         - kube-vip
 
 - name: Install Kubernetes
+  any_errors_fatal: true
   hosts: "{{ kubernetes_group | default('all') }}"
   become: true
   roles:
@@ -34,6 +36,7 @@
         - kubernetes
 
 - name: Install control-plane components
+  any_errors_fatal: true
   hosts: "{{ kubernetes_control_plane_group | default('controllers') }}"
   become: true
   roles:
