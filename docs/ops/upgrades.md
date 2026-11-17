@@ -14,6 +14,14 @@ prerequisites below before each step.
 
 ## Upgrade lifecycle
 
+For an existing cluster whose runtime has already been qualified, set
+`kubelet_manage_runtime: false` to skip the kubelet role's containerd, CRI tools
+and CNI binary dependencies. Use the `vexxhost.kubernetes.kubernetes` role in a
+dedicated play; the full `site` playbook also includes containerd explicitly.
+Verify the existing runtime, CRI tools and CNI binaries before using this
+option. It does not install prerequisites on new nodes or suppress runtime
+roles explicitly included elsewhere.
+
 Controllers are reconciled serially. The stored cluster version decides whether
 `upgrade apply` is needed; each controller's three component manifests decide
 whether its `upgrade node` remains necessary. A rerun therefore finishes peers
