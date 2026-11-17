@@ -532,6 +532,12 @@ kubelet_sysctls:
   - name: fs.inotify.max_user_watches
     value: 1048576
 
+# Manage the container runtime, CRI tools and CNI binaries as dependencies.
+# Existing clusters may disable this for a Kubernetes-only upgrade, after
+# verifying that those components are installed and compatible with the target.
+# This does not suppress an explicitly included containerd role elsewhere.
+kubelet_manage_runtime: true
+
 # CRI socket path
 kubelet_cri_socket: unix:///run/containerd/containerd.sock
 

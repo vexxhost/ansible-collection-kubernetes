@@ -20,8 +20,11 @@ galaxy_info:
 
 dependencies:
   - role: vexxhost.containers.containerd
+    when: kubelet_manage_runtime | bool
   - role: vexxhost.containers.cri_tools
+    when: kubelet_manage_runtime | bool
   - role: vexxhost.containers.cni_plugins
+    when: kubelet_manage_runtime | bool
   - role: vexxhost.containers.forget_package
     forget_package_name: "{{ kubelet_package_name }}"
     when: ansible_facts['pkg_mgr'] == "apt"
