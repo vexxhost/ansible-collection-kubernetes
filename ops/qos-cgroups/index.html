@@ -1,0 +1,656 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      
+        <link rel="prev" href="../custom-ca/">
+      
+      
+        <link rel="next" href="../upgrades/">
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.4.3, mkdocs-material-9.1.15">
+    
+    
+      
+        <title>Migrate legacy nodes to pod QoS cgroups - Ansible collection for Kubernetes</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.26e3688c.min.css">
+      
+      
+
+    
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&"object"==typeof palette.color)for(var key of Object.keys(palette.color))document.body.setAttribute("data-md-color-"+key,palette.color[key])</script>
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#migrate-legacy-nodes-to-pod-qos-cgroups" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Ansible collection for Kubernetes" class="md-header__button md-logo" aria-label="Ansible collection for Kubernetes" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Ansible collection for Kubernetes
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Migrate legacy nodes to pod QoS cgroups
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Ansible collection for Kubernetes" class="md-nav__button md-logo" aria-label="Ansible collection for Kubernetes" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
+
+    </a>
+    Ansible collection for Kubernetes
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+      
+
+  
+  
+    
+  
+  
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1" checked>
+      
+      
+      
+        <label class="md-nav__link" for="__nav_1" id="__nav_1_label" tabindex="0">
+          Operations Guide
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_1_label" aria-expanded="true">
+        <label class="md-nav__title" for="__nav_1">
+          <span class="md-nav__icon md-icon"></span>
+          Operations Guide
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../custom-ca/" class="md-nav__link">
+        Configure PKI certificates manually for Kubernetes cluster
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+    
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          Migrate legacy nodes to pod QoS cgroups
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        Migrate legacy nodes to pod QoS cgroups
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#requirements" class="md-nav__link">
+    Requirements
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#remove-legacy-overrides" class="md-nav__link">
+    Remove legacy overrides
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#migrate-a-node" class="md-nav__link">
+    Migrate a node
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#finish-the-migration" class="md-nav__link">
+    Finish the migration
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#recover-a-failed-node" class="md-nav__link">
+    Recover a failed node
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../upgrades/" class="md-nav__link">
+        Upgrades
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#requirements" class="md-nav__link">
+    Requirements
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#remove-legacy-overrides" class="md-nav__link">
+    Remove legacy overrides
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#migrate-a-node" class="md-nav__link">
+    Migrate a node
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#finish-the-migration" class="md-nav__link">
+    Finish the migration
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#recover-a-failed-node" class="md-nav__link">
+    Recover a failed node
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+<h1 id="migrate-legacy-nodes-to-pod-qos-cgroups">Migrate legacy nodes to pod QoS cgroups</h1>
+<p>Older releases of this collection joined nodes with
+<code>--cgroups-per-qos=false</code> and <code>--enforce-node-allocatable=</code>. Kubeadm stores
+those arguments in <code>/var/lib/kubelet/kubeadm-flags.env</code> when a node joins and
+does not rewrite the file during an upgrade. Upgrading Kubernetes or rerunning
+the collection therefore does not move an existing node to QoS cgroups.</p>
+<p>Kubernetes 1.35 makes in-place pod resize generally available and locked on.
+On a node without pod QoS cgroups, an in-place resize can crash the kubelet due
+to <a href="https://github.com/kubernetes/kubernetes/issues/137993">kubernetes/kubernetes#137993</a>.
+The collection blocks API-initiated resize while any affected legacy node
+remains, but migrating every node is the permanent remediation. It also allows
+the cluster to use patch releases that the upgrade preflight must otherwise
+refuse because kubelet-initiated resize cannot be blocked by admission.</p>
+<p>Changing this setting changes the cgroup hierarchy used for every pod. The
+supported procedure is to drain, reset and rejoin one node at a time. Do not
+edit <code>kubeadm-flags.env</code> and restart a node in place.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>This migration evicts and restarts every ordinary pod on each node. Draining
+with <code>--delete-emptydir-data</code> deletes data stored in <code>emptyDir</code> volumes.
+Confirm that PodDisruptionBudgets, local storage and application quorum can
+tolerate each eviction before continuing.</p>
+</div>
+<h2 id="requirements">Requirements</h2>
+<ul>
+<li>Use a collection release that includes the <code>pods/resize</code> admission guard and
+  this procedure. Releases 3.5.0 and later no longer set the legacy arguments
+  when a node joins, but 3.5.1 and earlier do not include the admission guard.</li>
+<li>Keep <code>kubernetes_version</code> at the cluster's current version for the entire
+  migration. Do not combine the cgroup migration with a Kubernetes upgrade.</li>
+<li>Take an etcd backup before changing control-plane nodes.</li>
+<li>Keep the normal deployment inventory and variables available. The collection
+  creates fresh join credentials and renders the node's kubeadm configuration
+  when it rejoins.</li>
+<li>Do not remove a host from inventory while its Kubernetes Node still exists.
+  The preflight inspects and reports such untracked Node objects, but inventory
+  is still required to perform the drain, reset and rejoin procedure.</li>
+<li>Migrate only one node at a time and wait for it to become healthy before
+  starting the next node.</li>
+<li>For a stacked-etcd control plane, keep an etcd quorum throughout the
+  operation. Migrating control-plane nodes this way requires at least three
+  healthy control-plane nodes.</li>
+</ul>
+<div class="admonition danger">
+<p class="admonition-title">Danger</p>
+<p>Do not reset the only control-plane node. A single-control-plane cluster has
+no remaining API server or etcd member from which the node can rejoin. Use a
+maintenance rebuild and restore from backup instead. A two-member
+stacked-etcd cluster also loses quorum when either member is stopped; add a
+third member or use a maintenance recovery procedure first.</p>
+</div>
+<h2 id="remove-legacy-overrides">Remove legacy overrides</h2>
+<p>Remove these keys anywhere they are set in inventory:</p>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nt">kubernetes_kubeadm_extra_args</span><span class="p">:</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">  </span><span class="nt">kubelet</span><span class="p">:</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">    </span><span class="nt">cgroups-per-qos</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;false&quot;</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">    </span><span class="nt">enforce-node-allocatable</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;&quot;</span>
+</span></code></pre></div>
+<p>Also remove <code>cgroupsPerQOS: false</code> from any
+<code>kubernetes_kubeadm_patches.kubeletconfiguration</code> override and remove an
+equivalent <code>KUBELET_EXTRA_ARGS</code> override from <code>/etc/default/kubelet</code> or the
+system that manages that file. It is not necessary to set
+<code>cgroups-per-qos=true</code>; omitting the argument uses the kubelet default.</p>
+<p>Do not change <code>kubernetes_kubelet_cgroup_driver</code> as part of this procedure. The
+cgroup driver and pod QoS cgroups are separate settings, and the driver must
+continue to match the container runtime.</p>
+<p>Check the effective legacy arguments on every node before starting:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>ansible<span class="w"> </span>-i<span class="w"> </span>inventory/hosts.ini<span class="w"> </span>kubernetes<span class="w"> </span>--become<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">  </span>-m<span class="w"> </span>ansible.builtin.command<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">  </span>-a<span class="w"> </span><span class="s1">&#39;cat /var/lib/kubelet/kubeadm-flags.env&#39;</span>
+</span></code></pre></div>
+<p>Use the inventory group that contains all Kubernetes nodes in place of
+<code>kubernetes</code> when it has a different name. Record the Kubernetes node name for
+each inventory host; it may differ when <code>kubelet_hostname</code> is customized.</p>
+<p>Run the normal deployment playbook in check mode after removing the inventory
+overrides. The current version should pass the upgrade preflight without
+proposing a Kubernetes version change:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>ansible-playbook<span class="w"> </span>-i<span class="w"> </span>inventory/hosts.ini<span class="w"> </span>deployment.yml<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">  </span>--check<span class="w"> </span>--diff<span class="w"> </span>--tags<span class="w"> </span>kubernetes
+</span></code></pre></div>
+<p>Apply the playbook at the current Kubernetes version before resetting any
+node. This renders the collection's current <code>KubeletConfiguration</code>, including
+<code>kubernetes_kubelet_cgroup_driver</code>, on the control-plane hosts:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>ansible-playbook<span class="w"> </span>-i<span class="w"> </span>inventory/hosts.ini<span class="w"> </span>deployment.yml<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">  </span>--tags<span class="w"> </span>kubernetes
+</span></code></pre></div>
+<p>Kubeadm join downloads the shared <code>kubelet-config</code> ConfigMap. That ConfigMap
+can predate the rendered files on disk, because the collection normally
+refreshes it during an upgrade and this procedure deliberately does not
+upgrade Kubernetes. Refresh it from the first control-plane host before the
+first reset/rejoin:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>ansible<span class="w"> </span>-i<span class="w"> </span>inventory/hosts.ini<span class="w"> </span><span class="s1">&#39;controllers[0]&#39;</span><span class="w"> </span>--become<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">  </span>-m<span class="w"> </span>ansible.builtin.command<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">  </span>-a<span class="w"> </span><span class="s1">&#39;kubeadm init phase upload-config kubelet --config /etc/kubernetes/kubeadm.yaml&#39;</span>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>kubectl<span class="w"> </span>-n<span class="w"> </span>kube-system<span class="w"> </span>get<span class="w"> </span>configmap<span class="w"> </span>kubelet-config<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="w">  </span>-o<span class="w"> </span><span class="nv">jsonpath</span><span class="o">=</span><span class="s1">&#39;{.data.kubelet}&#39;</span>
+</span></code></pre></div>
+<p>Use the actual <code>kubernetes_control_plane_group</code> instead of <code>controllers</code> when
+it differs. In the ConfigMap output, <code>cgroupDriver</code> must equal
+<code>kubernetes_kubelet_cgroup_driver</code> and must match the container runtime before
+any node is reset. A stale <code>cgroupDriver: systemd</code> with runc using cgroupfs can
+make static control-plane pods fail after a rejoin, costing an etcd member
+during the migration.</p>
+<p>The commands in this guide assume the deployment playbook tags the
+<code>vexxhost.kubernetes.kubernetes</code> role with <code>kubernetes</code>, as the collection
+playbook does. Omit <code>--tags kubernetes</code> when the deployment playbook does not
+use that tag.</p>
+<p>Do not override <code>kubernetes_upgrade_check_cgroups_per_qos_denylist</code> to force a
+version that the preflight refuses. Complete this migration on the current safe
+patch release first, then upgrade Kubernetes after every node uses QoS cgroups.</p>
+<h2 id="migrate-a-node">Migrate a node</h2>
+<p>Migrate workers first. Migrate control-plane nodes afterwards, leaving the
+first host in <code>kubernetes_control_plane_group</code> until last because the collection
+uses that host as its default API delegate.</p>
+<p>Set the inventory host and Kubernetes node name for one node:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">INVENTORY_HOST</span><span class="o">=</span>k8s-w1.example.com
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="nb">export</span><span class="w"> </span><span class="nv">NODE_NAME</span><span class="o">=</span>k8s-w1.example.com
+</span></code></pre></div>
+<p>Before resetting the node, set a temporary registration taint in that host's
+inventory. This taint is part of the kubeadm <code>JoinConfiguration</code>, so the
+replacement Node is unschedulable from its first API registration rather than
+only after the deployment play returns:</p>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="nt">kubernetes_kubeadm_node_registration_taints</span><span class="p">:</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">vexxhost.com/qos-cgroups-migration</span>
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">pending</span>
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="w">    </span><span class="nt">effect</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">NoSchedule</span>
+</span></code></pre></div>
+<p>Set this only for <code>INVENTORY_HOST</code>. Required node infrastructure must tolerate
+the temporary taint; ordinary workloads must not. Leave the variable in place
+until validation finishes so a repeated reset and rejoin remains protected.</p>
+<p>Drain the node. Resolve any PodDisruptionBudget failure instead of bypassing
+eviction protection without reviewing the workload impact:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>kubectl<span class="w"> </span>drain<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$NODE_NAME</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="w">  </span>--ignore-daemonsets<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="w">  </span>--delete-emptydir-data<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="w">  </span>--timeout<span class="o">=</span>15m
+</span></code></pre></div>
+<p>Reset kubeadm on that host while the rest of the cluster is healthy:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>ansible<span class="w"> </span>-i<span class="w"> </span>inventory/hosts.ini<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$INVENTORY_HOST</span><span class="s2">&quot;</span><span class="w"> </span>--become<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="w">  </span>-m<span class="w"> </span>ansible.builtin.command<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="w">  </span>-a<span class="w"> </span><span class="s1">&#39;kubeadm reset --force&#39;</span>
+</span></code></pre></div>
+<p>For a stacked-etcd control-plane node, <code>kubeadm reset</code> also removes its local
+etcd member. Confirm the remaining etcd members and API servers are healthy
+before proceeding. Stop the migration if quorum or <code>/readyz</code> is unhealthy.</p>
+<p>Delete the stale Node API object:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>kubectl<span class="w"> </span>delete<span class="w"> </span>node<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$NODE_NAME</span><span class="s2">&quot;</span><span class="w"> </span>--wait<span class="o">=</span><span class="nb">true</span>
+</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>kubectl<span class="w"> </span>get<span class="w"> </span>--raw<span class="o">=</span>/readyz
+</span></code></pre></div>
+<p>Run the same deployment playbook and variables used for the cluster, limited to
+the reset inventory host. The <code>kubernetes</code> role sees the missing
+<code>/etc/kubernetes/kubelet.conf</code>, creates new join credentials and rejoins the
+node with the current kubelet defaults:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>ansible-playbook<span class="w"> </span>-i<span class="w"> </span>inventory/hosts.ini<span class="w"> </span>deployment.yml<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="w">  </span>--tags<span class="w"> </span>kubernetes<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="w">  </span>--limit<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$INVENTORY_HOST</span><span class="s2">&quot;</span>
+</span></code></pre></div>
+<p>Confirm the replacement Node retained the temporary <code>NoSchedule</code> taint, then
+wait for it to become Ready. Stop immediately if the taint is absent; do not
+continue validation with a schedulable replacement:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>kubectl<span class="w"> </span>get<span class="w"> </span>node<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$NODE_NAME</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="w">  </span>-o<span class="w"> </span><span class="nv">jsonpath</span><span class="o">=</span><span class="s1">&#39;{.spec.taints[?(@.key==&quot;vexxhost.com/qos-cgroups-migration&quot;)]}{&quot;\n&quot;}&#39;</span>
+</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a>kubectl<span class="w"> </span><span class="nb">wait</span><span class="w"> </span>--for<span class="o">=</span><span class="nv">condition</span><span class="o">=</span>Ready<span class="w"> </span><span class="s2">&quot;node/</span><span class="nv">$NODE_NAME</span><span class="s2">&quot;</span><span class="w"> </span>--timeout<span class="o">=</span>10m
+</span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a>kubectl<span class="w"> </span>get<span class="w"> </span>node<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$NODE_NAME</span><span class="s2">&quot;</span><span class="w"> </span>-o<span class="w"> </span>wide
+</span></code></pre></div>
+<p>Verify that the rejoin did not restore either legacy argument:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>ansible<span class="w"> </span>-i<span class="w"> </span>inventory/hosts.ini<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$INVENTORY_HOST</span><span class="s2">&quot;</span><span class="w"> </span>--become<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a><span class="w">  </span>-m<span class="w"> </span>ansible.builtin.command<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-12-3"><a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a><span class="w">  </span>-a<span class="w"> </span><span class="s1">&#39;cat /var/lib/kubelet/kubeadm-flags.env&#39;</span>
+</span></code></pre></div>
+<p>The output must not contain <code>--cgroups-per-qos=false</code> or
+<code>--enforce-node-allocatable=</code>. If <code>/var/lib/kubelet/config.yaml</code> explicitly
+contains <code>cgroupsPerQOS</code>, it must be <code>true</code>. Confirm that replacement workload
+infrastructure, including DaemonSets, becomes Ready and that the kubelet has
+not entered a restart loop before continuing.</p>
+<p>Check the effective kubelet configuration through the API after every rejoin:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>kubectl<span class="w"> </span>get<span class="w"> </span>--raw<span class="o">=</span><span class="s2">&quot;/api/v1/nodes/</span><span class="nv">$NODE_NAME</span><span class="s2">/proxy/configz&quot;</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a><span class="w">  </span><span class="p">|</span><span class="w"> </span>jq<span class="w"> </span><span class="s1">&#39;.kubeletconfig | {cgroupsPerQOS, cgroupDriver}&#39;</span>
+</span></code></pre></div>
+<p><code>cgroupsPerQOS</code> must be <code>true</code>. Then inspect the containerd runtime selected
+for pods on the rejoined host:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>ansible<span class="w"> </span>-i<span class="w"> </span>inventory/hosts.ini<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$INVENTORY_HOST</span><span class="s2">&quot;</span><span class="w"> </span>--become<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a><span class="w">  </span>-m<span class="w"> </span>ansible.builtin.command<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-14-3"><a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a><span class="w">  </span>-a<span class="w"> </span><span class="s1">&#39;crictl info -o json&#39;</span>
+</span></code></pre></div>
+<p>In that JSON, find
+<code>config.containerd.runtimes[config.containerd.defaultRuntimeName].options.SystemdCgroup</code>.
+It must be <code>true</code> when the kubelet reports <code>cgroupDriver: systemd</code>, and <code>false</code>
+when the kubelet reports <code>cgroupDriver: cgroupfs</code>. Keep the node tainted and
+stop if they disagree. Do not rely on a newer container runtime overriding a
+stale kubelet ConfigMap; the migration must also be safe on containerd 1.7.</p>
+<p>For each control-plane node, additionally check the API and local etcd pod after
+the rejoin:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a>kubectl<span class="w"> </span>get<span class="w"> </span>--raw<span class="o">=</span>/readyz
+</span><span id="__span-15-2"><a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a>kubectl<span class="w"> </span>-n<span class="w"> </span>kube-system<span class="w"> </span>get<span class="w"> </span>pods<span class="w"> </span>-l<span class="w"> </span><span class="nv">component</span><span class="o">=</span>etcd<span class="w"> </span>-o<span class="w"> </span>wide
+</span></code></pre></div>
+<p>Only after all applicable flag, <code>configz</code>, runtime-driver, workload
+infrastructure and control-plane checks pass, make the node schedulable and
+confirm its workloads become Ready:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="c1"># First remove kubernetes_kubeadm_node_registration_taints from this host&#39;s</span>
+</span><span id="__span-16-2"><a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a><span class="c1"># inventory, then remove the temporary taint from the live Node.</span>
+</span><span id="__span-16-3"><a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a>kubectl<span class="w"> </span>taint<span class="w"> </span>node<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$NODE_NAME</span><span class="s2">&quot;</span><span class="w"> </span>vexxhost.com/qos-cgroups-migration-
+</span><span id="__span-16-4"><a id="__codelineno-16-4" name="__codelineno-16-4" href="#__codelineno-16-4"></a>kubectl<span class="w"> </span>get<span class="w"> </span>node<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$NODE_NAME</span><span class="s2">&quot;</span><span class="w"> </span>-o<span class="w"> </span>wide
+</span><span id="__span-16-5"><a id="__codelineno-16-5" name="__codelineno-16-5" href="#__codelineno-16-5"></a>kubectl<span class="w"> </span>get<span class="w"> </span>pods<span class="w"> </span>--all-namespaces<span class="w"> </span>-o<span class="w"> </span>wide<span class="w"> </span>--field-selector<span class="w"> </span>spec.nodeName<span class="o">=</span><span class="s2">&quot;</span><span class="nv">$NODE_NAME</span><span class="s2">&quot;</span>
+</span></code></pre></div>
+<p>Keep the node tainted and investigate if any validation fails. Do not proceed
+to the next node until the current node and the rest of the cluster are healthy.</p>
+<h2 id="finish-the-migration">Finish the migration</h2>
+<p>After every node has rejoined, run the Kubernetes play for the full inventory
+in check mode and then apply it:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a>ansible-playbook<span class="w"> </span>-i<span class="w"> </span>inventory/hosts.ini<span class="w"> </span>deployment.yml<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-17-2"><a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a><span class="w">  </span>--check<span class="w"> </span>--diff<span class="w"> </span>--tags<span class="w"> </span>kubernetes
+</span><span id="__span-17-3"><a id="__codelineno-17-3" name="__codelineno-17-3" href="#__codelineno-17-3"></a>
+</span><span id="__span-17-4"><a id="__codelineno-17-4" name="__codelineno-17-4" href="#__codelineno-17-4"></a>ansible-playbook<span class="w"> </span>-i<span class="w"> </span>inventory/hosts.ini<span class="w"> </span>deployment.yml<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-17-5"><a id="__codelineno-17-5" name="__codelineno-17-5" href="#__codelineno-17-5"></a><span class="w">  </span>--tags<span class="w"> </span>kubernetes
+</span></code></pre></div>
+<p>The full run verifies every inventory node. On an affected Kubernetes release,
+it removes the resize admission policy only after all nodes are confirmed to
+use QoS cgroups. Verify cluster health and that no guard remains:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-18-1"><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a>kubectl<span class="w"> </span>get<span class="w"> </span>nodes
+</span><span id="__span-18-2"><a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a>kubectl<span class="w"> </span>get<span class="w"> </span>pods<span class="w"> </span>--all-namespaces
+</span><span id="__span-18-3"><a id="__codelineno-18-3" name="__codelineno-18-3" href="#__codelineno-18-3"></a>kubectl<span class="w"> </span>get<span class="w"> </span>--raw<span class="o">=</span>/readyz
+</span><span id="__span-18-4"><a id="__codelineno-18-4" name="__codelineno-18-4" href="#__codelineno-18-4"></a>kubectl<span class="w"> </span>get<span class="w"> </span>validatingadmissionpolicy,validatingadmissionpolicybinding<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-18-5"><a id="__codelineno-18-5" name="__codelineno-18-5" href="#__codelineno-18-5"></a><span class="w">  </span>vexxhost-kubelet-resize-guard<span class="w"> </span>--ignore-not-found
+</span></code></pre></div>
+<p>The final command must return no guard resources. Kubernetes upgrades that were
+previously refused by the QoS-cgroup preflight can now be performed normally.
+A VPA configured with <code>InPlaceOrRecreate</code> can fall back to evicting and
+recreating pods while the guard is installed; after the guard is removed,
+eligible pods can use in-place resize again.</p>
+<h2 id="recover-a-failed-node">Recover a failed node</h2>
+<p>Do not continue to another node when reset, join or health verification fails.
+Leave the failed node drained and diagnose it while the rest of the cluster is
+healthy. The rejoin is repeatable after another <code>kubeadm reset --force</code> and
+Node deletion.</p>
+<p>To return a node to its previous configuration, restore both legacy kubelet
+arguments in that host's inventory, reset it again and rerun the limited rejoin.
+Keep the temporary registration taint until it is Ready and its previous
+kubelet behavior has been verified. For a failed control-plane rejoin, verify
+etcd membership and restore from the pre-migration backup when the member
+cannot be added safely.</p>
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var tab,labels=set.querySelector(".tabbed-labels");for(tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    <script id="__config" type="application/json">{"base": "../..", "features": ["content.code.copy", "content.tabs.link", "navigation.tracking"], "search": "../../assets/javascripts/workers/search.208ed371.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.b4d07000.min.js"></script>
+      
+    
+  </body>
+</html>
