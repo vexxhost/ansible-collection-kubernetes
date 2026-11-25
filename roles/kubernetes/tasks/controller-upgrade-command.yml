@@ -1,0 +1,17 @@
+# Copyright (c) 2026 VEXXHOST, Inc.
+# SPDX-License-Identifier: Apache-2.0
+
+---
+- name: Upgrade one controller and wait for its health
+  when: not ansible_check_mode
+  block:
+    - name: Run the controller kubeadm upgrade
+      delegate_to: "{{ kubernetes_upgrade_host }}"
+      changed_when: true
+      async: 600
+      poll: 5
+      ansible.builtin.command:
+        cmd: "{{ kubernetes_upgrade_command }}"
+
+    - name: Wait for the control plane
+      ansible.builtin.include_tasks: health-check.yml

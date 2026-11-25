@@ -60,7 +60,9 @@
       delegate_to: "{{ kubernetes_kubelet_upgrade_host }}"
       changed_when: true
       ansible.builtin.command:
-        cmd: kubeadm upgrade node {{ kubernetes_kubeadm_upgrade_args }}
+        cmd: >-
+          kubeadm upgrade node {{ 'phase kubelet-config' if kubernetes_kubelet_upgrade_control_plane | bool else '' }}
+          {{ kubernetes_kubeadm_upgrade_args }}
       register: kubernetes_kubelet_upgrade_kubeadm
       retries: 3
       delay: 10
@@ -182,6 +184,7 @@
           kubernetes_kubelet_upgrade_node.resources[0].status.conditions
           | selectattr('type', 'equalto', 'Ready')
           | map(attribute='status') | first | default('False') == 'True'
+        - kubernetes_kubelet_upgrade_node.resources[0].status.nodeInfo.kubeletVersion | regex_replace('^v', '') == kubernetes_version
 
     - name: Wait for the control plane after restarting its kubelet
       when: kubernetes_kubelet_upgrade_control_plane | bool
